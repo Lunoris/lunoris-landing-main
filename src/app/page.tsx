@@ -489,8 +489,11 @@ export default function LunorisLandingPage() {
         Math.max(startY + 120, rawEndY)
       );
 
-      // Comfortable margin from the right edge (aligned with the header right slot, ~110-140px from edge)
-      const minRightMargin = Math.max(105, window.innerWidth * 0.06);
+      // Comfortable margin from the right edge (responsive for mobile, tablet, and desktop)
+      const isMobile = window.innerWidth <= 768;
+      const minRightMargin = isMobile
+        ? Math.max(24, window.innerWidth * 0.06)
+        : Math.max(105, window.innerWidth * 0.06);
       const railX = Math.min(startX, window.innerWidth - minRightMargin);
 
       // Silky-smooth sine ease-in-out parameter u in [0, 1]
