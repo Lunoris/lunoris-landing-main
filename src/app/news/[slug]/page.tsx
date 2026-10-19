@@ -1,4 +1,5 @@
 import React from "react";
+import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { LUNORIS_NEWS } from "@/data/newsData";
@@ -7,6 +8,36 @@ export function generateStaticParams() {
   return LUNORIS_NEWS.map((item) => ({
     slug: item.slug,
   }));
+}
+
+// Each article shares with its own headline, excerpt and cover image.
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ slug: string }>;
+}): Promise<Metadata> {
+  const { slug } = await params;
+  const article = LUNORIS_NEWS.find((item) => item.slug === slug);
+  if (!article) return {};
+
+  const title = `${article.title} | Lunoris: Piece of Mind`;
+  return {
+    title,
+    description: article.excerpt,
+    openGraph: {
+      type: "article",
+      siteName: "Lunoris: Piece of Mind",
+      title,
+      description: article.excerpt,
+      images: [{ url: article.image, alt: article.title }],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title,
+      description: article.excerpt,
+      images: [article.image],
+    },
+  };
 }
 
 export default async function SingleNewsArticlePage({

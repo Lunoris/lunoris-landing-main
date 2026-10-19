@@ -10,12 +10,27 @@ const ovoFont = localFont({
   display: "swap",
 });
 
+const title = "Lunoris: Piece of Mind | Official Game Experience";
+const description =
+  "Explore five interconnected realms inside a young artist's fractured subconscious in Lunoris: Piece of Mind, an emotional 3D action-adventure for PC, PlayStation 5, and Xbox Series X|S.";
+
+// The share image comes from opengraph-image.tsx / twitter-image.tsx.
 export const metadata: Metadata = {
-  title: "Lunoris: Piece of Mind | Official Game Experience",
-  description:
-    "Explore five interconnected realms inside a young artist's fractured subconscious in Lunoris: Piece of Mind, an emotional 3D action-adventure for PC, PlayStation 5, and Xbox Series X|S.",
+  title,
+  description,
   icons: {
     icon: "/assets/logo-square.png",
+  },
+  openGraph: {
+    type: "website",
+    siteName: "Lunoris: Piece of Mind",
+    title,
+    description,
+  },
+  twitter: {
+    card: "summary_large_image",
+    title,
+    description,
   },
 };
 
