@@ -2,7 +2,7 @@
 
 import React, { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { CHARACTERS_GALLERY, GAME_ROADMAP } from "@/data/pitchData";
+import { CHARACTERS_GALLERY, GAME_ROADMAP } from "@/data/gameData";
 import { LUNORIS_NEWS } from "@/data/newsData";
 
 const COMPANIONS_SHOWCASE = [
@@ -259,7 +259,7 @@ function SquareCompanionFrame() {
   );
 }
 
-export default function LunorisDotaStylePage() {
+export default function LunorisLandingPage() {
   const heroRef = useRef<HTMLElement | null>(null);
   const roadmapTimelineRef = useRef<HTMLDivElement | null>(null);
   const [activeCompanion, setActiveCompanion] = useState(0);
@@ -347,19 +347,19 @@ export default function LunorisDotaStylePage() {
   }, []);
 
   return (
-    <div className="dota-page">
+    <div className="lunoris-page">
       {/* OVERLAID TRANSPARENT TOP HEADER */}
-      <header className="dota-header">
-        <div className="dota-header-inner">
-          <div className="dota-header-left">
-            <a href="#top" className="dota-logo-link">
+      <header className="lunoris-header">
+        <div className="lunoris-header-inner">
+          <div className="lunoris-header-left">
+            <a href="#top" className="lunoris-logo-link">
               <img
                 src="/assets/logo-wordmark.svg"
                 alt="Lunoris: Piece of Mind"
-                className="dota-logo-img"
+                className="lunoris-logo-img"
               />
             </a>
-            <nav className="dota-nav">
+            <nav className="lunoris-nav">
               <a href="#news">Latest News</a>
               <a href="#world">The World</a>
               <a href="#companions">Companions</a>
@@ -368,12 +368,12 @@ export default function LunorisDotaStylePage() {
             </nav>
           </div>
 
-          <div className="dota-header-right">
+          <div className="lunoris-header-right">
             <a
               href="https://store.steampowered.com/app/3053030/Lunoris/"
               target="_blank"
               rel="noopener"
-              className="dota-steam-btn dota-steam-btn-nav"
+              className="lunoris-steam-btn lunoris-steam-btn-nav"
             >
               <BrushstrokeButtonBg />
               <svg
@@ -382,7 +382,7 @@ export default function LunorisDotaStylePage() {
                 fill="currentColor"
                 aria-hidden="true"
               >
-                <path d="M11.979 0C5.678 0 .511 4.86.022 11.037l6.432 2.658c.545-.371 1.203-.59 1.912-.59.063 0 .125.004.188.006l2.861-4.142V8.91c0-2.495 2.028-4.524 4.524-4.524 2.494 0 4.524 2.031 4.524 4.527s-2.03 4.525-4.524 4.525h-.105l-4.076 2.911c0 .052.004.105.004.159 0 1.875-1.515 3.396-3.39 3.396-1.635 0-3.016-1.173-3.331-2.727L.436 15.27C1.862 20.307 6.486 24 11.979 24c6.627 0 11.999-5.373 11.999-12S18.605 0 11.979 0z" />
+                <path d="M11.979 0C5.678 0 .511 4.86.022 11.037l6.432 2.658c.545-.371 1.203-.59 1.912-.59.063 0 .125.004.188.006l2.861-4.142V8.91c0-2.495 2.028-4.524 4.524-4.524 2.494 0 4.524 2.031 4.524 4.527s-2.03 4.525-4.524 4.525h-.105l-4.076 2.911c0 .052.004.105.004.159 0 1.875-1.515 3.396-3.39 3.396-1.635 0-3.016-1.173-3.331-2.727L.436 15.27C1.862 20.307 6.486 24 11.979 24c6.627 0 11.999-5.373 11.999-12S18.605 0 11.979 0zM7.54 18.21l-1.473-.61c.262.543.714.999 1.314 1.25 1.297.539 2.793-.076 3.332-1.375.263-.63.264-1.319.005-1.949s-.75-1.121-1.377-1.383c-.624-.26-1.29-.249-1.878-.03l1.523.63c.956.4 1.409 1.5 1.009 2.455-.397.957-1.497 1.41-2.454 1.012H7.54zm11.415-9.303c0-1.662-1.353-3.015-3.015-3.015-1.665 0-3.015 1.353-3.015 3.015 0 1.665 1.35 3.015 3.015 3.015 1.663 0 3.015-1.35 3.015-3.015zm-5.273-.005c0-1.252 1.013-2.266 2.265-2.266 1.249 0 2.266 1.014 2.266 2.266 0 1.251-1.017 2.265-2.266 2.265-1.253 0-2.265-1.014-2.265-2.265z" />
               </svg>
               <div className="steam-btn-text">
                 <span className="steam-btn-main">Play Free Demo</span>
@@ -397,10 +397,10 @@ export default function LunorisDotaStylePage() {
         {/* =====================================================
             1. HERO VIDEO + CENTERED WIDE FLOATING LAUREL AWARD
            ===================================================== */}
-        <section className="dota-hero" ref={heroRef}>
-          <div className="dota-hero-video-bg" aria-hidden="true">
+        <section className="lunoris-hero" ref={heroRef}>
+          <div className="lunoris-hero-video-bg" aria-hidden="true">
             <video
-              className="dota-hero-video"
+              className="lunoris-hero-video"
               autoPlay
               loop
               muted
@@ -410,32 +410,32 @@ export default function LunorisDotaStylePage() {
             >
               <source src="/assets/PressAnyKeyVideo.mp4" type="video/mp4" />
             </video>
-            <div className="dota-hero-vignette" />
-            <div className="dota-hero-bottom-fade" />
+            <div className="lunoris-hero-vignette" />
+            <div className="lunoris-hero-bottom-fade" />
           </div>
 
-          <div className="dota-wide-wrap dota-hero-foreground">
-            <div className="dota-hero-clean-layout">
-              <div className="dota-hero-quote-block">
-                <h1 className="dota-hero-quote">
+          <div className="lunoris-wide-wrap lunoris-hero-foreground">
+            <div className="lunoris-hero-clean-layout">
+              <div className="lunoris-hero-quote-block">
+                <h1 className="lunoris-hero-quote">
                   &ldquo;Some dreams aren&apos;t sleep.
                   <br />
                   <span>They&apos;re worlds you can&apos;t leave.&rdquo;</span>
                 </h1>
 
-                <div className="dota-quote-source">
+                <div className="lunoris-quote-source">
                   LUNORIS: PIECE OF MIND · PC, PLAYSTATION 5 &amp; XBOX SERIES X|S
                 </div>
 
-                <div className="dota-divider-bar" />
+                <div className="lunoris-divider-bar" />
               </div>
 
-              <div className="dota-hero-actions-bar dota-hero-award-center-row">
+              <div className="lunoris-hero-actions-bar lunoris-hero-award-center-row">
                 {/* CENTERED & WIDE FLOATING GAMESCOM VAN GOGH AWARD CREST */}
-                <div id="awards" className="dota-single-award-crest">
+                <div id="awards" className="lunoris-single-award-crest">
                   <AwardBrushWash />
                   <svg
-                    className="dota-laurel-icon"
+                    className="lunoris-laurel-icon"
                     viewBox="0 0 64 120"
                     fill="none"
                     aria-hidden="true"
@@ -451,15 +451,15 @@ export default function LunorisDotaStylePage() {
                       fill="currentColor"
                     />
                   </svg>
-                  <div className="dota-laurel-copy">
-                    <span className="dota-laurel-kicker">
+                  <div className="lunoris-laurel-copy">
+                    <span className="lunoris-laurel-kicker">
                       WINNER · INDIE CASTLE AWARDS · GAMESCOM COLOGNE
                     </span>
                     <h3>The &ldquo;Van Gogh&rdquo; Award</h3>
                     <p>&ldquo;For the game that should be in an art museum&rdquo;</p>
                   </div>
                   <svg
-                    className="dota-laurel-icon dota-laurel-flip"
+                    className="lunoris-laurel-icon lunoris-laurel-flip"
                     viewBox="0 0 64 120"
                     fill="none"
                     aria-hidden="true"
@@ -484,11 +484,11 @@ export default function LunorisDotaStylePage() {
         {/* =====================================================
             1.5 LATEST NEWS SECTION (OPENS FULL NEWS PAGE ON CLICK)
            ===================================================== */}
-        <section id="news" className="dota-news-section">
-          <div className="dota-wide-wrap">
+        <section id="news" className="lunoris-news-section">
+          <div className="lunoris-wide-wrap">
             {/* Ornamental Diamond Divider + LATEST NEWS Heading */}
-            <div className="dota-heading-stack dota-news-header" data-reveal="up">
-              <div className="dota-ornament-divider" aria-hidden="true">
+            <div className="lunoris-heading-stack lunoris-news-header" data-reveal="up">
+              <div className="lunoris-ornament-divider" aria-hidden="true">
                 <span className="ornament-line ornament-line-left" />
                 <span className="ornament-diamond ornament-diamond-sm" />
                 <span className="ornament-diamond ornament-diamond-lg">
@@ -497,17 +497,17 @@ export default function LunorisDotaStylePage() {
                 <span className="ornament-diamond ornament-diamond-sm" />
                 <span className="ornament-line ornament-line-right" />
               </div>
-              <h2 className="dota-title-major dota-news-heading">
+              <h2 className="lunoris-title-major lunoris-news-heading">
                 Latest News
               </h2>
             </div>
 
             {/* 4-Card Painterly News Stage with Left/Right Carousel Controls */}
-            <div className="dota-news-stage" data-reveal="up">
+            <div className="lunoris-news-stage" data-reveal="up">
               <button
                 type="button"
                 onClick={handlePrevNews}
-                className="dota-news-arrow-btn arrow-prev"
+                className="lunoris-news-arrow-btn arrow-prev"
                 aria-label="Previous news articles"
               >
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
@@ -520,25 +520,25 @@ export default function LunorisDotaStylePage() {
                 </svg>
               </button>
 
-              <div className="dota-news-grid">
+              <div className="lunoris-news-grid">
                 {visibleNews.map((article, idx) => (
                   <Link
                     href={`/news/${article.slug}`}
                     key={`${article.slug}-${newsOffset}-${idx}`}
-                    className="dota-news-card"
+                    className="lunoris-news-card"
                     style={
                       {
                         "--news-stagger": `${idx * 85}ms`,
                       } as React.CSSProperties
                     }
                   >
-                    <div className="dota-canvas-weave" aria-hidden="true" />
+                    <div className="lunoris-canvas-weave" aria-hidden="true" />
                     <DeckledCanvasFrame />
 
-                    <div className="dota-news-media">
+                    <div className="lunoris-news-media">
                       {article.isVideo && article.videoSrc ? (
                         <video
-                          className="dota-news-thumb"
+                          className="lunoris-news-thumb"
                           src={article.videoSrc}
                           poster={article.image}
                           autoPlay
@@ -550,15 +550,15 @@ export default function LunorisDotaStylePage() {
                         <img
                           src={article.image}
                           alt={article.title}
-                          className="dota-news-thumb"
+                          className="lunoris-news-thumb"
                         />
                       )}
-                      <div className="dota-news-media-shade" />
+                      <div className="lunoris-news-media-shade" />
                       <span className="news-corner-tag">{article.category}</span>
 
                       {article.isVideo && (
                         <div
-                          className="dota-news-play-circle"
+                          className="lunoris-news-play-circle"
                           aria-hidden="true"
                         >
                           <svg viewBox="0 0 24 24" fill="currentColor">
@@ -568,19 +568,19 @@ export default function LunorisDotaStylePage() {
                       )}
                     </div>
 
-                    <div className="dota-news-body">
-                      <div className="dota-news-meta">
+                    <div className="lunoris-news-body">
+                      <div className="lunoris-news-meta">
                         <span>{article.date}</span>
                         <span className="news-meta-sep">|</span>
                         <span>{article.readTime}</span>
                       </div>
-                      <h3 className="dota-news-title">{article.title}</h3>
-                      <p className="dota-news-excerpt">{article.excerpt}</p>
+                      <h3 className="lunoris-news-title">{article.title}</h3>
+                      <p className="lunoris-news-excerpt">{article.excerpt}</p>
 
-                      <div className="dota-news-footer">
-                        <span className="dota-news-cta">
+                      <div className="lunoris-news-footer">
+                        <span className="lunoris-news-cta">
                           {article.ctaLabel}
-                          <span className="dota-news-cta-line" />
+                          <span className="lunoris-news-cta-line" />
                         </span>
                       </div>
                     </div>
@@ -591,7 +591,7 @@ export default function LunorisDotaStylePage() {
               <button
                 type="button"
                 onClick={handleNextNews}
-                className="dota-news-arrow-btn arrow-next"
+                className="lunoris-news-arrow-btn arrow-next"
                 aria-label="Next news articles"
               >
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
@@ -606,8 +606,8 @@ export default function LunorisDotaStylePage() {
             </div>
 
             {/* Bottom Centered ALL NEWS Button */}
-            <div className="dota-news-bottom-bar" data-reveal="up">
-              <Link href="/news" className="dota-all-news-btn">
+            <div className="lunoris-news-bottom-bar" data-reveal="up">
+              <Link href="/news" className="lunoris-all-news-btn">
                 <BrushstrokeButtonBg />
                 <span>All News</span>
               </Link>
@@ -618,42 +618,42 @@ export default function LunorisDotaStylePage() {
         {/* =====================================================
             2. FULL-BLEED MURAL: "BREAK THE ENDLESS DREAM LOOP" + 3 ARCHED DREAM CANVASES
            ===================================================== */}
-        <section id="world" className="dota-mural-section">
+        <section id="world" className="lunoris-mural-section">
           <div
-            className="dota-mural-bg"
+            className="lunoris-mural-bg"
             style={{ backgroundImage: "url('/assets/elar-joy.jpg')" }}
             aria-hidden="true"
           />
-          <div className="dota-mural-fade-top" aria-hidden="true" />
-          <div className="dota-mural-fade-bottom" aria-hidden="true" />
+          <div className="lunoris-mural-fade-top" aria-hidden="true" />
+          <div className="lunoris-mural-fade-bottom" aria-hidden="true" />
 
-          <div className="dota-wide-wrap dota-mural-center">
-            <div className="dota-heading-stack" data-reveal="up">
-              <span className="dota-title-minor">Awaken the Inner Sanctuary</span>
-              <h2 className="dota-title-major">Break the Endless Dream Loop</h2>
-              <div className="dota-center-bar" />
-              <p className="dota-mural-body">
+          <div className="lunoris-wide-wrap lunoris-mural-center">
+            <div className="lunoris-heading-stack" data-reveal="up">
+              <span className="lunoris-title-minor">Awaken the Inner Sanctuary</span>
+              <h2 className="lunoris-title-major">Break the Endless Dream Loop</h2>
+              <div className="lunoris-center-bar" />
+              <p className="lunoris-mural-body">
                 Adrift inside her own painted subconscious after a midnight crash on Wahm Lane, eighteen-year-old artist Lunora traverses floating Dream Islands, high-tension Nightmare arenas, playable 1988 Diriyah flashbacks, and the living 2000x2000 open garden of ELAR.
               </p>
             </div>
 
             {/* 3 Arched Painter's Canvases / Living Portals */}
-            <div className="dota-3tile-row">
+            <div className="lunoris-3tile-row">
               <article
-                className="dota-media-tile canvas-portal-left"
+                className="lunoris-media-tile canvas-portal-left"
                 data-reveal="up"
                 style={{ "--stagger": 0 } as React.CSSProperties}
               >
                 <img
                   src="/assets/elar-hope.jpg"
                   alt="ELAR Open Sanctuary"
-                  className="dota-tile-bg"
+                  className="lunoris-tile-bg"
                 />
-                <div className="dota-canvas-weave" aria-hidden="true" />
-                <div className="dota-tile-shade" />
+                <div className="lunoris-canvas-weave" aria-hidden="true" />
+                <div className="lunoris-tile-shade" />
                 <ArchedCanvasFrame />
-                <div className="dota-tile-caption">
-                  <span className="dota-tile-kicker">2000x2000 Open Sanctuary</span>
+                <div className="lunoris-tile-caption">
+                  <span className="lunoris-tile-kicker">2000x2000 Open Sanctuary</span>
                   <h3>ELAR: The Living Inner Garden</h3>
                   <p>
                     Zero enemies, zero timers. Carry Echo Lights from the dark to awaken 32 creatures across nine emotional biomes.
@@ -662,12 +662,12 @@ export default function LunorisDotaStylePage() {
               </article>
 
               <article
-                className="dota-media-tile canvas-portal-center"
+                className="lunoris-media-tile canvas-portal-center"
                 data-reveal="up"
                 style={{ "--stagger": 1 } as React.CSSProperties}
               >
                 <video
-                  className="dota-tile-bg"
+                  className="lunoris-tile-bg"
                   src="/assets/car-level-loop.mp4"
                   poster="/assets/car-level-poster.jpg"
                   autoPlay
@@ -675,11 +675,11 @@ export default function LunorisDotaStylePage() {
                   muted
                   playsInline
                 />
-                <div className="dota-canvas-weave" aria-hidden="true" />
-                <div className="dota-tile-shade" />
+                <div className="lunoris-canvas-weave" aria-hidden="true" />
+                <div className="lunoris-tile-shade" />
                 <ArchedCanvasFrame />
-                <div className="dota-tile-caption">
-                  <span className="dota-tile-kicker">Playable Nostalgia</span>
+                <div className="lunoris-tile-caption">
+                  <span className="lunoris-tile-kicker">Playable Nostalgia</span>
                   <h3>1988 Diriyah &amp; Retro Flashbacks</h3>
                   <p>
                     Drive a 1967 Chevrolet Impala through 1988 Diriyah and uncover family memories that shift into 2D arcade chapters.
@@ -688,20 +688,20 @@ export default function LunorisDotaStylePage() {
               </article>
 
               <article
-                className="dota-media-tile canvas-portal-right"
+                className="lunoris-media-tile canvas-portal-right"
                 data-reveal="up"
                 style={{ "--stagger": 2 } as React.CSSProperties}
               >
                 <img
                   src="/assets/fearclaw-boss.png"
                   alt="FearClaw Boss in the Nightmare Realm"
-                  className="dota-tile-bg"
+                  className="lunoris-tile-bg"
                 />
-                <div className="dota-canvas-weave" aria-hidden="true" />
-                <div className="dota-tile-shade" />
+                <div className="lunoris-canvas-weave" aria-hidden="true" />
+                <div className="lunoris-tile-shade" />
                 <ArchedCanvasFrame />
-                <div className="dota-tile-caption">
-                  <span className="dota-tile-kicker">Beyond the Mirror</span>
+                <div className="lunoris-tile-caption">
+                  <span className="lunoris-tile-kicker">Beyond the Mirror</span>
                   <h3>Nightmare Realms &amp; Bosses</h3>
                   <p>
                     Step through the apartment mirror to confront towering manifestations of trauma like FearClaw.
@@ -715,18 +715,18 @@ export default function LunorisDotaStylePage() {
         {/* =====================================================
             3. COMPANIONS: SQUARE / RECTANGULAR FRAMED GUARDIANS
            ===================================================== */}
-        <section id="companions" className="dota-companions-section">
-          <div className="dota-wide-wrap">
-            <div className="dota-heading-stack" data-reveal="up">
-              <span className="dota-title-minor">
+        <section id="companions" className="lunoris-companions-section">
+          <div className="lunoris-wide-wrap">
+            <div className="lunoris-heading-stack" data-reveal="up">
+              <span className="lunoris-title-minor">
                 Four Guardians of the Subconscious
               </span>
-              <h2 className="dota-title-major">Luminous Companions</h2>
-              <div className="dota-center-bar" />
+              <h2 className="lunoris-title-major">Luminous Companions</h2>
+              <div className="lunoris-center-bar" />
             </div>
 
             <div
-              className="dota-pillars-stage"
+              className="lunoris-pillars-stage"
               data-reveal="up"
               onMouseEnter={() => setCompanionPaused(true)}
               onMouseLeave={() => setCompanionPaused(false)}
@@ -736,26 +736,26 @@ export default function LunorisDotaStylePage() {
                 return (
                   <article
                     key={pet.name}
-                    className={`dota-pillar ${isExpanded ? "is-active" : ""}`}
+                    className={`lunoris-pillar ${isExpanded ? "is-active" : ""}`}
                     onMouseEnter={() => setActiveCompanion(idx)}
                     onClick={() => setActiveCompanion(idx)}
                   >
                     <img
                       src={pet.image}
                       alt={pet.name}
-                      className="dota-pillar-img"
+                      className="lunoris-pillar-img"
                     />
-                    <div className="dota-canvas-weave" aria-hidden="true" />
-                    <div className="dota-pillar-wash" />
-                    <div className="dota-pillar-shade" />
+                    <div className="lunoris-canvas-weave" aria-hidden="true" />
+                    <div className="lunoris-pillar-wash" />
+                    <div className="lunoris-pillar-shade" />
                     <SquareCompanionFrame />
 
-                    <div className="dota-pillar-content">
-                      <span className="dota-pillar-sub">
+                    <div className="lunoris-pillar-content">
+                      <span className="lunoris-pillar-sub">
                         {pet.species} · {pet.title}
                       </span>
-                      <h3 className="dota-pillar-name">{pet.name}</h3>
-                      <p className="dota-pillar-desc">{pet.desc}</p>
+                      <h3 className="lunoris-pillar-name">{pet.name}</h3>
+                      <p className="lunoris-pillar-desc">{pet.desc}</p>
                     </div>
                   </article>
                 );
@@ -767,27 +767,27 @@ export default function LunorisDotaStylePage() {
         {/* =====================================================
             4. "WHO WILL WALK BESIDE YOU?" WATERCOLOR CANVAS GALLERY
            ===================================================== */}
-        <section id="cast" className="dota-heroes-section">
-          <div className="dota-wide-wrap dota-mural-center">
-            <div className="dota-heading-stack" data-reveal="up">
-              <span className="dota-title-minor">
+        <section id="cast" className="lunoris-heroes-section">
+          <div className="lunoris-wide-wrap lunoris-mural-center">
+            <div className="lunoris-heading-stack" data-reveal="up">
+              <span className="lunoris-title-minor">
                 Echoes of Wahm Lane &amp; Voice Cast
               </span>
-              <h2 className="dota-title-major">Who Will Walk Beside You?</h2>
-              <div className="dota-center-bar" />
-              <p className="dota-mural-body">
+              <h2 className="lunoris-title-major">Who Will Walk Beside You?</h2>
+              <div className="lunoris-center-bar" />
+              <p className="lunoris-mural-body">
                 Meet the voiced characters, childhood memories, and guardians whose voices echo across Lunora&apos;s journey.
               </p>
             </div>
           </div>
 
-          <div className="dota-hero-wall" data-reveal="scale">
-            <div className="dota-wall-row dota-row-left">
+          <div className="lunoris-hero-wall" data-reveal="scale">
+            <div className="lunoris-wall-row lunoris-row-left">
               {[...ROW_ONE_CAST, ...ROW_ONE_CAST, ...ROW_ONE_CAST].map(
                 (char, idx) => (
                   <div
                     key={`r1-${char.name}-${idx}`}
-                    className="dota-hero-tile"
+                    className="lunoris-hero-tile"
                     style={
                       { "--tile-accent": char.accent } as React.CSSProperties
                     }
@@ -795,33 +795,33 @@ export default function LunorisDotaStylePage() {
                     <img
                       src={char.image}
                       alt={char.name}
-                      className="dota-hero-tile-img"
+                      className="lunoris-hero-tile-img"
                       loading="lazy"
                     />
-                    <div className="dota-canvas-weave" aria-hidden="true" />
-                    <div className="dota-hero-tile-gradient" />
+                    <div className="lunoris-canvas-weave" aria-hidden="true" />
+                    <div className="lunoris-hero-tile-gradient" />
                     <DeckledCanvasFrame />
-                    <div className="dota-hero-tile-info">
+                    <div className="lunoris-hero-tile-info">
                       <span
-                        className="dota-hero-tile-role"
+                        className="lunoris-hero-tile-role"
                         style={{ color: char.accent }}
                       >
                         {char.role} · {char.voiceOrTrait}
                       </span>
-                      <h3 className="dota-hero-tile-name">{char.name}</h3>
-                      <p className="dota-hero-tile-lore">{char.lore}</p>
+                      <h3 className="lunoris-hero-tile-name">{char.name}</h3>
+                      <p className="lunoris-hero-tile-lore">{char.lore}</p>
                     </div>
                   </div>
                 )
               )}
             </div>
 
-            <div className="dota-wall-row dota-row-right">
+            <div className="lunoris-wall-row lunoris-row-right">
               {[...ROW_TWO_CAST, ...ROW_TWO_CAST, ...ROW_TWO_CAST].map(
                 (char, idx) => (
                   <div
                     key={`r2-${char.name}-${idx}`}
-                    className="dota-hero-tile"
+                    className="lunoris-hero-tile"
                     style={
                       { "--tile-accent": char.accent } as React.CSSProperties
                     }
@@ -829,21 +829,21 @@ export default function LunorisDotaStylePage() {
                     <img
                       src={char.image}
                       alt={char.name}
-                      className="dota-hero-tile-img"
+                      className="lunoris-hero-tile-img"
                       loading="lazy"
                     />
-                    <div className="dota-canvas-weave" aria-hidden="true" />
-                    <div className="dota-hero-tile-gradient" />
+                    <div className="lunoris-canvas-weave" aria-hidden="true" />
+                    <div className="lunoris-hero-tile-gradient" />
                     <DeckledCanvasFrame />
-                    <div className="dota-hero-tile-info">
+                    <div className="lunoris-hero-tile-info">
                       <span
-                        className="dota-hero-tile-role"
+                        className="lunoris-hero-tile-role"
                         style={{ color: char.accent }}
                       >
                         {char.role} · {char.voiceOrTrait}
                       </span>
-                      <h3 className="dota-hero-tile-name">{char.name}</h3>
-                      <p className="dota-hero-tile-lore">{char.lore}</p>
+                      <h3 className="lunoris-hero-tile-name">{char.name}</h3>
+                      <p className="lunoris-hero-tile-lore">{char.lore}</p>
                     </div>
                   </div>
                 )
@@ -855,20 +855,20 @@ export default function LunorisDotaStylePage() {
         {/* =====================================================
             5. SCROLL-DRIVEN CENTER-LINE ROADMAP & FINAL BANNER
            ===================================================== */}
-        <section id="roadmap" className="dota-roadmap-section">
-          <div className="dota-wide-wrap">
-            <div className="dota-heading-stack" data-reveal="up">
-              <span className="dota-title-minor">The Path to Awakening</span>
-              <h2 className="dota-title-major">World &amp; Release Roadmap</h2>
-              <div className="dota-center-bar" />
+        <section id="roadmap" className="lunoris-roadmap-section">
+          <div className="lunoris-wide-wrap">
+            <div className="lunoris-heading-stack" data-reveal="up">
+              <span className="lunoris-title-minor">The Path to Awakening</span>
+              <h2 className="lunoris-title-major">World &amp; Release Roadmap</h2>
+              <div className="lunoris-center-bar" />
             </div>
 
-            <div className="dota-center-timeline" ref={roadmapTimelineRef}>
+            <div className="lunoris-center-timeline" ref={roadmapTimelineRef}>
               {/* Central Vertical Spine & Live Scroll Beam */}
-              <div className="dota-timeline-spine" aria-hidden="true">
-                <div className="dota-timeline-track" />
-                <div className="dota-timeline-fill">
-                  <span className="dota-timeline-spark" />
+              <div className="lunoris-timeline-spine" aria-hidden="true">
+                <div className="lunoris-timeline-track" />
+                <div className="lunoris-timeline-fill">
+                  <span className="lunoris-timeline-spark" />
                 </div>
               </div>
 
@@ -881,63 +881,63 @@ export default function LunorisDotaStylePage() {
                 return (
                   <div
                     key={item.phase}
-                    className={`dota-timeline-row ${
+                    className={`lunoris-timeline-row ${
                       isLeft ? "row-left" : "row-right"
                     } ${isReached ? "is-reached" : ""} ${
                       isCurrent ? "is-current" : ""
                     }`}
                   >
                     {/* Opposite-side Date & Phase Counterbalance */}
-                    <div className="dota-timeline-meta">
-                      <span className="dota-timeline-phase">{item.phase}</span>
-                      <div className="dota-timeline-date">{item.date}</div>
+                    <div className="lunoris-timeline-meta">
+                      <span className="lunoris-timeline-phase">{item.phase}</span>
+                      <div className="lunoris-timeline-date">{item.date}</div>
                       <span
-                        className={`dota-roadmap-status status-${item.status}`}
+                        className={`lunoris-roadmap-status status-${item.status}`}
                       >
                         {item.highlight}
                       </span>
                     </div>
 
                     {/* Center Line Node */}
-                    <div className="dota-timeline-axis" aria-hidden="true">
+                    <div className="lunoris-timeline-axis" aria-hidden="true">
                       <div
-                        className={`dota-timeline-node status-${item.status}`}
+                        className={`lunoris-timeline-node status-${item.status}`}
                       >
-                        <span className="dota-timeline-node-core" />
+                        <span className="lunoris-timeline-node-core" />
                       </div>
                     </div>
 
                     {/* Milestone Painted Canvas Card */}
                     <article
-                      className={`dota-timeline-card status-${item.status}`}
+                      className={`lunoris-timeline-card status-${item.status}`}
                     >
                       <div
-                        className="dota-timeline-card-bg"
+                        className="lunoris-timeline-card-bg"
                         style={{ backgroundImage: `url('${bgImage}')` }}
                         aria-hidden="true"
                       />
-                      <div className="dota-canvas-weave" aria-hidden="true" />
+                      <div className="lunoris-canvas-weave" aria-hidden="true" />
                       <div
-                        className="dota-timeline-card-shade"
+                        className="lunoris-timeline-card-shade"
                         aria-hidden="true"
                       />
                       <DeckledCanvasFrame />
-                      <div className="dota-timeline-card-body">
-                        <div className="dota-timeline-card-mobile-meta">
-                          <span className="dota-roadmap-phase">
+                      <div className="lunoris-timeline-card-body">
+                        <div className="lunoris-timeline-card-mobile-meta">
+                          <span className="lunoris-roadmap-phase">
                             {item.phase}
                           </span>
                           <span
-                            className={`dota-roadmap-status status-${item.status}`}
+                            className={`lunoris-roadmap-status status-${item.status}`}
                           >
                             {item.highlight}
                           </span>
                         </div>
-                        <div className="dota-timeline-card-mobile-date">
+                        <div className="lunoris-timeline-card-mobile-date">
                           {item.date}
                         </div>
-                        <h3 className="dota-roadmap-title">{item.title}</h3>
-                        <p className="dota-roadmap-desc">{item.desc}</p>
+                        <h3 className="lunoris-roadmap-title">{item.title}</h3>
+                        <p className="lunoris-roadmap-desc">{item.desc}</p>
                       </div>
                     </article>
                   </div>
@@ -947,27 +947,27 @@ export default function LunorisDotaStylePage() {
           </div>
         </section>
 
-        <section className="dota-final-cta">
+        <section className="lunoris-final-cta">
           <div
-            className="dota-mural-bg"
+            className="lunoris-mural-bg"
             style={{ backgroundImage: "url('/assets/elar-hope.jpg')" }}
             aria-hidden="true"
           />
-          <div className="dota-mural-fade-top" aria-hidden="true" />
-          <div className="dota-mural-fade-bottom" aria-hidden="true" />
+          <div className="lunoris-mural-fade-top" aria-hidden="true" />
+          <div className="lunoris-mural-fade-bottom" aria-hidden="true" />
 
-          <div className="dota-wide-wrap dota-final-cta-inner" data-reveal="up">
-            <span className="dota-title-minor">Step Inside the Dream</span>
-            <h2 className="dota-title-major">Find Your Way Back</h2>
+          <div className="lunoris-wide-wrap lunoris-final-cta-inner" data-reveal="up">
+            <span className="lunoris-title-minor">Step Inside the Dream</span>
+            <h2 className="lunoris-title-major">Find Your Way Back</h2>
             <div
-              className="dota-center-bar"
+              className="lunoris-center-bar"
               style={{ margin: "1.5rem 0 2rem" }}
             />
             <a
               href="https://store.steampowered.com/app/3053030/Lunoris/"
               target="_blank"
               rel="noopener"
-              className="dota-steam-btn dota-steam-btn-hero"
+              className="lunoris-steam-btn lunoris-steam-btn-hero"
             >
               <BrushstrokeButtonBg />
               <svg
@@ -976,7 +976,7 @@ export default function LunorisDotaStylePage() {
                 fill="currentColor"
                 aria-hidden="true"
               >
-                <path d="M11.979 0C5.678 0 .511 4.86.022 11.037l6.432 2.658c.545-.371 1.203-.59 1.912-.59.063 0 .125.004.188.006l2.861-4.142V8.91c0-2.495 2.028-4.524 4.524-4.524 2.494 0 4.524 2.031 4.524 4.527s-2.03 4.525-4.524 4.525h-.105l-4.076 2.911c0 .052.004.105.004.159 0 1.875-1.515 3.396-3.39 3.396-1.635 0-3.016-1.173-3.331-2.727L.436 15.27C1.862 20.307 6.486 24 11.979 24c6.627 0 11.999-5.373 11.999-12S18.605 0 11.979 0z" />
+                <path d="M11.979 0C5.678 0 .511 4.86.022 11.037l6.432 2.658c.545-.371 1.203-.59 1.912-.59.063 0 .125.004.188.006l2.861-4.142V8.91c0-2.495 2.028-4.524 4.524-4.524 2.494 0 4.524 2.031 4.524 4.527s-2.03 4.525-4.524 4.525h-.105l-4.076 2.911c0 .052.004.105.004.159 0 1.875-1.515 3.396-3.39 3.396-1.635 0-3.016-1.173-3.331-2.727L.436 15.27C1.862 20.307 6.486 24 11.979 24c6.627 0 11.999-5.373 11.999-12S18.605 0 11.979 0zM7.54 18.21l-1.473-.61c.262.543.714.999 1.314 1.25 1.297.539 2.793-.076 3.332-1.375.263-.63.264-1.319.005-1.949s-.75-1.121-1.377-1.383c-.624-.26-1.29-.249-1.878-.03l1.523.63c.956.4 1.409 1.5 1.009 2.455-.397.957-1.497 1.41-2.454 1.012H7.54zm11.415-9.303c0-1.662-1.353-3.015-3.015-3.015-1.665 0-3.015 1.353-3.015 3.015 0 1.665 1.35 3.015 3.015 3.015 1.663 0 3.015-1.35 3.015-3.015zm-5.273-.005c0-1.252 1.013-2.266 2.265-2.266 1.249 0 2.266 1.014 2.266 2.266 0 1.251-1.017 2.265-2.266 2.265-1.253 0-2.265-1.014-2.265-2.265z" />
               </svg>
               <div className="steam-btn-text">
                 <span className="steam-btn-main">Play Free Demo</span>
@@ -987,14 +987,14 @@ export default function LunorisDotaStylePage() {
         </section>
       </main>
 
-      <footer className="dota-footer">
-        <div className="dota-wide-wrap dota-footer-inner">
+      <footer className="lunoris-footer">
+        <div className="lunoris-wide-wrap lunoris-footer-inner">
           <img
             src="/assets/logo-wordmark.svg"
             alt="Lunoris: Piece of Mind"
-            className="dota-footer-logo"
+            className="lunoris-footer-logo"
           />
-          <p className="dota-footer-legal">
+          <p className="lunoris-footer-legal">
             Lunoris and the Lunoris logo are trademarks and/or registered trademarks. 2026 Lunoris: Piece of Mind, all rights reserved.
           </p>
         </div>

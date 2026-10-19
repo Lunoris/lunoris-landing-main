@@ -54,19 +54,19 @@ export default function LunorisNewsArchivePage() {
   const featuredArticle = LUNORIS_NEWS[0];
 
   return (
-    <div className="dota-page news-archive-page">
+    <div className="lunoris-page news-archive-page">
       {/* TOP HEADER */}
-      <header className="dota-header">
-        <div className="dota-header-inner">
-          <div className="dota-header-left">
-            <Link href="/" className="dota-logo-link">
+      <header className="lunoris-header">
+        <div className="lunoris-header-inner">
+          <div className="lunoris-header-left">
+            <Link href="/" className="lunoris-logo-link">
               <img
                 src="/assets/logo-wordmark.svg"
                 alt="Lunoris: Piece of Mind"
-                className="dota-logo-img"
+                className="lunoris-logo-img"
               />
             </Link>
-            <nav className="dota-nav">
+            <nav className="lunoris-nav">
               <Link href="/">← Return to Game World</Link>
               <Link href="/#world">The World</Link>
               <Link href="/#companions">Companions</Link>
@@ -75,13 +75,21 @@ export default function LunorisNewsArchivePage() {
             </nav>
           </div>
 
-          <div className="dota-header-right">
+          <div className="lunoris-header-right">
             <a
               href="https://store.steampowered.com/app/3053030/Lunoris/"
               target="_blank"
               rel="noopener"
-              className="dota-steam-btn dota-steam-btn-nav"
+              className="lunoris-steam-btn lunoris-steam-btn-nav"
             >
+              <svg
+                className="steam-icon"
+                viewBox="0 0 24 24"
+                fill="currentColor"
+                aria-hidden="true"
+              >
+                <path d="M11.979 0C5.678 0 .511 4.86.022 11.037l6.432 2.658c.545-.371 1.203-.59 1.912-.59.063 0 .125.004.188.006l2.861-4.142V8.91c0-2.495 2.028-4.524 4.524-4.524 2.494 0 4.524 2.031 4.524 4.527s-2.03 4.525-4.524 4.525h-.105l-4.076 2.911c0 .052.004.105.004.159 0 1.875-1.515 3.396-3.39 3.396-1.635 0-3.016-1.173-3.331-2.727L.436 15.27C1.862 20.307 6.486 24 11.979 24c6.627 0 11.999-5.373 11.999-12S18.605 0 11.979 0zM7.54 18.21l-1.473-.61c.262.543.714.999 1.314 1.25 1.297.539 2.793-.076 3.332-1.375.263-.63.264-1.319.005-1.949s-.75-1.121-1.377-1.383c-.624-.26-1.29-.249-1.878-.03l1.523.63c.956.4 1.409 1.5 1.009 2.455-.397.957-1.497 1.41-2.454 1.012H7.54zm11.415-9.303c0-1.662-1.353-3.015-3.015-3.015-1.665 0-3.015 1.353-3.015 3.015 0 1.665 1.35 3.015 3.015 3.015 1.663 0 3.015-1.35 3.015-3.015zm-5.273-.005c0-1.252 1.013-2.266 2.265-2.266 1.249 0 2.266 1.014 2.266 2.266 0 1.251-1.017 2.265-2.266 2.265-1.253 0-2.265-1.014-2.265-2.265z" />
+              </svg>
               <div className="steam-btn-text">
                 <span className="steam-btn-main">Play Free Demo</span>
                 <span className="steam-btn-sub">Wishlist on Steam</span>
@@ -95,15 +103,15 @@ export default function LunorisNewsArchivePage() {
         {/* HERO BANNER */}
         <section className="news-page-hero">
           <div
-            className="dota-mural-bg"
+            className="lunoris-mural-bg"
             style={{ backgroundImage: "url('/assets/elar-stillness.jpg')" }}
             aria-hidden="true"
           />
-          <div className="dota-mural-fade-top" aria-hidden="true" />
-          <div className="dota-mural-fade-bottom" aria-hidden="true" />
+          <div className="lunoris-mural-fade-top" aria-hidden="true" />
+          <div className="lunoris-mural-fade-bottom" aria-hidden="true" />
 
-          <div className="dota-wide-wrap news-page-hero-inner">
-            <div className="dota-ornament-divider" aria-hidden="true">
+          <div className="lunoris-wide-wrap news-page-hero-inner">
+            <div className="lunoris-ornament-divider" aria-hidden="true">
               <span className="ornament-line ornament-line-left" />
               <span className="ornament-diamond ornament-diamond-sm" />
               <span className="ornament-diamond ornament-diamond-lg">
@@ -112,11 +120,11 @@ export default function LunorisNewsArchivePage() {
               <span className="ornament-diamond ornament-diamond-sm" />
               <span className="ornament-line ornament-line-right" />
             </div>
-            <span className="dota-title-minor">
+            <span className="lunoris-title-minor">
               Chronicles of the Subconscious
             </span>
-            <h1 className="dota-title-major">Latest News &amp; Updates</h1>
-            <p className="dota-mural-body" style={{ marginTop: "1rem" }}>
+            <h1 className="lunoris-title-major">Latest News &amp; Updates</h1>
+            <p className="lunoris-mural-body" style={{ marginTop: "1rem" }}>
               Dispatches from inside Lunora&apos;s dreamscape: major sanctuary
               updates, Gamescom accolades, playable memory teasers, and deep
               dives into the realms of Lunoris: Piece of Mind.
@@ -133,11 +141,11 @@ export default function LunorisNewsArchivePage() {
                   alt={featuredArticle.title}
                   className="news-featured-img"
                 />
-                <div className="dota-canvas-weave" aria-hidden="true" />
+                <div className="lunoris-canvas-weave" aria-hidden="true" />
                 <span className="news-category-pill">Featured Chronicle</span>
               </div>
               <div className="news-featured-content">
-                <div className="dota-news-meta">
+                <div className="lunoris-news-meta">
                   <span>{featuredArticle.date}</span>
                   <span className="news-meta-sep">|</span>
                   <span>{featuredArticle.readTime}</span>
@@ -146,9 +154,9 @@ export default function LunorisNewsArchivePage() {
                 <p className="news-featured-excerpt">
                   {featuredArticle.lead}
                 </p>
-                <span className="dota-news-cta">
+                <span className="lunoris-news-cta">
                   {featuredArticle.ctaLabel}
-                  <span className="dota-news-cta-line" />
+                  <span className="lunoris-news-cta-line" />
                 </span>
               </div>
             </Link>
@@ -157,7 +165,7 @@ export default function LunorisNewsArchivePage() {
 
         {/* FILTERABLE NEWS CANVAS GRID */}
         <section className="news-archive-grid-section">
-          <div className="dota-wide-wrap">
+          <div className="lunoris-wide-wrap">
             <div className="news-filter-bar">
               {CATEGORIES.map((cat) => (
                 <button
@@ -173,23 +181,23 @@ export default function LunorisNewsArchivePage() {
               ))}
             </div>
 
-            <div className="dota-news-grid dota-news-archive-grid">
+            <div className="lunoris-news-grid lunoris-news-archive-grid">
               {filteredNews.map((article, idx) => (
                 <Link
                   href={`/news/${article.slug}`}
                   key={article.slug}
-                  className="dota-news-card is-visible"
+                  className="lunoris-news-card is-visible"
                   style={
                     { "--news-stagger": `${idx * 90}ms` } as React.CSSProperties
                   }
                 >
-                  <div className="dota-canvas-weave" aria-hidden="true" />
+                  <div className="lunoris-canvas-weave" aria-hidden="true" />
                   <NewsCanvasFrame />
 
-                  <div className="dota-news-media">
+                  <div className="lunoris-news-media">
                     {article.isVideo && article.videoSrc ? (
                       <video
-                        className="dota-news-thumb"
+                        className="lunoris-news-thumb"
                         src={article.videoSrc}
                         poster={article.image}
                         autoPlay
@@ -201,13 +209,13 @@ export default function LunorisNewsArchivePage() {
                       <img
                         src={article.image}
                         alt={article.title}
-                        className="dota-news-thumb"
+                        className="lunoris-news-thumb"
                       />
                     )}
-                    <div className="dota-news-media-shade" />
+                    <div className="lunoris-news-media-shade" />
                     <span className="news-corner-tag">{article.category}</span>
                     {article.isVideo && (
-                      <div className="dota-news-play-circle" aria-hidden="true">
+                      <div className="lunoris-news-play-circle" aria-hidden="true">
                         <svg viewBox="0 0 24 24" fill="currentColor">
                           <path d="M8 5v14l11-7z" />
                         </svg>
@@ -215,18 +223,18 @@ export default function LunorisNewsArchivePage() {
                     )}
                   </div>
 
-                  <div className="dota-news-body">
-                    <div className="dota-news-meta">
+                  <div className="lunoris-news-body">
+                    <div className="lunoris-news-meta">
                       <span>{article.date}</span>
                       <span className="news-meta-sep">|</span>
                       <span>{article.readTime}</span>
                     </div>
-                    <h3 className="dota-news-title">{article.title}</h3>
-                    <p className="dota-news-excerpt">{article.excerpt}</p>
-                    <div className="dota-news-footer">
-                      <span className="dota-news-cta">
+                    <h3 className="lunoris-news-title">{article.title}</h3>
+                    <p className="lunoris-news-excerpt">{article.excerpt}</p>
+                    <div className="lunoris-news-footer">
+                      <span className="lunoris-news-cta">
                         {article.ctaLabel}
-                        <span className="dota-news-cta-line" />
+                        <span className="lunoris-news-cta-line" />
                       </span>
                     </div>
                   </div>
@@ -237,14 +245,14 @@ export default function LunorisNewsArchivePage() {
         </section>
       </main>
 
-      <footer className="dota-footer">
-        <div className="dota-wide-wrap dota-footer-inner">
+      <footer className="lunoris-footer">
+        <div className="lunoris-wide-wrap lunoris-footer-inner">
           <img
             src="/assets/logo-wordmark.svg"
             alt="Lunoris: Piece of Mind"
-            className="dota-footer-logo"
+            className="lunoris-footer-logo"
           />
-          <p className="dota-footer-legal">
+          <p className="lunoris-footer-legal">
             Lunoris and the Lunoris logo are trademarks and/or registered
             trademarks. 2026 Lunoris: Piece of Mind, all rights reserved.
           </p>

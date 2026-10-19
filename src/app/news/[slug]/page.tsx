@@ -26,19 +26,19 @@ export default async function SingleNewsArticlePage({
   ).slice(0, 3);
 
   return (
-    <div className="dota-page news-article-page">
+    <div className="lunoris-page news-article-page">
       {/* TOP HEADER */}
-      <header className="dota-header">
-        <div className="dota-header-inner">
-          <div className="dota-header-left">
-            <Link href="/" className="dota-logo-link">
+      <header className="lunoris-header">
+        <div className="lunoris-header-inner">
+          <div className="lunoris-header-left">
+            <Link href="/" className="lunoris-logo-link">
               <img
                 src="/assets/logo-wordmark.svg"
                 alt="Lunoris: Piece of Mind"
-                className="dota-logo-img"
+                className="lunoris-logo-img"
               />
             </Link>
-            <nav className="dota-nav">
+            <nav className="lunoris-nav">
               <Link href="/news">← All News</Link>
               <Link href="/">Game Home</Link>
               <Link href="/#world">The World</Link>
@@ -47,13 +47,21 @@ export default async function SingleNewsArticlePage({
             </nav>
           </div>
 
-          <div className="dota-header-right">
+          <div className="lunoris-header-right">
             <a
               href="https://store.steampowered.com/app/3053030/Lunoris/"
               target="_blank"
               rel="noopener"
-              className="dota-steam-btn dota-steam-btn-nav"
+              className="lunoris-steam-btn lunoris-steam-btn-nav"
             >
+              <svg
+                className="steam-icon"
+                viewBox="0 0 24 24"
+                fill="currentColor"
+                aria-hidden="true"
+              >
+                <path d="M11.979 0C5.678 0 .511 4.86.022 11.037l6.432 2.658c.545-.371 1.203-.59 1.912-.59.063 0 .125.004.188.006l2.861-4.142V8.91c0-2.495 2.028-4.524 4.524-4.524 2.494 0 4.524 2.031 4.524 4.527s-2.03 4.525-4.524 4.525h-.105l-4.076 2.911c0 .052.004.105.004.159 0 1.875-1.515 3.396-3.39 3.396-1.635 0-3.016-1.173-3.331-2.727L.436 15.27C1.862 20.307 6.486 24 11.979 24c6.627 0 11.999-5.373 11.999-12S18.605 0 11.979 0zM7.54 18.21l-1.473-.61c.262.543.714.999 1.314 1.25 1.297.539 2.793-.076 3.332-1.375.263-.63.264-1.319.005-1.949s-.75-1.121-1.377-1.383c-.624-.26-1.29-.249-1.878-.03l1.523.63c.956.4 1.409 1.5 1.009 2.455-.397.957-1.497 1.41-2.454 1.012H7.54zm11.415-9.303c0-1.662-1.353-3.015-3.015-3.015-1.665 0-3.015 1.353-3.015 3.015 0 1.665 1.35 3.015 3.015 3.015 1.663 0 3.015-1.35 3.015-3.015zm-5.273-.005c0-1.252 1.013-2.266 2.265-2.266 1.249 0 2.266 1.014 2.266 2.266 0 1.251-1.017 2.265-2.266 2.265-1.253 0-2.265-1.014-2.265-2.265z" />
+              </svg>
               <div className="steam-btn-text">
                 <span className="steam-btn-main">Play Free Demo</span>
                 <span className="steam-btn-sub">Wishlist on Steam</span>
@@ -67,14 +75,14 @@ export default async function SingleNewsArticlePage({
         {/* ARTICLE HERO MURAL */}
         <section className="news-article-hero">
           <div
-            className="dota-mural-bg"
+            className="lunoris-mural-bg"
             style={{ backgroundImage: `url('${article.image}')` }}
             aria-hidden="true"
           />
-          <div className="dota-mural-fade-top" aria-hidden="true" />
-          <div className="dota-mural-fade-bottom" aria-hidden="true" />
+          <div className="lunoris-mural-fade-top" aria-hidden="true" />
+          <div className="lunoris-mural-fade-bottom" aria-hidden="true" />
 
-          <div className="dota-news-full-wrap news-article-hero-inner">
+          <div className="lunoris-news-full-wrap news-article-hero-inner">
             <div className="news-breadcrumb">
               <Link href="/">Lunoris</Link>
               <span>/</span>
@@ -83,7 +91,7 @@ export default async function SingleNewsArticlePage({
               <span className="news-breadcrumb-current">{article.category}</span>
             </div>
 
-            <div className="dota-news-meta news-article-meta">
+            <div className="lunoris-news-meta news-article-meta">
               <span className="news-category-inline">{article.category}</span>
               <span className="news-meta-sep">|</span>
               <span>{article.date}</span>
@@ -92,16 +100,16 @@ export default async function SingleNewsArticlePage({
             </div>
 
             <h1 className="news-article-title news-article-main-title">{article.title}</h1>
-            <div className="dota-center-bar" style={{ margin: "1.5rem 0" }} />
+            <div className="lunoris-center-bar" style={{ margin: "1.5rem 0" }} />
             <p className="news-article-lead">{article.lead}</p>
           </div>
         </section>
 
         {/* ARTICLE BODY CANVAS */}
         <section className="news-article-content-section">
-          <div className="dota-news-full-wrap news-article-container">
+          <div className="lunoris-news-full-wrap news-article-container">
             <article className="news-article-canvas">
-              <div className="dota-canvas-weave" aria-hidden="true" />
+              <div className="lunoris-canvas-weave" aria-hidden="true" />
 
               {/* Featured Video or Key Artwork */}
               <div className="news-article-showcase-frame">
@@ -165,10 +173,10 @@ export default async function SingleNewsArticlePage({
               ))}
 
               <div className="news-article-actions">
-                <Link href="/news" className="dota-all-news-btn">
+                <Link href="/news" className="lunoris-all-news-btn">
                   ← All News Chronicles
                 </Link>
-                <Link href="/" className="dota-all-news-btn">
+                <Link href="/" className="lunoris-all-news-btn">
                   Return to Main World
                 </Link>
               </div>
@@ -176,7 +184,7 @@ export default async function SingleNewsArticlePage({
 
             {/* MORE NEWS SECTION */}
             <div className="news-related-wrap">
-              <div className="dota-ornament-divider" aria-hidden="true">
+              <div className="lunoris-ornament-divider" aria-hidden="true">
                 <span className="ornament-line" />
                 <span className="ornament-diamond">
                   <span className="ornament-diamond-core" />
@@ -184,7 +192,7 @@ export default async function SingleNewsArticlePage({
                 <span className="ornament-line" />
               </div>
               <h2
-                className="dota-title-major"
+                className="lunoris-title-major"
                 style={{
                   fontSize: "clamp(2.2rem, 3.6vw, 3.6rem)",
                   textAlign: "center",
@@ -194,35 +202,35 @@ export default async function SingleNewsArticlePage({
                 More Dispatches From the Dream
               </h2>
 
-              <div className="dota-news-grid news-related-grid">
+              <div className="lunoris-news-grid news-related-grid">
                 {relatedArticles.map((rel) => (
                   <Link
                     href={`/news/${rel.slug}`}
                     key={rel.slug}
-                    className="dota-news-card is-visible"
+                    className="lunoris-news-card is-visible"
                   >
-                    <div className="dota-canvas-weave" aria-hidden="true" />
-                    <div className="dota-news-media">
+                    <div className="lunoris-canvas-weave" aria-hidden="true" />
+                    <div className="lunoris-news-media">
                       <img
                         src={rel.image}
                         alt={rel.title}
-                        className="dota-news-thumb"
+                        className="lunoris-news-thumb"
                       />
-                      <div className="dota-news-media-shade" />
+                      <div className="lunoris-news-media-shade" />
                       <span className="news-corner-tag">{rel.category}</span>
                     </div>
-                    <div className="dota-news-body">
-                      <div className="dota-news-meta">
+                    <div className="lunoris-news-body">
+                      <div className="lunoris-news-meta">
                         <span>{rel.date}</span>
                         <span className="news-meta-sep">|</span>
                         <span>{rel.readTime}</span>
                       </div>
-                      <h3 className="dota-news-title">{rel.title}</h3>
-                      <p className="dota-news-excerpt">{rel.excerpt}</p>
-                      <div className="dota-news-footer">
-                        <span className="dota-news-cta">
+                      <h3 className="lunoris-news-title">{rel.title}</h3>
+                      <p className="lunoris-news-excerpt">{rel.excerpt}</p>
+                      <div className="lunoris-news-footer">
+                        <span className="lunoris-news-cta">
                           {rel.ctaLabel}
-                          <span className="dota-news-cta-line" />
+                          <span className="lunoris-news-cta-line" />
                         </span>
                       </div>
                     </div>
@@ -234,14 +242,14 @@ export default async function SingleNewsArticlePage({
         </section>
       </main>
 
-      <footer className="dota-footer">
-        <div className="dota-wide-wrap dota-footer-inner">
+      <footer className="lunoris-footer">
+        <div className="lunoris-wide-wrap lunoris-footer-inner">
           <img
             src="/assets/logo-wordmark.svg"
             alt="Lunoris: Piece of Mind"
-            className="dota-footer-logo"
+            className="lunoris-footer-logo"
           />
-          <p className="dota-footer-legal">
+          <p className="lunoris-footer-legal">
             Lunoris and the Lunoris logo are trademarks and/or registered
             trademarks. 2026 Lunoris: Piece of Mind, all rights reserved.
           </p>
