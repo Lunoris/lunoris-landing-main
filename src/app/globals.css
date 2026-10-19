@@ -980,15 +980,6 @@ body {
   }
 }
 
-@keyframes portalContourFlowInner {
-  0% {
-    stroke-dashoffset: -1000;
-  }
-  100% {
-    stroke-dashoffset: 0;
-  }
-}
-
 @keyframes portalHaloBreath {
   0% {
     opacity: 0.48;
@@ -1042,11 +1033,6 @@ body {
 .portal-arch-flow-outer {
   filter: drop-shadow(0 0 10px var(--portal-accent, #fbbf24));
   animation: portalContourFlowOuter 10s linear infinite;
-}
-
-.portal-arch-flow-inner {
-  filter: drop-shadow(0 0 8px var(--portal-accent, #fbbf24));
-  animation: portalContourFlowInner 13s linear infinite;
 }
 
 .lunoris-tile-bg {

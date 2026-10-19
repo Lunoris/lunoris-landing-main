@@ -54,7 +54,6 @@ const WORLD_LOCATIONS_SHOWCASE = [
     isVideo: false,
     accentColor: "#22d3ee",
     strokeColor: "rgba(34, 211, 238, 0.95)",
-    innerColor: "rgba(165, 243, 252, 0.72)",
     glowColor: "rgba(34, 211, 238, 0.48)",
     glowStrong: "rgba(6, 182, 212, 0.78)",
     desc: "Step through Lunora's School doors into all three Dream Levels—soaring across floating islands in The World That Answers, entering the living Van Gogh canvas of The Man in the Memory, and ascending toward Breakthrough's golden portal of hope.",
@@ -67,7 +66,6 @@ const WORLD_LOCATIONS_SHOWCASE = [
     isVideo: true,
     accentColor: "#fbbf24",
     strokeColor: "rgba(251, 191, 36, 0.96)",
-    innerColor: "rgba(254, 240, 138, 0.75)",
     glowColor: "rgba(251, 191, 36, 0.48)",
     glowStrong: "rgba(245, 158, 11, 0.78)",
     desc: "Cruise a 1967 Chevrolet Impala down an endless midnight highway between dreams, where family keepsakes and dashboard radio frequencies transform 3D memories into playable 2D retro arcade chapters.",
@@ -79,7 +77,6 @@ const WORLD_LOCATIONS_SHOWCASE = [
     isVideo: false,
     accentColor: "#a855f7",
     strokeColor: "rgba(192, 132, 252, 0.96)",
-    innerColor: "rgba(232, 121, 249, 0.75)",
     glowColor: "rgba(168, 85, 247, 0.52)",
     glowStrong: "rgba(147, 51, 234, 0.82)",
     desc: "Plunge through the fogged mirror or the basement's violet-indigo vortex into shifting Nightmare corridors—crossing magenta dissolve rifts to confront FearClaw or catch your breath at the Matchi Matchi sanctuary.",
@@ -248,11 +245,9 @@ function AwardBrushWash() {
 
 function ArchedCanvasFrame({
   strokeColor = "rgba(251, 191, 36, 0.85)",
-  innerColor = "rgba(255, 255, 255, 0.35)",
   accentColor = "#fbbf24",
 }: {
   strokeColor?: string;
-  innerColor?: string;
   accentColor?: string;
 }) {
   return (
@@ -291,18 +286,6 @@ function ArchedCanvasFrame({
           strokeWidth="3"
           strokeLinecap="round"
           strokeDasharray="65 22 110 26 42 18 95 22"
-          vectorEffect="non-scaling-stroke"
-        />
-        {/* Inner animated glowing dashed segments flowing in reverse along the inner arch contour */}
-        <path
-          className="portal-arch-flow-inner"
-          d="M24,212 C24,98 100,26 200,26 C300,26 376,98 376,212 L376,474 C376,488 366,495 350,495 L50,495 C34,495 24,488 24,474 Z"
-          pathLength="1000"
-          fill="none"
-          stroke={innerColor}
-          strokeWidth="1.9"
-          strokeLinecap="round"
-          strokeDasharray="48 26 84 22 34 22 78 26"
           vectorEffect="non-scaling-stroke"
         />
         {/* Bottom corner painterly flourishes */}
@@ -993,7 +976,6 @@ export default function LunorisLandingPage() {
                   <div className="lunoris-tile-shade" />
                   <ArchedCanvasFrame
                     strokeColor={loc.strokeColor}
-                    innerColor={loc.innerColor}
                     accentColor={loc.accentColor}
                   />
                   <div className="lunoris-tile-caption">
