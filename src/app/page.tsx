@@ -457,6 +457,11 @@ export default function LunorisLandingPage() {
     let flightRafId: number | null = null;
     let lastTime = performance.now();
 
+    // Desktop CSS sets zoom on <html> (globals.css). Rects and scrollY are in
+    // screen px, while px values set inside the page get zoomed, so divide by it.
+    const pageZoom = () =>
+      parseFloat(getComputedStyle(document.documentElement).zoom) || 1;
+
     const applySteamFlight = (p: number) => {
       const btn = steamBtnRef.current;
       const navSlot = navBtnSlotRef.current;
@@ -528,8 +533,9 @@ export default function LunorisLandingPage() {
       const scale = 1 + arc * 0.08;
       const rot = Math.sin(u * Math.PI) * (-2.2 * dir);
 
-      btn.style.setProperty("--btn-fly-x", `${dx.toFixed(2)}px`);
-      btn.style.setProperty("--btn-fly-y", `${dy.toFixed(2)}px`);
+      const z = pageZoom();
+      btn.style.setProperty("--btn-fly-x", `${(dx / z).toFixed(2)}px`);
+      btn.style.setProperty("--btn-fly-y", `${(dy / z).toFixed(2)}px`);
       btn.style.setProperty("--btn-fly-scale", `${scale.toFixed(3)}`);
       btn.style.setProperty("--btn-fly-rot", `${rot.toFixed(2)}deg`);
       btn.style.setProperty("--cta-morph", `${ctaMorph.toFixed(3)}`);
@@ -573,7 +579,7 @@ export default function LunorisLandingPage() {
       if (!ticking) {
         window.requestAnimationFrame(() => {
           if (heroRef.current) {
-            const y = Math.min(window.scrollY, 800);
+            const y = Math.min(window.scrollY / pageZoom(), 800);
             heroRef.current.style.setProperty("--hero-scroll", `${y}`);
           }
 

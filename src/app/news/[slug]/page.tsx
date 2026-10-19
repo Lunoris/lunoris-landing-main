@@ -194,7 +194,7 @@ export default async function SingleNewsArticlePage({
               <h2
                 className="lunoris-title-major"
                 style={{
-                  fontSize: "clamp(2.2rem, 3.6vw, 3.6rem)",
+                  fontSize: "clamp(2.2rem, calc(3.6vw * var(--vu)), 3.6rem)",
                   textAlign: "center",
                   marginBottom: "2.5rem",
                 }}
