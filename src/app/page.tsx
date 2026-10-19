@@ -46,53 +46,152 @@ const ROADMAP_VISUALS = [
   "/assets/elar-hope.jpg",
 ];
 
+const WORLD_LOCATIONS_SHOWCASE = [
+  {
+    id: "dream-levels",
+    title: "Dream Levels",
+    image: "/assets/dream-level-1.png",
+    isVideo: false,
+    accentColor: "#22d3ee",
+    strokeColor: "rgba(34, 211, 238, 0.95)",
+    innerColor: "rgba(165, 243, 252, 0.72)",
+    glowColor: "rgba(34, 211, 238, 0.48)",
+    glowStrong: "rgba(6, 182, 212, 0.78)",
+    desc: "Step through Lunora's School doors into all three Dream Levels—soaring across floating islands in The World That Answers, entering the living Van Gogh canvas of The Man in the Memory, and ascending toward Breakthrough's golden portal of hope.",
+  },
+  {
+    id: "retro-games",
+    title: "Retro Games",
+    image: "/assets/car-level-poster.jpg",
+    videoSrc: "/assets/car-level-loop.mp4",
+    isVideo: true,
+    accentColor: "#fbbf24",
+    strokeColor: "rgba(251, 191, 36, 0.96)",
+    innerColor: "rgba(254, 240, 138, 0.75)",
+    glowColor: "rgba(251, 191, 36, 0.48)",
+    glowStrong: "rgba(245, 158, 11, 0.78)",
+    desc: "Cruise a 1967 Chevrolet Impala down an endless midnight highway between dreams, where family keepsakes and dashboard radio frequencies transform 3D memories into playable 2D retro arcade chapters.",
+  },
+  {
+    id: "nightmare",
+    title: "Nightmare",
+    image: "/assets/fearclaw-boss.png",
+    isVideo: false,
+    accentColor: "#a855f7",
+    strokeColor: "rgba(192, 132, 252, 0.96)",
+    innerColor: "rgba(232, 121, 249, 0.75)",
+    glowColor: "rgba(168, 85, 247, 0.52)",
+    glowStrong: "rgba(147, 51, 234, 0.82)",
+    desc: "Plunge through the fogged mirror or the basement's violet-indigo vortex into shifting Nightmare corridors—crossing magenta dissolve rifts to confront FearClaw or catch your breath at the Matchi Matchi sanctuary.",
+  },
+];
+
+function CanvasStar({
+  className,
+  color = "#fbbf24",
+}: {
+  className: string;
+  color?: string;
+}) {
+  return (
+    <svg
+      className={`canvas-fixed-star ${className}`}
+      viewBox="0 0 24 24"
+      aria-hidden="true"
+    >
+      <path
+        d="M12 2 L14.8 9.2 L22 12 L14.8 14.8 L12 22 L9.2 14.8 L2 12 L9.2 9.2 Z"
+        fill={color}
+      />
+    </svg>
+  );
+}
+
 function BrushstrokeButtonBg() {
   return (
     <svg
       className="canvas-brush-btn-svg"
-      viewBox="0 0 420 110"
-      preserveAspectRatio="none"
+      viewBox="0 0 460 116"
       aria-hidden="true"
     >
       <defs>
-        <linearGradient id="brushFillGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" stopColor="rgba(52, 28, 88, 0.94)" />
-          <stop offset="52%" stopColor="rgba(26, 16, 48, 0.96)" />
-          <stop offset="100%" stopColor="rgba(68, 34, 96, 0.92)" />
+        {/* Deep velvety twilight-purple pill fill */}
+        <linearGradient id="moonPillFill" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stopColor="#2d1d54" />
+          <stop offset="48%" stopColor="#1e133a" />
+          <stop offset="100%" stopColor="#150d2a" />
         </linearGradient>
-        <linearGradient id="brushStrokeRim" x1="0%" y1="0%" x2="100%" y2="0%">
-          <stop offset="0%" stopColor="rgba(251, 191, 36, 0.25)" />
-          <stop offset="50%" stopColor="rgba(251, 191, 36, 0.92)" />
-          <stop offset="100%" stopColor="rgba(232, 121, 249, 0.55)" />
+
+        {/* Pill rim gradient: bright near the left crescent, subtle violet around the capsule */}
+        <linearGradient id="moonPillStroke" x1="0%" y1="50%" x2="100%" y2="50%">
+          <stop offset="0%" stopColor="rgba(233, 213, 255, 0.9)" />
+          <stop offset="28%" stopColor="rgba(192, 132, 252, 0.48)" />
+          <stop offset="70%" stopColor="rgba(168, 85, 247, 0.28)" />
+          <stop offset="100%" stopColor="rgba(139, 92, 246, 0.22)" />
         </linearGradient>
+
+        {/* Crescent moon translucent lavender-purple fill */}
+        <linearGradient id="crescentFill" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stopColor="rgba(243, 232, 255, 0.42)" />
+          <stop offset="50%" stopColor="rgba(216, 180, 254, 0.28)" />
+          <stop offset="100%" stopColor="rgba(192, 132, 252, 0.4)" />
+        </linearGradient>
+
+        {/* Crescent moon bright glowing rim */}
+        <linearGradient id="crescentRim" x1="0%" y1="0%" x2="50%" y2="100%">
+          <stop offset="0%" stopColor="#faf5ff" />
+          <stop offset="50%" stopColor="#e9d5ff" />
+          <stop offset="100%" stopColor="#d8b4fe" />
+        </linearGradient>
+
+        {/* Soft radial moonlight glow behind the Steam icon */}
+        <radialGradient id="iconMoonGlow" cx="20%" cy="50%" r="32%">
+          <stop offset="0%" stopColor="rgba(233, 213, 255, 0.34)" />
+          <stop offset="55%" stopColor="rgba(168, 85, 247, 0.14)" />
+          <stop offset="100%" stopColor="rgba(168, 85, 247, 0)" />
+        </radialGradient>
+
+        <filter id="crescentGlow" x="-25%" y="-25%" width="150%" height="150%">
+          <feGaussianBlur stdDeviation="3.2" result="blur" />
+          <feMerge>
+            <feMergeNode in="blur" />
+            <feMergeNode in="SourceGraphic" />
+          </feMerge>
+        </filter>
       </defs>
-      {/* Organic tapered oil-paint brushstroke shape */}
-      <path
-        d="M22,20 C78,8 190,11 334,13 C378,14 404,22 412,37 C418,49 406,66 414,78 C402,91 368,98 310,97 C194,96 86,101 28,92 C10,89 4,74 11,59 C5,45 9,25 22,20 Z"
-        fill="url(#brushFillGrad)"
+
+      {/* Main capsule / pill body */}
+      <rect
+        x="18"
+        y="8"
+        width="430"
+        height="100"
+        rx="50"
+        ry="50"
+        fill="url(#moonPillFill)"
+        stroke="url(#moonPillStroke)"
+        strokeWidth="1.5"
       />
-      {/* Hand-painted gold brushstroke outline */}
-      <path
-        d="M18,24 C86,10 218,12 384,17 C404,19 412,36 407,56 C413,75 396,92 356,94 C216,99 88,96 24,89 C9,85 8,66 14,52 C7,38 10,27 18,24 Z"
-        fill="none"
-        stroke="url(#brushStrokeRim)"
-        strokeWidth="2.4"
-        strokeLinecap="round"
-        strokeDasharray="260 12 140 8"
+
+      {/* Ambient radial glow around the left Steam icon */}
+      <rect
+        x="18"
+        y="8"
+        width="430"
+        height="100"
+        rx="50"
+        ry="50"
+        fill="url(#iconMoonGlow)"
       />
-      {/* Subtle inner palette-knife highlight */}
+
+      {/* Glowing Crescent Moon hugging the left semicircle of the pill */}
       <path
-        d="M38,26 C130,19 260,20 374,25"
-        fill="none"
-        stroke="rgba(255, 243, 196, 0.38)"
-        strokeWidth="1.4"
-        strokeLinecap="round"
-      />
-      {/* Astral star accents */}
-      <path
-        d="M26,55 L30,51 L34,55 L30,59 Z M390,55 L394,51 L398,55 L394,59 Z"
-        fill="#fbbf24"
-        opacity="0.85"
+        d="M 68 8 A 62 50 0 0 0 68 108 A 50 50 0 0 1 68 8 Z"
+        fill="url(#crescentFill)"
+        stroke="url(#crescentRim)"
+        strokeWidth="2.2"
+        strokeLinejoin="round"
+        filter="url(#crescentGlow)"
       />
     </svg>
   );
@@ -100,168 +199,216 @@ function BrushstrokeButtonBg() {
 
 function AwardBrushWash() {
   return (
-    <svg
-      className="canvas-award-wash-svg"
-      viewBox="0 0 560 130"
-      preserveAspectRatio="none"
-      aria-hidden="true"
-    >
-      <defs>
-        <radialGradient id="awardWashGrad" cx="50%" cy="50%" r="54%">
-          <stop offset="0%" stopColor="rgba(58, 36, 18, 0.72)" />
-          <stop offset="65%" stopColor="rgba(24, 16, 38, 0.52)" />
-          <stop offset="100%" stopColor="rgba(10, 7, 18, 0)" />
-        </radialGradient>
-      </defs>
-      <path
-        d="M34,26 C140,8 418,10 526,28 C552,42 548,88 518,102 C404,118 152,116 38,100 C10,86 12,40 34,26 Z"
-        fill="url(#awardWashGrad)"
-      />
-      <path
-        d="M72,22 C196,12 364,12 488,22"
-        stroke="rgba(251, 191, 36, 0.48)"
-        strokeWidth="1.5"
-        strokeLinecap="round"
-        fill="none"
-      />
-      <path
-        d="M88,108 C206,116 354,116 472,108"
-        stroke="rgba(251, 191, 36, 0.48)"
-        strokeWidth="1.5"
-        strokeLinecap="round"
-        fill="none"
-      />
-    </svg>
+    <>
+      <svg
+        className="canvas-square-frame-svg"
+        viewBox="0 0 800 180"
+        preserveAspectRatio="none"
+        aria-hidden="true"
+      >
+        {/* Outer crisp square/rectangular gilded frame matching site cards */}
+        <rect
+          x="6"
+          y="6"
+          width="788"
+          height="168"
+          fill="none"
+          stroke="rgba(251, 191, 36, 0.72)"
+          strokeWidth="2"
+          vectorEffect="non-scaling-stroke"
+        />
+        {/* Inner gallery mat line */}
+        <rect
+          x="14"
+          y="14"
+          width="772"
+          height="152"
+          fill="none"
+          stroke="rgba(255, 255, 255, 0.22)"
+          strokeWidth="1"
+          vectorEffect="non-scaling-stroke"
+        />
+        {/* Four square corner ornamental L-brackets */}
+        <path
+          d="M6,34 L6,6 L34,6 M766,6 L794,6 L794,34 M794,146 L794,174 L766,174 M34,174 L6,174 L6,146"
+          fill="none"
+          stroke="#fbbf24"
+          strokeWidth="3"
+          strokeLinecap="square"
+          vectorEffect="non-scaling-stroke"
+        />
+      </svg>
+      <CanvasStar className="star-sq-tl" />
+      <CanvasStar className="star-sq-tr" />
+      <CanvasStar className="star-sq-br" />
+      <CanvasStar className="star-sq-bl" />
+    </>
   );
 }
 
-function ArchedCanvasFrame() {
+function ArchedCanvasFrame({
+  strokeColor = "rgba(251, 191, 36, 0.85)",
+  innerColor = "rgba(255, 255, 255, 0.35)",
+  accentColor = "#fbbf24",
+}: {
+  strokeColor?: string;
+  innerColor?: string;
+  accentColor?: string;
+}) {
   return (
-    <svg
-      className="canvas-arched-frame-svg"
-      viewBox="0 0 400 520"
-      preserveAspectRatio="none"
-      aria-hidden="true"
-    >
-      {/* Outer hand-painted arched gallery canvas stroke */}
-      <path
-        d="M14,210 C14,88 94,14 200,14 C306,14 386,88 386,210 L386,482 C386,498 374,506 356,506 L44,506 C26,506 14,498 14,482 Z"
-        fill="none"
-        stroke="rgba(251, 191, 36, 0.62)"
-        strokeWidth="2.2"
-        strokeDasharray="180 8 95 6 240 10"
-      />
-      {/* Inner delicate canvas stretcher line */}
-      <path
-        d="M24,212 C24,98 100,26 200,26 C300,26 376,98 376,212 L376,474 C376,488 366,495 350,495 L50,495 C34,495 24,488 24,474 Z"
-        fill="none"
-        stroke="rgba(255, 255, 255, 0.22)"
-        strokeWidth="1.1"
-      />
-      {/* Crown celestial four-point star */}
-      <path
-        d="M200,4 L204,13 L213,17 L204,21 L200,30 L196,21 L187,17 L196,13 Z"
-        fill="#fbbf24"
-      />
-      {/* Bottom corner painterly flourishes */}
-      <path
-        d="M18,465 C18,492 26,500 52,500 M382,465 C382,492 374,500 348,500"
-        fill="none"
-        stroke="#fbbf24"
-        strokeWidth="3"
-        strokeLinecap="round"
-      />
-    </svg>
+    <>
+      <svg
+        className="canvas-arched-frame-svg"
+        viewBox="0 0 400 520"
+        preserveAspectRatio="none"
+        aria-hidden="true"
+      >
+        {/* Constant pulsing neon portal halo along the arched perimeter */}
+        <path
+          className="portal-arch-neon-halo"
+          d="M14,210 C14,88 94,14 200,14 C306,14 386,88 386,210 L386,482 C386,498 374,506 356,506 L44,506 C26,506 14,498 14,482 Z"
+          fill="none"
+          stroke={accentColor}
+          strokeWidth="5"
+          vectorEffect="non-scaling-stroke"
+        />
+        {/* Subtle continuous base track along outer arch */}
+        <path
+          d="M14,210 C14,88 94,14 200,14 C306,14 386,88 386,210 L386,482 C386,498 374,506 356,506 L44,506 C26,506 14,498 14,482 Z"
+          fill="none"
+          stroke={strokeColor}
+          strokeOpacity="0.28"
+          strokeWidth="1.6"
+          vectorEffect="non-scaling-stroke"
+        />
+        {/* Outer animated glowing dashed segments flowing around the card contour */}
+        <path
+          className="portal-arch-flow-outer"
+          d="M14,210 C14,88 94,14 200,14 C306,14 386,88 386,210 L386,482 C386,498 374,506 356,506 L44,506 C26,506 14,498 14,482 Z"
+          pathLength="1000"
+          fill="none"
+          stroke={strokeColor}
+          strokeWidth="3"
+          strokeLinecap="round"
+          strokeDasharray="65 22 110 26 42 18 95 22"
+          vectorEffect="non-scaling-stroke"
+        />
+        {/* Inner animated glowing dashed segments flowing in reverse along the inner arch contour */}
+        <path
+          className="portal-arch-flow-inner"
+          d="M24,212 C24,98 100,26 200,26 C300,26 376,98 376,212 L376,474 C376,488 366,495 350,495 L50,495 C34,495 24,488 24,474 Z"
+          pathLength="1000"
+          fill="none"
+          stroke={innerColor}
+          strokeWidth="1.9"
+          strokeLinecap="round"
+          strokeDasharray="48 26 84 22 34 22 78 26"
+          vectorEffect="non-scaling-stroke"
+        />
+        {/* Bottom corner painterly flourishes */}
+        <path
+          d="M18,465 C18,492 26,500 52,500 M382,465 C382,492 374,500 348,500"
+          fill="none"
+          stroke={accentColor}
+          strokeWidth="3.2"
+          strokeLinecap="round"
+          vectorEffect="non-scaling-stroke"
+        />
+      </svg>
+      <CanvasStar className="star-arch-crown" color={accentColor} />
+    </>
   );
 }
 
 function DeckledCanvasFrame() {
   return (
-    <svg
-      className="canvas-deckled-frame-svg"
-      viewBox="0 0 500 340"
-      preserveAspectRatio="none"
-      aria-hidden="true"
-    >
-      {/* Organic brushstroke perimeter */}
-      <path
-        d="M36,12 C164,6 348,8 472,16 C486,18 492,30 490,54 C494,138 491,226 486,304 C484,322 470,329 446,328 C312,333 168,331 28,324 C14,322 8,310 10,286 C6,196 9,104 14,34 C16,18 24,13 36,12 Z"
-        fill="none"
-        stroke="rgba(251, 191, 36, 0.52)"
-        strokeWidth="2.2"
-        strokeLinecap="round"
-        strokeDasharray="210 10 130 8 190 12"
-      />
-      {/* Inner sketchy artist pencil/chalk guide line */}
-      <path
-        d="M42,22 C178,17 340,18 464,25 C476,26 480,36 479,58 C481,142 479,224 475,296 C473,310 462,317 440,317 C308,321 170,319 36,314 C24,312 19,302 20,280 C18,194 20,108 24,42 C25,28 32,23 42,22 Z"
-        fill="none"
-        stroke="rgba(255, 255, 255, 0.18)"
-        strokeWidth="1"
-      />
-      {/* Top-left & bottom-right painter's star marks */}
-      <path
-        d="M26,26 L30,18 L34,26 L42,30 L34,34 L30,42 L26,34 L18,30 Z"
-        fill="#fbbf24"
-        opacity="0.85"
-      />
-      <path
-        d="M468,302 L471,295 L474,302 L481,305 L474,308 L471,315 L468,308 L461,305 Z"
-        fill="#fbbf24"
-        opacity="0.85"
-      />
-    </svg>
+    <>
+      <svg
+        className="canvas-deckled-frame-svg"
+        viewBox="0 0 500 340"
+        preserveAspectRatio="none"
+        aria-hidden="true"
+      >
+        {/* Organic brushstroke perimeter */}
+        <path
+          d="M36,12 C164,6 348,8 472,16 C486,18 492,30 490,54 C494,138 491,226 486,304 C484,322 470,329 446,328 C312,333 168,331 28,324 C14,322 8,310 10,286 C6,196 9,104 14,34 C16,18 24,13 36,12 Z"
+          fill="none"
+          stroke="rgba(251, 191, 36, 0.52)"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeDasharray="210 10 130 8 190 12"
+          vectorEffect="non-scaling-stroke"
+        />
+        {/* Inner sketchy artist pencil/chalk guide line */}
+        <path
+          d="M42,22 C178,17 340,18 464,25 C476,26 480,36 479,58 C481,142 479,224 475,296 C473,310 462,317 440,317 C308,321 170,319 36,314 C24,312 19,302 20,280 C18,194 20,108 24,42 C25,28 32,23 42,22 Z"
+          fill="none"
+          stroke="rgba(255, 255, 255, 0.18)"
+          strokeWidth="1"
+          vectorEffect="non-scaling-stroke"
+        />
+      </svg>
+      <CanvasStar className="star-card-tl" />
+      <CanvasStar className="star-card-br" />
+    </>
   );
 }
 
 function SquareCompanionFrame() {
   return (
-    <svg
-      className="canvas-square-frame-svg"
-      viewBox="0 0 400 640"
-      preserveAspectRatio="none"
-      aria-hidden="true"
-    >
-      {/* Outer crisp square/rectangular gilded frame */}
-      <rect
-        x="10"
-        y="10"
-        width="380"
-        height="620"
-        fill="none"
-        stroke="rgba(251, 191, 36, 0.72)"
-        strokeWidth="2.2"
-      />
-      {/* Inner gallery mat line */}
-      <rect
-        x="20"
-        y="20"
-        width="360"
-        height="600"
-        fill="none"
-        stroke="rgba(255, 255, 255, 0.22)"
-        strokeWidth="1"
-      />
-      {/* Four square corner ornamental L-brackets */}
-      <path
-        d="M10,42 L10,10 L42,10 M358,10 L390,10 L390,42 M390,598 L390,630 L358,630 M42,630 L10,630 L10,598"
-        fill="none"
-        stroke="#fbbf24"
-        strokeWidth="3.5"
-        strokeLinecap="square"
-      />
-      {/* Corner diamond rivets */}
-      <rect x="17" y="17" width="6" height="6" fill="#fbbf24" />
-      <rect x="377" y="17" width="6" height="6" fill="#fbbf24" />
-      <rect x="377" y="617" width="6" height="6" fill="#fbbf24" />
-      <rect x="17" y="617" width="6" height="6" fill="#fbbf24" />
-    </svg>
+    <>
+      <svg
+        className="canvas-square-frame-svg"
+        viewBox="0 0 400 640"
+        preserveAspectRatio="none"
+        aria-hidden="true"
+      >
+        {/* Outer crisp square/rectangular gilded frame */}
+        <rect
+          x="10"
+          y="10"
+          width="380"
+          height="620"
+          fill="none"
+          stroke="rgba(251, 191, 36, 0.72)"
+          strokeWidth="2"
+          vectorEffect="non-scaling-stroke"
+        />
+        {/* Inner gallery mat line */}
+        <rect
+          x="20"
+          y="20"
+          width="360"
+          height="600"
+          fill="none"
+          stroke="rgba(255, 255, 255, 0.22)"
+          strokeWidth="1"
+          vectorEffect="non-scaling-stroke"
+        />
+        {/* Four square corner ornamental L-brackets */}
+        <path
+          d="M10,42 L10,10 L42,10 M358,10 L390,10 L390,42 M390,598 L390,630 L358,630 M42,630 L10,630 L10,598"
+          fill="none"
+          stroke="#fbbf24"
+          strokeWidth="3.2"
+          strokeLinecap="square"
+          vectorEffect="non-scaling-stroke"
+        />
+      </svg>
+      <CanvasStar className="star-sq-tl" />
+      <CanvasStar className="star-sq-tr" />
+      <CanvasStar className="star-sq-br" />
+      <CanvasStar className="star-sq-bl" />
+    </>
   );
 }
 
 export default function LunorisLandingPage() {
   const heroRef = useRef<HTMLElement | null>(null);
   const roadmapTimelineRef = useRef<HTMLDivElement | null>(null);
+  const navBtnSlotRef = useRef<HTMLDivElement | null>(null);
+  const steamBtnRef = useRef<HTMLAnchorElement | null>(null);
+  const finalCtaSlotRef = useRef<HTMLDivElement | null>(null);
   const [activeCompanion, setActiveCompanion] = useState(0);
   const [companionPaused, setCompanionPaused] = useState(false);
   const [roadmapStep, setRoadmapStep] = useState(0);
@@ -305,6 +452,119 @@ export default function LunorisLandingPage() {
     );
     elements.forEach((el) => observer.observe(el));
 
+    let flightProgress = 0;
+    let targetFlight = 0;
+    let flightRafId: number | null = null;
+    let lastTime = performance.now();
+
+    const applySteamFlight = (p: number) => {
+      const btn = steamBtnRef.current;
+      const navSlot = navBtnSlotRef.current;
+      const ctaSlot = finalCtaSlotRef.current;
+      if (!btn || !navSlot || !ctaSlot) return;
+
+      if (p <= 0.001) {
+        btn.style.setProperty("--btn-fly-x", "0px");
+        btn.style.setProperty("--btn-fly-y", "0px");
+        btn.style.setProperty("--btn-fly-scale", "1");
+        btn.style.setProperty("--btn-fly-rot", "0deg");
+        btn.style.setProperty("--cta-morph", "0");
+        btn.classList.remove(
+          "is-magic-flying",
+          "is-magic-landed",
+          "is-cta-expanded"
+        );
+        return;
+      }
+
+      const navRect = navSlot.getBoundingClientRect();
+      const ctaRect = ctaSlot.getBoundingClientRect();
+
+      const startX = navRect.left + navRect.width / 2;
+      const startY = navRect.top + navRect.height / 2;
+      const endX = ctaRect.left + ctaRect.width / 2;
+      const rawEndY = ctaRect.top + ctaRect.height / 2;
+      const endY = Math.min(
+        window.innerHeight - 68,
+        Math.max(startY + 120, rawEndY)
+      );
+
+      // Comfortable margin from the right edge (aligned with the header right slot, ~110-140px from edge)
+      const minRightMargin = Math.max(105, window.innerWidth * 0.06);
+      const railX = Math.min(startX, window.innerWidth - minRightMargin);
+
+      // Silky-smooth sine ease-in-out parameter u in [0, 1]
+      const u = 0.5 - 0.5 * Math.cos(p * Math.PI);
+      const inv = 1 - u;
+
+      // Single continuous Cubic Bezier curve:
+      // P0 = (startX, startY)
+      // P1 = (railX, startY + (endY - startY) * 0.65)
+      // P2 = (railX, endY)
+      // P3 = (endX, endY)
+      const p1y = startY + (endY - startY) * 0.65;
+      const currentX =
+        inv * inv * inv * startX +
+        3 * inv * inv * u * railX +
+        3 * inv * u * u * railX +
+        u * u * u * endX;
+      const currentY =
+        inv * inv * inv * startY +
+        3 * inv * inv * u * p1y +
+        3 * inv * u * u * endY +
+        u * u * u * endY;
+
+      // Smoothstep morph between solo Steam icon and full Ethereal Moonlight button
+      const rawMorph = Math.max(0, Math.min(1, (u - 0.48) / 0.48));
+      const ctaMorph = rawMorph * rawMorph * (3 - 2 * rawMorph);
+
+      const dx = currentX - startX;
+      const dy = currentY - startY;
+      const arc = Math.sin(u * Math.PI);
+      const dir = targetFlight === 1 ? 1 : -1;
+      const scale = 1 + arc * 0.08;
+      const rot = Math.sin(u * Math.PI) * (-2.2 * dir);
+
+      btn.style.setProperty("--btn-fly-x", `${dx.toFixed(2)}px`);
+      btn.style.setProperty("--btn-fly-y", `${dy.toFixed(2)}px`);
+      btn.style.setProperty("--btn-fly-scale", `${scale.toFixed(3)}`);
+      btn.style.setProperty("--btn-fly-rot", `${rot.toFixed(2)}deg`);
+      btn.style.setProperty("--cta-morph", `${ctaMorph.toFixed(3)}`);
+
+      const isFlying = p > 0.015 && p < 0.985;
+      const isLanded = p >= 0.985;
+      btn.classList.toggle("is-magic-flying", isFlying);
+      btn.classList.toggle("is-magic-landed", isLanded);
+      btn.classList.toggle("is-cta-expanded", u > 0.5);
+    };
+
+    const stepFlight = (now: number) => {
+      const dt = Math.min(0.05, (now - lastTime) / 1000);
+      lastTime = now;
+
+      const speed = 1 / 1.12; // 1.12s smooth magical flight duration
+      if (Math.abs(targetFlight - flightProgress) > 0.001) {
+        if (flightProgress < targetFlight) {
+          flightProgress = Math.min(targetFlight, flightProgress + dt * speed);
+        } else {
+          flightProgress = Math.max(targetFlight, flightProgress - dt * speed);
+        }
+        applySteamFlight(flightProgress);
+        flightRafId = window.requestAnimationFrame(stepFlight);
+      } else {
+        flightProgress = targetFlight;
+        applySteamFlight(flightProgress);
+        flightRafId = null;
+      }
+    };
+
+    const startFlightLoop = () => {
+      if (flightRafId === null) {
+        lastTime = performance.now();
+        flightRafId = window.requestAnimationFrame(stepFlight);
+      }
+    };
+
     let ticking = false;
     const onScroll = () => {
       if (!ticking) {
@@ -332,19 +592,37 @@ export default function LunorisLandingPage() {
             setRoadmapStep(clamped <= 0.02 ? 0 : stepIndex);
           }
 
+          if (finalCtaSlotRef.current) {
+            const ctaRect = finalCtaSlotRef.current.getBoundingClientRect();
+            const shouldFlyDown = ctaRect.top < window.innerHeight * 0.88;
+            const nextTarget = shouldFlyDown ? 1 : 0;
+            if (nextTarget !== targetFlight) {
+              targetFlight = nextTarget;
+              startFlightLoop();
+            } else if (flightProgress > 0.001 && flightRafId === null) {
+              // Keep button locked to the bottom slot while scrolling
+              applySteamFlight(flightProgress);
+            }
+          }
+
           ticking = false;
         });
         ticking = true;
       }
     };
     window.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("resize", onScroll, { passive: true });
     onScroll();
 
     return () => {
       observer.disconnect();
       window.removeEventListener("scroll", onScroll);
+      window.removeEventListener("resize", onScroll);
+      if (flightRafId !== null) {
+        window.cancelAnimationFrame(flightRafId);
+      }
     };
-  }, []);
+  }, ["steam-flight-v4"]);
 
   return (
     <div className="lunoris-page">
@@ -363,32 +641,58 @@ export default function LunorisLandingPage() {
               <a href="#news">Latest News</a>
               <a href="#world">The World</a>
               <a href="#companions">Companions</a>
-              <a href="#cast">Voice Cast</a>
+              <a href="#characters">Characters</a>
               <a href="#roadmap">Roadmap</a>
             </nav>
           </div>
 
           <div className="lunoris-header-right">
-            <a
-              href="https://store.steampowered.com/app/3053030/Lunoris/"
-              target="_blank"
-              rel="noopener"
-              className="lunoris-steam-btn lunoris-steam-btn-nav"
-            >
-              <BrushstrokeButtonBg />
-              <svg
-                className="steam-icon"
-                viewBox="0 0 24 24"
-                fill="currentColor"
-                aria-hidden="true"
+            <div ref={navBtnSlotRef} className="lunoris-steam-nav-slot">
+              <a
+                ref={steamBtnRef}
+                href="https://store.steampowered.com/app/3053030/Lunoris/"
+                target="_blank"
+                rel="noopener"
+                aria-label="Play Free Demo and Wishlist on Steam"
+                className="lunoris-steam-btn lunoris-steam-btn-nav"
               >
-                <path d="M11.979 0C5.678 0 .511 4.86.022 11.037l6.432 2.658c.545-.371 1.203-.59 1.912-.59.063 0 .125.004.188.006l2.861-4.142V8.91c0-2.495 2.028-4.524 4.524-4.524 2.494 0 4.524 2.031 4.524 4.527s-2.03 4.525-4.524 4.525h-.105l-4.076 2.911c0 .052.004.105.004.159 0 1.875-1.515 3.396-3.39 3.396-1.635 0-3.016-1.173-3.331-2.727L.436 15.27C1.862 20.307 6.486 24 11.979 24c6.627 0 11.999-5.373 11.999-12S18.605 0 11.979 0zM7.54 18.21l-1.473-.61c.262.543.714.999 1.314 1.25 1.297.539 2.793-.076 3.332-1.375.263-.63.264-1.319.005-1.949s-.75-1.121-1.377-1.383c-.624-.26-1.29-.249-1.878-.03l1.523.63c.956.4 1.409 1.5 1.009 2.455-.397.957-1.497 1.41-2.454 1.012H7.54zm11.415-9.303c0-1.662-1.353-3.015-3.015-3.015-1.665 0-3.015 1.353-3.015 3.015 0 1.665 1.35 3.015 3.015 3.015 1.663 0 3.015-1.35 3.015-3.015zm-5.273-.005c0-1.252 1.013-2.266 2.265-2.266 1.249 0 2.266 1.014 2.266 2.266 0 1.251-1.017 2.265-2.266 2.265-1.253 0-2.265-1.014-2.265-2.265z" />
-              </svg>
-              <div className="steam-btn-text">
-                <span className="steam-btn-main">Play Free Demo</span>
-                <span className="steam-btn-sub">Wishlist on Steam</span>
-              </div>
-            </a>
+                <span className="steam-magic-sparkles" aria-hidden="true">
+                  <CanvasStar className="magic-sparkle sp-1" color="#fbbf24" />
+                  <CanvasStar className="magic-sparkle sp-2" color="#e879f9" />
+                  <CanvasStar className="magic-sparkle sp-3" color="#38bdf8" />
+                  <CanvasStar className="magic-sparkle sp-4" color="#fbbf24" />
+                  <CanvasStar className="magic-sparkle sp-5" color="#c084fc" />
+                  <CanvasStar className="magic-sparkle sp-6" color="#fde68a" />
+                </span>
+
+                {/* Clean white transparent Steam logo in top header & during right-edge flight */}
+                <svg
+                  className="steam-nav-solo-icon"
+                  viewBox="0 0 24 24"
+                  fill="currentColor"
+                  aria-hidden="true"
+                >
+                  <path d="M11.979 0C5.678 0 .511 4.86.022 11.037l6.432 2.658c.545-.371 1.203-.59 1.912-.59.063 0 .125.004.188.006l2.861-4.142V8.91c0-2.495 2.028-4.524 4.524-4.524 2.494 0 4.524 2.031 4.524 4.527s-2.03 4.525-4.524 4.525h-.105l-4.076 2.911c0 .052.004.105.004.159 0 1.875-1.515 3.396-3.39 3.396-1.635 0-3.016-1.173-3.331-2.727L.436 15.27C1.862 20.307 6.486 24 11.979 24c6.627 0 11.999-5.373 11.999-12S18.605 0 11.979 0zM7.54 18.21l-1.473-.61c.262.543.714.999 1.314 1.25 1.297.539 2.793-.076 3.332-1.375.263-.63.264-1.319.005-1.949s-.75-1.121-1.377-1.383c-.624-.26-1.29-.249-1.878-.03l1.523.63c.956.4 1.409 1.5 1.009 2.455-.397.957-1.497 1.41-2.454 1.012H7.54zm11.415-9.303c0-1.662-1.353-3.015-3.015-3.015-1.665 0-3.015 1.353-3.015 3.015 0 1.665 1.35 3.015 3.015 3.015 1.663 0 3.015-1.35 3.015-3.015zm-5.273-.005c0-1.252 1.013-2.266 2.265-2.266 1.249 0 2.266 1.014 2.266 2.266 0 1.251-1.017 2.265-2.266 2.265-1.253 0-2.265-1.014-2.265-2.265z" />
+                </svg>
+
+                {/* Larger full brushstroke Steam CTA button revealed at the bottom of the page */}
+                <div className="steam-cta-full-body">
+                  <BrushstrokeButtonBg />
+                  <svg
+                    className="steam-icon"
+                    viewBox="0 0 24 24"
+                    fill="currentColor"
+                    aria-hidden="true"
+                  >
+                    <path d="M11.979 0C5.678 0 .511 4.86.022 11.037l6.432 2.658c.545-.371 1.203-.59 1.912-.59.063 0 .125.004.188.006l2.861-4.142V8.91c0-2.495 2.028-4.524 4.524-4.524 2.494 0 4.524 2.031 4.524 4.527s-2.03 4.525-4.524 4.525h-.105l-4.076 2.911c0 .052.004.105.004.159 0 1.875-1.515 3.396-3.39 3.396-1.635 0-3.016-1.173-3.331-2.727L.436 15.27C1.862 20.307 6.486 24 11.979 24c6.627 0 11.999-5.373 11.999-12S18.605 0 11.979 0zM7.54 18.21l-1.473-.61c.262.543.714.999 1.314 1.25 1.297.539 2.793-.076 3.332-1.375.263-.63.264-1.319.005-1.949s-.75-1.121-1.377-1.383c-.624-.26-1.29-.249-1.878-.03l1.523.63c.956.4 1.409 1.5 1.009 2.455-.397.957-1.497 1.41-2.454 1.012H7.54zm11.415-9.303c0-1.662-1.353-3.015-3.015-3.015-1.665 0-3.015 1.353-3.015 3.015 0 1.665 1.35 3.015 3.015 3.015 1.663 0 3.015-1.35 3.015-3.015zm-5.273-.005c0-1.252 1.013-2.266 2.265-2.266 1.249 0 2.266 1.014 2.266 2.266 0 1.251-1.017 2.265-2.266 2.265-1.253 0-2.265-1.014-2.265-2.265z" />
+                  </svg>
+                  <div className="steam-btn-text">
+                    <span className="steam-btn-main">Play Free Demo</span>
+                    <span className="steam-btn-sub">Wishlist on Steam</span>
+                  </div>
+                </div>
+              </a>
+            </div>
           </div>
         </div>
       </header>
@@ -453,7 +757,7 @@ export default function LunorisLandingPage() {
                   </svg>
                   <div className="lunoris-laurel-copy">
                     <span className="lunoris-laurel-kicker">
-                      WINNER · INDIE CASTLE AWARDS · GAMESCOM COLOGNE
+                      WINNER · INDIE CASTLE AWARDS · GAMESCOM COLOGNE 2026
                     </span>
                     <h3>The &ldquo;Van Gogh&rdquo; Award</h3>
                     <p>&ldquo;For the game that should be in an art museum&rdquo;</p>
@@ -616,7 +920,7 @@ export default function LunorisLandingPage() {
         </section>
 
         {/* =====================================================
-            2. FULL-BLEED MURAL: "BREAK THE ENDLESS DREAM LOOP" + 3 ARCHED DREAM CANVASES
+            2. FULL-BLEED MURAL: "BREAK THE ENDLESS DREAM LOOP" + ARCHED LOCATION PORTALS
            ===================================================== */}
         <section id="world" className="lunoris-mural-section">
           <div
@@ -633,81 +937,65 @@ export default function LunorisLandingPage() {
               <h2 className="lunoris-title-major">Break the Endless Dream Loop</h2>
               <div className="lunoris-center-bar" />
               <p className="lunoris-mural-body">
-                Adrift inside her own painted subconscious after a midnight crash on Wahm Lane, eighteen-year-old artist Lunora traverses floating Dream Islands, high-tension Nightmare arenas, playable 1988 Diriyah flashbacks, and the living 2000x2000 open garden of ELAR.
+                From the lavender-lit sanctuary of Lunora&apos;s House, step through stroked Dream Doors, swirling Van Gogh canvases, the sky-cyan Well of Elar, and deep-indigo Nightmare rifts—each realm bound by its own living portal spectrum.
               </p>
             </div>
 
-            {/* 3 Arched Painter's Canvases / Living Portals */}
-            <div className="lunoris-3tile-row">
-              <article
-                className="lunoris-media-tile canvas-portal-left"
-                data-reveal="up"
-                style={{ "--stagger": 0 } as React.CSSProperties}
-              >
-                <img
-                  src="/assets/elar-hope.jpg"
-                  alt="ELAR Open Sanctuary"
-                  className="lunoris-tile-bg"
-                />
-                <div className="lunoris-canvas-weave" aria-hidden="true" />
-                <div className="lunoris-tile-shade" />
-                <ArchedCanvasFrame />
-                <div className="lunoris-tile-caption">
-                  <span className="lunoris-tile-kicker">2000x2000 Open Sanctuary</span>
-                  <h3>ELAR: The Living Inner Garden</h3>
-                  <p>
-                    Zero enemies, zero timers. Carry Echo Lights from the dark to awaken 32 creatures across nine emotional biomes.
-                  </p>
-                </div>
-              </article>
-
-              <article
-                className="lunoris-media-tile canvas-portal-center"
-                data-reveal="up"
-                style={{ "--stagger": 1 } as React.CSSProperties}
-              >
-                <video
-                  className="lunoris-tile-bg"
-                  src="/assets/car-level-loop.mp4"
-                  poster="/assets/car-level-poster.jpg"
-                  autoPlay
-                  loop
-                  muted
-                  playsInline
-                />
-                <div className="lunoris-canvas-weave" aria-hidden="true" />
-                <div className="lunoris-tile-shade" />
-                <ArchedCanvasFrame />
-                <div className="lunoris-tile-caption">
-                  <span className="lunoris-tile-kicker">Playable Nostalgia</span>
-                  <h3>1988 Diriyah &amp; Retro Flashbacks</h3>
-                  <p>
-                    Drive a 1967 Chevrolet Impala through 1988 Diriyah and uncover family memories that shift into 2D arcade chapters.
-                  </p>
-                </div>
-              </article>
-
-              <article
-                className="lunoris-media-tile canvas-portal-right"
-                data-reveal="up"
-                style={{ "--stagger": 2 } as React.CSSProperties}
-              >
-                <img
-                  src="/assets/fearclaw-boss.png"
-                  alt="FearClaw Boss in the Nightmare Realm"
-                  className="lunoris-tile-bg"
-                />
-                <div className="lunoris-canvas-weave" aria-hidden="true" />
-                <div className="lunoris-tile-shade" />
-                <ArchedCanvasFrame />
-                <div className="lunoris-tile-caption">
-                  <span className="lunoris-tile-kicker">Beyond the Mirror</span>
-                  <h3>Nightmare Realms &amp; Bosses</h3>
-                  <p>
-                    Step through the apartment mirror to confront towering manifestations of trauma like FearClaw.
-                  </p>
-                </div>
-              </article>
+            {/* Arched Painter's Canvases / Living Location Portals */}
+            <div className="lunoris-3tile-row lunoris-locations-grid">
+              {WORLD_LOCATIONS_SHOWCASE.map((loc, idx) => (
+                <article
+                  key={loc.id}
+                  className={`lunoris-media-tile ${
+                    idx % 3 === 1
+                      ? "canvas-portal-center"
+                      : idx % 3 === 0
+                        ? "canvas-portal-left"
+                        : "canvas-portal-right"
+                  }`}
+                  data-reveal="up"
+                  style={
+                    {
+                      "--stagger": idx % 3,
+                      "--portal-accent": loc.accentColor,
+                      "--portal-glow": loc.glowColor,
+                      "--portal-glow-strong": loc.glowStrong,
+                    } as React.CSSProperties
+                  }
+                >
+                  {loc.isVideo && loc.videoSrc ? (
+                    <video
+                      className="lunoris-tile-bg"
+                      src={loc.videoSrc}
+                      poster={loc.image}
+                      autoPlay
+                      loop
+                      muted
+                      playsInline
+                    />
+                  ) : (
+                    <img
+                      src={loc.image}
+                      alt={loc.title}
+                      className="lunoris-tile-bg"
+                    />
+                  )}
+                  <div className="lunoris-canvas-weave" aria-hidden="true" />
+                  <div className="lunoris-tile-shade" />
+                  <ArchedCanvasFrame
+                    strokeColor={loc.strokeColor}
+                    innerColor={loc.innerColor}
+                    accentColor={loc.accentColor}
+                  />
+                  <div className="lunoris-tile-caption">
+                    <h3>{loc.title}</h3>
+                    <div className="lunoris-tile-divider" aria-hidden="true">
+                      <span className="lunoris-tile-divider-gem" />
+                    </div>
+                    <p>{loc.desc}</p>
+                  </div>
+                </article>
+              ))}
             </div>
           </div>
         </section>
@@ -767,16 +1055,16 @@ export default function LunorisLandingPage() {
         {/* =====================================================
             4. "WHO WILL WALK BESIDE YOU?" WATERCOLOR CANVAS GALLERY
            ===================================================== */}
-        <section id="cast" className="lunoris-heroes-section">
+        <section id="characters" className="lunoris-heroes-section">
           <div className="lunoris-wide-wrap lunoris-mural-center">
             <div className="lunoris-heading-stack" data-reveal="up">
               <span className="lunoris-title-minor">
-                Echoes of Wahm Lane &amp; Voice Cast
+                Echoes of Wahm Lane
               </span>
               <h2 className="lunoris-title-major">Who Will Walk Beside You?</h2>
               <div className="lunoris-center-bar" />
               <p className="lunoris-mural-body">
-                Meet the voiced characters, childhood memories, and guardians whose voices echo across Lunora&apos;s journey.
+                Meet the characters, childhood memories, and guardians who walk beside Lunora across her journey.
               </p>
             </div>
           </div>
@@ -802,12 +1090,6 @@ export default function LunorisLandingPage() {
                     <div className="lunoris-hero-tile-gradient" />
                     <DeckledCanvasFrame />
                     <div className="lunoris-hero-tile-info">
-                      <span
-                        className="lunoris-hero-tile-role"
-                        style={{ color: char.accent }}
-                      >
-                        {char.role} · {char.voiceOrTrait}
-                      </span>
                       <h3 className="lunoris-hero-tile-name">{char.name}</h3>
                       <p className="lunoris-hero-tile-lore">{char.lore}</p>
                     </div>
@@ -836,12 +1118,6 @@ export default function LunorisLandingPage() {
                     <div className="lunoris-hero-tile-gradient" />
                     <DeckledCanvasFrame />
                     <div className="lunoris-hero-tile-info">
-                      <span
-                        className="lunoris-hero-tile-role"
-                        style={{ color: char.accent }}
-                      >
-                        {char.role} · {char.voiceOrTrait}
-                      </span>
                       <h3 className="lunoris-hero-tile-name">{char.name}</h3>
                       <p className="lunoris-hero-tile-lore">{char.lore}</p>
                     </div>
@@ -956,33 +1232,20 @@ export default function LunorisLandingPage() {
           <div className="lunoris-mural-fade-top" aria-hidden="true" />
           <div className="lunoris-mural-fade-bottom" aria-hidden="true" />
 
-          <div className="lunoris-wide-wrap lunoris-final-cta-inner" data-reveal="up">
-            <span className="lunoris-title-minor">Step Inside the Dream</span>
-            <h2 className="lunoris-title-major">Find Your Way Back</h2>
+          <div className="lunoris-wide-wrap lunoris-final-cta-inner">
+            <div className="lunoris-final-cta-headings">
+              <span className="lunoris-title-minor">Step Inside the Dream</span>
+              <h2 className="lunoris-title-major">Find Your Way Back</h2>
+              <div
+                className="lunoris-center-bar"
+                style={{ margin: "1.5rem auto 2.6rem" }}
+              />
+            </div>
             <div
-              className="lunoris-center-bar"
-              style={{ margin: "1.5rem 0 2rem" }}
+              ref={finalCtaSlotRef}
+              className="lunoris-steam-cta-landing-slot"
+              aria-hidden="true"
             />
-            <a
-              href="https://store.steampowered.com/app/3053030/Lunoris/"
-              target="_blank"
-              rel="noopener"
-              className="lunoris-steam-btn lunoris-steam-btn-hero"
-            >
-              <BrushstrokeButtonBg />
-              <svg
-                className="steam-icon"
-                viewBox="0 0 24 24"
-                fill="currentColor"
-                aria-hidden="true"
-              >
-                <path d="M11.979 0C5.678 0 .511 4.86.022 11.037l6.432 2.658c.545-.371 1.203-.59 1.912-.59.063 0 .125.004.188.006l2.861-4.142V8.91c0-2.495 2.028-4.524 4.524-4.524 2.494 0 4.524 2.031 4.524 4.527s-2.03 4.525-4.524 4.525h-.105l-4.076 2.911c0 .052.004.105.004.159 0 1.875-1.515 3.396-3.39 3.396-1.635 0-3.016-1.173-3.331-2.727L.436 15.27C1.862 20.307 6.486 24 11.979 24c6.627 0 11.999-5.373 11.999-12S18.605 0 11.979 0zM7.54 18.21l-1.473-.61c.262.543.714.999 1.314 1.25 1.297.539 2.793-.076 3.332-1.375.263-.63.264-1.319.005-1.949s-.75-1.121-1.377-1.383c-.624-.26-1.29-.249-1.878-.03l1.523.63c.956.4 1.409 1.5 1.009 2.455-.397.957-1.497 1.41-2.454 1.012H7.54zm11.415-9.303c0-1.662-1.353-3.015-3.015-3.015-1.665 0-3.015 1.353-3.015 3.015 0 1.665 1.35 3.015 3.015 3.015 1.663 0 3.015-1.35 3.015-3.015zm-5.273-.005c0-1.252 1.013-2.266 2.265-2.266 1.249 0 2.266 1.014 2.266 2.266 0 1.251-1.017 2.265-2.266 2.265-1.253 0-2.265-1.014-2.265-2.265z" />
-              </svg>
-              <div className="steam-btn-text">
-                <span className="steam-btn-main">Play Free Demo</span>
-                <span className="steam-btn-sub">Download Now on Steam</span>
-              </div>
-            </a>
           </div>
         </section>
       </main>

@@ -4,7 +4,7 @@ export interface NewsArticle {
   date: string;
   readTime: string;
   category: "Update" | "World & Lore" | "Video";
-  ctaLabel: "READ MORE" | "WATCH NOW";
+  ctaLabel: "READ MORE";
   isVideo?: boolean;
   videoSrc?: string;
   image: string;
@@ -100,7 +100,7 @@ export const LUNORIS_NEWS: NewsArticle[] = [
     date: "September 28, 2026",
     readTime: "Video Feature",
     category: "Video",
-    ctaLabel: "WATCH NOW",
+    ctaLabel: "READ MORE",
     isVideo: true,
     videoSrc: "/assets/car-level-loop.mp4",
     image: "/assets/car-level-poster.jpg",
@@ -183,29 +183,29 @@ export const LUNORIS_NEWS: NewsArticle[] = [
   },
   {
     slug: "voices-of-wahm-lane-cast-spotlight",
-    title: "Echoes of Wahm Lane: Spotlight on the Voice Cast of Lunoris",
+    title: "Echoes of Wahm Lane: Spotlight on the Characters of Lunoris",
     date: "August 22, 2026",
     readTime: "5 Min Read",
     category: "World & Lore",
     ctaLabel: "READ MORE",
     image: "/assets/lunora-render.png",
     excerpt:
-      "Meet the acclaimed voice actors bringing Lunora, Young Lunora, her father John Ford, Kai, Kane, and Centric to life across waking-world echoes and dream realms.",
-    lead: "Every realm in Lunoris: Piece of Mind is threaded with voices — both the memories of the night on Wahm Lane and the quiet conversations reaching Lunora from the waking world.",
+      "Meet the key figures of Lunora's life — Young Lunora, her father John Ford, Kai, Kane, and Samantha — across waking-world echoes and dream realms.",
+    lead: "Every realm in Lunoris: Piece of Mind is threaded with memories — both the fragments of the night on Wahm Lane and the quiet echoes reaching Lunora from the waking world.",
     highlights: [
-      "Kira Buckland as 18-year-old protagonist Lunora & LilyPichu as Young Lunora in watercolor flashbacks",
-      "Scott Dreier as Lunora's devoted father and painting partner, John Ford",
-      "Ryan Drummond (Kai), David Humphrey (Kane), and Pete Capella (Centric)",
+      "18-year-old protagonist Lunora & Young Lunora in childhood watercolor flashbacks",
+      "John Ford, Lunora's devoted father and painting partner who anchors her journey",
+      "Kai, Kane, and Samantha — the pivotal figures connected to the night on Wahm Lane",
     ],
     sections: [
       {
-        heading: "Voices Across Two Realities",
+        heading: "Echoes Across Two Realities",
         paragraphs: [
-          "As players journey deeper into the seven grief-stage chapters, audio echoes from the waking world bleed into the dreamscape sky. Hearing John Ford's voice while restoring a canvas in ELAR grounds the fantastical imagery in an intimate human story of family, forgiveness, and awakening.",
+          "As players journey deeper into the seven grief-stage chapters, memories from the waking world bleed into the dreamscape sky. Uncovering John Ford's keepsakes while restoring a canvas in ELAR grounds the fantastical imagery in an intimate human story of family, forgiveness, and awakening.",
         ],
         image: "/assets/dad-portrait.png",
         imageCaption:
-          "John Ford, Lunora's father and artistic mentor, whose voice guides her back toward waking life.",
+          "John Ford, Lunora's father and artistic mentor, whose memory guides her back toward waking life.",
       },
     ],
   },
