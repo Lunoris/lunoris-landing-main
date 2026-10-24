@@ -42,12 +42,12 @@ export function slugifyTitle(title: string): string {
 export function validateSlug(rawSlug: string): string {
   const cleaned = rawSlug.trim().toLowerCase();
   if (
-    cleaned.length < 3 ||
+    cleaned.length < 1 ||
     cleaned.length > 120 ||
     !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(cleaned)
   ) {
     throw new Error(
-      'Invalid "slug". Only lowercase letters, numbers, and single hyphens are allowed (3-120 chars).'
+      'Invalid "slug". Only lowercase letters, numbers, and single hyphens are allowed (1-120 chars).'
     );
   }
   return cleaned;
@@ -119,8 +119,8 @@ export function validateAndBuildNewsArticle(
   }
 
   const lead =
-    input.lead !== undefined
-      ? cleanText(input.lead, "lead", 10, 1500)
+    input.lead !== undefined && typeof input.lead === "string" && input.lead.trim().length > 0
+      ? cleanText(input.lead, "lead", 1, 1500)
       : existingArticle?.lead || excerpt;
 
   const rawImage =
@@ -157,7 +157,7 @@ export function validateAndBuildNewsArticle(
       );
     }
     highlights = input.highlights.map((item, idx) =>
-      cleanText(item, `highlights[${idx}]`, 2, 320)
+      cleanText(item, `highlights[${idx}]`, 1, 320)
     );
   }
 
@@ -182,7 +182,7 @@ export function validateAndBuildNewsArticle(
       const heading = cleanText(
         sec.heading,
         `sections[${sIdx}].heading`,
-        2,
+        1,
         200
       );
 
@@ -197,7 +197,7 @@ export function validateAndBuildNewsArticle(
       }
 
       const paragraphs = sec.paragraphs.map((p, pIdx) =>
-        cleanText(p, `sections[${sIdx}].paragraphs[${pIdx}]`, 2, 4000)
+        cleanText(p, `sections[${sIdx}].paragraphs[${pIdx}]`, 1, 4000)
       );
 
       const builtSection: NewsArticle["sections"][number] = {
@@ -209,7 +209,7 @@ export function validateAndBuildNewsArticle(
         builtSection.quote = cleanText(
           sec.quote,
           `sections[${sIdx}].quote`,
-          2,
+          1,
           600
         );
       }
@@ -225,7 +225,7 @@ export function validateAndBuildNewsArticle(
         builtSection.imageCaption = cleanText(
           sec.imageCaption,
           `sections[${sIdx}].imageCaption`,
-          2,
+          1,
           400
         );
       }

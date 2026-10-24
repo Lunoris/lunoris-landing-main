@@ -25,6 +25,17 @@ export function useLunorisScrollEffects() {
     );
     elements.forEach((el) => observer.observe(el));
 
+    // Also observe any [data-reveal] elements rendered asynchronously (e.g. after fetch)
+    const mutationObserver = new MutationObserver(() => {
+      document
+        .querySelectorAll("[data-reveal]:not(.is-visible)")
+        .forEach((el) => observer.observe(el));
+    });
+    mutationObserver.observe(document.body, {
+      childList: true,
+      subtree: true,
+    });
+
     let flightProgress = 0;
     let targetFlight = 0;
     let flightRafId: number | null = null;
@@ -199,6 +210,7 @@ export function useLunorisScrollEffects() {
 
     return () => {
       observer.disconnect();
+      mutationObserver.disconnect();
       window.removeEventListener("scroll", onScroll);
       window.removeEventListener("resize", onScroll);
       if (flightRafId !== null) {

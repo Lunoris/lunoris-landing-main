@@ -90,6 +90,11 @@ export async function POST(req: NextRequest) {
         }
       }
 
+      const rawMirror = formData.get("mirrorExternalMedia");
+      if (typeof rawMirror === "string") {
+        payload.mirrorExternalMedia = rawMirror.trim().toLowerCase() === "true";
+      }
+
       const rawHighlights = formData.get("highlights");
       if (typeof rawHighlights === "string" && rawHighlights.trim()) {
         payload.highlights = JSON.parse(rawHighlights);

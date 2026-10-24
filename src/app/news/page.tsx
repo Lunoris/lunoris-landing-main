@@ -29,7 +29,7 @@ export default function LunorisNewsArchivePage() {
     fetch("/api/news", { cache: "no-store" })
       .then((res) => (res.ok ? res.json() : null))
       .then((data) => {
-        if (active && data && Array.isArray(data.articles) && data.articles.length > 0) {
+        if (active && data && Array.isArray(data.articles)) {
           setArticles(data.articles);
         }
       })
@@ -46,7 +46,7 @@ export default function LunorisNewsArchivePage() {
       ? articles
       : articles.filter((item) => item.category === selectedCategory);
 
-  const featuredArticle = articles[0] || LUNORIS_NEWS[0];
+  const featuredArticle = articles[0];
 
   return (
     <div className="lunoris-page news-archive-page">
@@ -78,33 +78,39 @@ export default function LunorisNewsArchivePage() {
               dives into the realms of Lunoris: Piece of Mind.
             </p>
 
-            <Link
-              href={`/news/${featuredArticle.slug}`}
-              className="news-featured-canvas"
-            >
-              <div className="news-featured-media">
-                <img
-                  src={featuredArticle.image}
-                  alt={featuredArticle.title}
-                  className="news-featured-img"
-                />
-                <div className="lunoris-canvas-weave" aria-hidden="true" />
-                <span className="news-category-pill">Featured Chronicle</span>
-              </div>
-              <div className="news-featured-content">
-                <div className="lunoris-news-meta">
-                  <span>{featuredArticle.date}</span>
-                  <span className="news-meta-sep">|</span>
-                  <span>{featuredArticle.readTime}</span>
+            {featuredArticle && (
+              <Link
+                href={`/news/${featuredArticle.slug}`}
+                className="news-featured-canvas"
+              >
+                <div className="news-featured-media">
+                  <img
+                    src={featuredArticle.image}
+                    alt={featuredArticle.title}
+                    className="news-featured-img"
+                  />
+                  <div className="lunoris-canvas-weave" aria-hidden="true" />
+                  <span className="news-category-pill">Featured Chronicle</span>
                 </div>
-                <h2 className="news-featured-title">{featuredArticle.title}</h2>
-                <p className="news-featured-excerpt">{featuredArticle.lead}</p>
-                <span className="lunoris-news-cta">
-                  {featuredArticle.ctaLabel}
-                  <span className="lunoris-news-cta-line" />
-                </span>
-              </div>
-            </Link>
+                <div className="news-featured-content">
+                  <div className="lunoris-news-meta">
+                    <span>{featuredArticle.date}</span>
+                    <span className="news-meta-sep">|</span>
+                    <span>{featuredArticle.readTime}</span>
+                  </div>
+                  <h2 className="news-featured-title">
+                    {featuredArticle.title}
+                  </h2>
+                  <p className="news-featured-excerpt">
+                    {featuredArticle.lead}
+                  </p>
+                  <span className="lunoris-news-cta">
+                    {featuredArticle.ctaLabel}
+                    <span className="lunoris-news-cta-line" />
+                  </span>
+                </div>
+              </Link>
+            )}
           </div>
         </section>
 
@@ -125,17 +131,31 @@ export default function LunorisNewsArchivePage() {
               ))}
             </div>
 
-            <div className="lunoris-news-grid lunoris-news-archive-grid">
-              {filteredNews.map((article, idx) => (
-                <NewsArticleCard
-                  key={article.slug}
-                  article={article}
-                  staggerMs={idx * 90}
-                  forceVisible
-                  frameVariant="tall"
-                />
-              ))}
-            </div>
+            {filteredNews.length > 0 ? (
+              <div className="lunoris-news-grid lunoris-news-archive-grid">
+                {filteredNews.map((article, idx) => (
+                  <NewsArticleCard
+                    key={article.slug}
+                    article={article}
+                    staggerMs={idx * 90}
+                    forceVisible
+                    frameVariant="tall"
+                  />
+                ))}
+              </div>
+            ) : (
+              <p
+                className="lunoris-mural-body"
+                style={{
+                  margin: "0 auto",
+                  textAlign: "center",
+                  padding: "3rem 0",
+                  opacity: 0.72,
+                }}
+              >
+                No chronicles published yet.
+              </p>
+            )}
           </div>
         </section>
       </main>

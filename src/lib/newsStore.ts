@@ -21,11 +21,11 @@ async function ensureNewsStoreInitialized(): Promise<NewsArticle[]> {
   try {
     const raw = await fs.readFile(NEWS_FILE, "utf8");
     const parsed = JSON.parse(raw);
-    if (Array.isArray(parsed) && parsed.length > 0) {
+    if (Array.isArray(parsed)) {
       return parsed as NewsArticle[];
     }
   } catch {
-    // File does not exist yet or is empty; seed with LUNORIS_NEWS
+    // File does not exist yet or is invalid JSON; initialize with LUNORIS_NEWS
   }
 
   await fs.mkdir(DATA_DIR, { recursive: true });
@@ -55,11 +55,26 @@ export async function getNewsBySlug(
 
 export async function upsertNewsArticle(
   article: NewsArticle,
-  options: { allowOverwrite?: boolean } = { allowOverwrite: true }
+  options: { allowOverwrite?: boolean; targetSlug?: string } = {
+    allowOverwrite: true,
+  }
 ): Promise<{ article: NewsArticle; created: boolean }> {
   return enqueueWrite(async () => {
     const all = await ensureNewsStoreInitialized();
-    const existingIndex = all.findIndex((item) => item.slug === article.slug);
+    const lookupSlug = options.targetSlug || article.slug;
+    const existingIndex = all.findIndex((item) => item.slug === lookupSlug);
+
+    // If renaming slug via PATCH (lookupSlug !== article.slug), ensure no other article already owns the new slug
+    if (lookupSlug !== article.slug) {
+      const collisionIndex = all.findIndex(
+        (item, idx) => item.slug === article.slug && idx !== existingIndex
+      );
+      if (collisionIndex !== -1) {
+        throw new Error(
+          `Cannot rename slug to "${article.slug}": another article with that slug already exists.`
+        );
+      }
+    }
 
     if (existingIndex !== -1 && options.allowOverwrite === false) {
       throw new Error(
@@ -69,6 +84,7 @@ export async function upsertNewsArticle(
 
     let created = true;
     if (existingIndex !== -1) {
+      // Update in-place to preserve exact list order (even when slug is renamed)
       all[existingIndex] = article;
       created = false;
     } else {
