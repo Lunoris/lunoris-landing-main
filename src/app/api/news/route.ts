@@ -1,9 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { revalidatePath } from "next/cache";
-import { verifyNewsWriteAuth, withSecurityHeaders } from "@/lib/newsAuth";
+import {
+  readAuthenticatedJsonText,
+  verifyNewsWriteAuth,
+  withSecurityHeaders,
+} from "@/lib/newsAuth";
 import {
   downloadAndSaveExternalMedia,
-  saveUploadedMediaBuffer,
+  saveUploadedFileObject,
 } from "@/lib/mediaUpload";
 import { validateAndBuildNewsArticle } from "@/lib/newsValidator";
 import { getAllNews, upsertNewsArticle } from "@/lib/newsStore";
@@ -110,8 +114,7 @@ export async function POST(req: NextRequest) {
         formData.get("imageFile") ??
         (formData.get("image") instanceof File ? formData.get("image") : null);
       if (imageFile instanceof File && imageFile.size > 0) {
-        const buf = Buffer.from(await imageFile.arrayBuffer());
-        const savedImg = await saveUploadedMediaBuffer(buf, "image");
+        const savedImg = await saveUploadedFileObject(imageFile, "image");
         payload.image = savedImg.url;
       }
 
@@ -120,8 +123,7 @@ export async function POST(req: NextRequest) {
         formData.get("videoFile") ??
         (formData.get("video") instanceof File ? formData.get("video") : null);
       if (videoFile instanceof File && videoFile.size > 0) {
-        const buf = Buffer.from(await videoFile.arrayBuffer());
-        const savedVid = await saveUploadedMediaBuffer(buf, "video");
+        const savedVid = await saveUploadedFileObject(videoFile, "video");
         payload.videoSrc = savedVid.url;
         payload.isVideo = true;
       }
@@ -131,8 +133,7 @@ export async function POST(req: NextRequest) {
         for (let i = 0; i < payload.sections.length; i++) {
           const secFile = formData.get(`sectionImage_${i}`);
           if (secFile instanceof File && secFile.size > 0) {
-            const buf = Buffer.from(await secFile.arrayBuffer());
-            const savedSecImg = await saveUploadedMediaBuffer(buf, "image");
+            const savedSecImg = await saveUploadedFileObject(secFile, "image");
             const secObj = payload.sections[i] as Record<string, unknown>;
             if (secObj && typeof secObj === "object") {
               secObj.image = savedSecImg.url;
@@ -151,23 +152,13 @@ export async function POST(req: NextRequest) {
     }
   } else {
     // Mode B: application/json (supports local media paths OR external https:// media URLs)
-    const rawBody = await req.text();
-    if (Buffer.byteLength(rawBody, "utf8") > MAX_JSON_BODY_BYTES) {
-      return withSecurityHeaders(
-        NextResponse.json(
-          { error: "Request JSON body exceeds 256 KB limit." },
-          { status: 413 }
-        )
-      );
-    }
-
-    const auth = verifyNewsWriteAuth(req, rawBody);
-    if (!auth.ok && auth.response) {
-      return withSecurityHeaders(auth.response);
+    const bodyResult = await readAuthenticatedJsonText(req, MAX_JSON_BODY_BYTES);
+    if (!bodyResult.ok) {
+      return bodyResult.response;
     }
 
     try {
-      payload = JSON.parse(rawBody) as Record<string, unknown>;
+      payload = JSON.parse(bodyResult.rawBody) as Record<string, unknown>;
     } catch {
       return withSecurityHeaders(
         NextResponse.json({ error: "Invalid JSON body." }, { status: 400 })

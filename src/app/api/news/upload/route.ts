@@ -1,26 +1,32 @@
 import { NextRequest, NextResponse } from "next/server";
-import { verifyNewsWriteAuth, withSecurityHeaders } from "@/lib/newsAuth";
+import {
+  readAuthenticatedJsonText,
+  verifyNewsWriteAuth,
+  withSecurityHeaders,
+} from "@/lib/newsAuth";
 import {
   downloadAndSaveExternalMedia,
-  saveUploadedMediaBuffer,
+  saveUploadedFileObject,
   type SavedMediaAsset,
 } from "@/lib/mediaUpload";
 
 export const runtime = "nodejs";
+
+const MAX_UPLOAD_JSON_BYTES = 16 * 1024; // 16 KB
+const MAX_FILES_PER_UPLOAD = 20;
 
 export async function POST(req: NextRequest) {
   const contentType = req.headers.get("content-type") || "";
 
   // 1. JSON mode: download & mirror an external media URL into /uploads/news/
   if (contentType.includes("application/json")) {
-    const rawBody = await req.text();
-    const auth = verifyNewsWriteAuth(req, rawBody);
-    if (!auth.ok && auth.response) {
-      return withSecurityHeaders(auth.response);
+    const bodyResult = await readAuthenticatedJsonText(req, MAX_UPLOAD_JSON_BYTES);
+    if (!bodyResult.ok) {
+      return bodyResult.response;
     }
 
     try {
-      const body = JSON.parse(rawBody) as {
+      const body = JSON.parse(bodyResult.rawBody) as {
         url?: string;
         kind?: "image" | "video";
       };
@@ -67,15 +73,18 @@ export async function POST(req: NextRequest) {
 
       for (const [key, value] of formData.entries()) {
         if (value instanceof File && value.size > 0) {
+          if (uploadedAssets.length >= MAX_FILES_PER_UPLOAD) {
+            throw new Error(
+              `Too many files in a single upload request (maximum ${MAX_FILES_PER_UPLOAD}).`
+            );
+          }
           const expectedKind =
             key.toLowerCase().includes("video")
               ? "video"
               : key.toLowerCase().includes("image")
                 ? "image"
                 : undefined;
-          const arrayBuffer = await value.arrayBuffer();
-          const buffer = Buffer.from(arrayBuffer);
-          const saved = await saveUploadedMediaBuffer(buffer, expectedKind);
+          const saved = await saveUploadedFileObject(value, expectedKind);
           uploadedAssets.push(saved);
         }
       }

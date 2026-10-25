@@ -81,7 +81,7 @@ export function HeaderBar({
                 ref={steamBtnRef}
                 href={STEAM_STORE_URL}
                 target="_blank"
-                rel="noopener"
+                rel="noopener noreferrer"
                 aria-label="Play Free Demo and Wishlist on Steam"
                 className="lunoris-steam-btn lunoris-steam-btn-nav"
               >
@@ -113,7 +113,7 @@ export function HeaderBar({
             <a
               href={STEAM_STORE_URL}
               target="_blank"
-              rel="noopener"
+              rel="noopener noreferrer"
               aria-label="Play Free Demo and Wishlist on Steam"
               className="lunoris-steam-btn lunoris-steam-btn-nav"
             >

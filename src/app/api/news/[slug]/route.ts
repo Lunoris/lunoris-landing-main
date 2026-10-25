@@ -1,9 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { revalidatePath } from "next/cache";
-import { verifyNewsWriteAuth, withSecurityHeaders } from "@/lib/newsAuth";
+import {
+  readAuthenticatedJsonText,
+  verifyNewsWriteAuth,
+  withSecurityHeaders,
+} from "@/lib/newsAuth";
 import {
   downloadAndSaveExternalMedia,
-  saveUploadedMediaBuffer,
+  saveUploadedFileObject,
 } from "@/lib/mediaUpload";
 import {
   validateAndBuildNewsArticle,
@@ -54,6 +58,25 @@ export async function PATCH(
   { params }: { params: Promise<{ slug: string }> }
 ) {
   try {
+    const contentType = req.headers.get("content-type") || "";
+    let payload: Record<string, unknown> = {};
+    let formData: FormData | null = null;
+
+    // 1. Authenticate and safely read body BEFORE reading disk or checking slug existence
+    if (contentType.includes("multipart/form-data")) {
+      const auth = verifyNewsWriteAuth(req, "");
+      if (!auth.ok && auth.response) {
+        return withSecurityHeaders(auth.response);
+      }
+      formData = await req.formData();
+    } else {
+      const bodyResult = await readAuthenticatedJsonText(req, MAX_JSON_BODY_BYTES);
+      if (!bodyResult.ok) {
+        return bodyResult.response;
+      }
+      payload = JSON.parse(bodyResult.rawBody) as Record<string, unknown>;
+    }
+
     const { slug } = await params;
     const safeSlug = validateSlug(slug);
     const existing = await getNewsBySlug(safeSlug);
@@ -64,16 +87,7 @@ export async function PATCH(
       );
     }
 
-    const contentType = req.headers.get("content-type") || "";
-    let payload: Record<string, unknown> = {};
-
-    if (contentType.includes("multipart/form-data")) {
-      const auth = verifyNewsWriteAuth(req, "");
-      if (!auth.ok && auth.response) {
-        return withSecurityHeaders(auth.response);
-      }
-
-      const formData = await req.formData();
+    if (formData) {
       const rawJsonField = formData.get("payload") ?? formData.get("data");
       if (typeof rawJsonField === "string" && rawJsonField.trim()) {
         payload = JSON.parse(rawJsonField) as Record<string, unknown>;
@@ -117,8 +131,7 @@ export async function PATCH(
         formData.get("imageFile") ??
         (formData.get("image") instanceof File ? formData.get("image") : null);
       if (imageFile instanceof File && imageFile.size > 0) {
-        const buf = Buffer.from(await imageFile.arrayBuffer());
-        const savedImg = await saveUploadedMediaBuffer(buf, "image");
+        const savedImg = await saveUploadedFileObject(imageFile, "image");
         payload.image = savedImg.url;
       }
 
@@ -127,8 +140,7 @@ export async function PATCH(
         formData.get("videoFile") ??
         (formData.get("video") instanceof File ? formData.get("video") : null);
       if (videoFile instanceof File && videoFile.size > 0) {
-        const buf = Buffer.from(await videoFile.arrayBuffer());
-        const savedVid = await saveUploadedMediaBuffer(buf, "video");
+        const savedVid = await saveUploadedFileObject(videoFile, "video");
         payload.videoSrc = savedVid.url;
         payload.isVideo = true;
       }
@@ -145,8 +157,7 @@ export async function PATCH(
       for (let i = 0; i < baseSections.length; i++) {
         const secFile = formData.get(`sectionImage_${i}`);
         if (secFile instanceof File && secFile.size > 0) {
-          const buf = Buffer.from(await secFile.arrayBuffer());
-          const savedSecImg = await saveUploadedMediaBuffer(buf, "image");
+          const savedSecImg = await saveUploadedFileObject(secFile, "image");
           const secObj = baseSections[i] as Record<string, unknown>;
           if (secObj && typeof secObj === "object") {
             secObj.image = savedSecImg.url;
@@ -157,22 +168,6 @@ export async function PATCH(
       if (sectionImageModified && !Array.isArray(payload.sections)) {
         payload.sections = baseSections;
       }
-    } else {
-      const rawBody = await req.text();
-      if (Buffer.byteLength(rawBody, "utf8") > MAX_JSON_BODY_BYTES) {
-        return withSecurityHeaders(
-          NextResponse.json(
-            { error: "Request JSON body exceeds 256 KB limit." },
-            { status: 413 }
-          )
-        );
-      }
-
-      const auth = verifyNewsWriteAuth(req, rawBody);
-      if (!auth.ok && auth.response) {
-        return withSecurityHeaders(auth.response);
-      }
-      payload = JSON.parse(rawBody) as Record<string, unknown>;
     }
 
     // Optional: if mirrorExternalMedia === true, download remote media links locally
