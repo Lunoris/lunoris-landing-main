@@ -28,10 +28,15 @@ async function ensureNewsStoreInitialized(): Promise<NewsArticle[]> {
     // File does not exist yet or is invalid JSON; initialize with LUNORIS_NEWS
   }
 
-  await fs.mkdir(DATA_DIR, { recursive: true });
-  const tempFile = `${NEWS_FILE}.seed-${process.pid}.tmp`;
-  await fs.writeFile(tempFile, JSON.stringify(LUNORIS_NEWS, null, 2), "utf8");
-  await fs.rename(tempFile, NEWS_FILE);
+  // Seed the store from the built-in articles. Where the disk is read-only (Vercel), serve them from memory.
+  try {
+    await fs.mkdir(DATA_DIR, { recursive: true });
+    const tempFile = `${NEWS_FILE}.seed-${process.pid}.tmp`;
+    await fs.writeFile(tempFile, JSON.stringify(LUNORIS_NEWS, null, 2), "utf8");
+    await fs.rename(tempFile, NEWS_FILE);
+  } catch {
+    // read-only filesystem: nothing to persist to
+  }
   return [...LUNORIS_NEWS];
 }
 
