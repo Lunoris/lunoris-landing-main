@@ -3200,3 +3200,443 @@ body {
 }
 
 
+
+/* ============================================================================
+   LUNORIS TEAM SECTION & FULL STUDIO ROSTER PAGE (/team)
+   ============================================================================ */
+
+.lunoris-team-section {
+  position: relative;
+  padding: clamp(5.5rem, calc(8vw * var(--vu)), 8rem) 0;
+  background:
+    radial-gradient(
+      ellipse 78% 52% at 50% 0%,
+      rgba(229, 193, 128, 0.08) 0%,
+      rgba(168, 85, 247, 0.06) 42%,
+      rgba(6, 5, 11, 0) 72%
+    ),
+    linear-gradient(180deg, #06050b 0%, #0b0815 50%, #06050b 100%);
+  border-top: 1px solid rgba(229, 193, 128, 0.14);
+  overflow: hidden;
+}
+
+.lunoris-team-intro {
+  max-width: 720px;
+  margin: 0.75rem auto 0;
+  text-align: center;
+}
+
+.lunoris-leaders-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: clamp(1.5rem, calc(2.2vw * var(--vu)), 2.35rem);
+  align-items: stretch;
+  margin-top: 2.5rem;
+}
+
+.team-page-leaders-grid {
+  margin-top: 3.25rem;
+  text-align: left;
+}
+
+.lunoris-leader-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  background: linear-gradient(
+    170deg,
+    rgba(25, 20, 42, 0.95) 0%,
+    rgba(10, 8, 19, 0.98) 100%
+  );
+  border-radius: 36px 12px 38px 14px;
+  padding: 1rem 1rem 1.85rem;
+  box-shadow:
+    0 22px 48px rgba(0, 0, 0, 0.82),
+    inset 0 0 38px rgba(229, 193, 128, 0.05);
+  overflow: hidden;
+  transition:
+    transform 0.45s cubic-bezier(0.16, 1, 0.3, 1),
+    box-shadow 0.45s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.lunoris-leader-card:hover {
+  transform: translateY(-8px);
+  box-shadow:
+    0 28px 60px rgba(0, 0, 0, 0.92),
+    0 0 34px rgba(229, 193, 128, 0.2),
+    inset 0 0 42px rgba(229, 193, 128, 0.09);
+}
+
+/* Profile Portrait Slot */
+.lunoris-leader-portrait-slot {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 4 / 3.4;
+  border-radius: 28px 8px 24px 8px;
+  overflow: hidden;
+  background: radial-gradient(
+    circle at 50% 38%,
+    rgba(48, 34, 78, 0.78) 0%,
+    rgba(12, 9, 22, 0.96) 75%
+  );
+  border: 1px solid rgba(229, 193, 128, 0.26);
+  box-shadow: inset 0 0 28px rgba(0, 0, 0, 0.75);
+}
+
+.lunoris-leader-photo {
+  position: relative;
+  z-index: 2;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  transition: transform 0.65s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.lunoris-leader-card:hover .lunoris-leader-photo {
+  transform: scale(1.06);
+}
+
+.lunoris-leader-portrait-placeholder {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  color: rgba(229, 193, 128, 0.78);
+}
+
+.lunoris-leader-portrait-placeholder.is-hidden {
+  display: none;
+}
+
+.lunoris-leader-halo {
+  position: absolute;
+  width: 160px;
+  height: 160px;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle,
+    var(--leader-accent, #f5b851) 0%,
+    transparent 70%
+  );
+  opacity: 0.22;
+  filter: blur(18px);
+  pointer-events: none;
+}
+
+.lunoris-leader-silhouette {
+  width: 86px;
+  height: 86px;
+  color: rgba(229, 193, 128, 0.42);
+  transition:
+    transform 0.45s ease,
+    color 0.45s ease;
+}
+
+.lunoris-leader-card:hover .lunoris-leader-silhouette {
+  transform: scale(1.06);
+  color: rgba(245, 184, 81, 0.76);
+}
+
+.lunoris-leader-monogram {
+  font-family: var(--font-display);
+  font-size: 1.55rem;
+  letter-spacing: 0.16em;
+  color: #f6f2eb;
+  text-shadow: 0 4px 18px rgba(0, 0, 0, 0.85);
+}
+
+.lunoris-leader-photo-caption {
+  font-size: 0.68rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: rgba(189, 181, 209, 0.62);
+}
+
+.lunoris-leader-portrait-vignette {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  background: linear-gradient(
+    180deg,
+    rgba(8, 6, 14, 0.06) 0%,
+    rgba(8, 6, 14, 0.14) 58%,
+    rgba(10, 8, 19, 0.88) 100%
+  );
+  pointer-events: none;
+}
+
+.lunoris-leader-role-badge {
+  position: absolute;
+  top: 0.85rem;
+  left: 0.9rem;
+  z-index: 4;
+  padding: 0.28rem 0.85rem;
+  border-radius: 16px 5px 16px 5px;
+  font-size: 0.74rem;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  backdrop-filter: blur(8px);
+  background: rgba(22, 16, 36, 0.86);
+  color: #f5d698;
+  border: 1px solid rgba(229, 193, 128, 0.58);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.6);
+}
+
+.lunoris-leader-body {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  padding: 1.3rem 1.05rem 0.2rem;
+}
+
+.lunoris-leader-dept {
+  font-size: 0.78rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #e5c180;
+  margin-bottom: 0.4rem;
+}
+
+.lunoris-leader-name {
+  font-family: var(--font-display);
+  font-size: clamp(1.55rem, calc(2.1vw * var(--vu)), 2rem);
+  line-height: 1.18;
+  color: #f7f3eb;
+  margin-bottom: 0.65rem;
+}
+
+.lunoris-leader-bio {
+  font-size: 0.98rem;
+  line-height: 1.58;
+  color: #c2bad6;
+}
+
+.lunoris-team-cta-btn {
+  min-width: 260px;
+}
+
+/* Full Studio Roster Page (/team) */
+.lunoris-team-departments-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 3.5rem;
+  margin-top: 1.5rem;
+}
+
+.lunoris-dept-group {
+  display: flex;
+  flex-direction: column;
+  gap: 1.4rem;
+}
+
+.lunoris-dept-header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.lunoris-dept-title {
+  font-family: var(--font-display);
+  font-size: clamp(1.35rem, calc(2vw * var(--vu)), 1.85rem);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #f6f2eb;
+  white-space: nowrap;
+}
+
+.lunoris-dept-count {
+  font-size: 0.78rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #e5c180;
+  padding: 0.22rem 0.72rem;
+  border-radius: 999px;
+  border: 1px solid rgba(229, 193, 128, 0.36);
+  background: rgba(24, 18, 38, 0.72);
+  white-space: nowrap;
+}
+
+.lunoris-dept-line {
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    rgba(229, 193, 128, 0.45) 0%,
+    rgba(229, 193, 128, 0.04) 100%
+  );
+}
+
+.lunoris-roster-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1.35rem;
+}
+
+.lunoris-roster-card {
+  position: relative;
+  background: linear-gradient(
+    165deg,
+    rgba(24, 19, 39, 0.92) 0%,
+    rgba(11, 9, 19, 0.97) 100%
+  );
+  border-radius: 26px 10px 28px 10px;
+  padding: 1.25rem 1.35rem;
+  box-shadow:
+    0 14px 34px rgba(0, 0, 0, 0.68),
+    inset 0 0 26px rgba(229, 193, 128, 0.04);
+  overflow: hidden;
+  transition:
+    transform 0.35s cubic-bezier(0.16, 1, 0.3, 1),
+    box-shadow 0.35s ease;
+}
+
+.lunoris-roster-card:hover {
+  transform: translateY(-5px);
+  box-shadow:
+    0 20px 44px rgba(0, 0, 0, 0.85),
+    0 0 24px rgba(229, 193, 128, 0.15);
+}
+
+.lunoris-roster-card-inner {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  gap: 1.1rem;
+}
+
+.lunoris-roster-avatar-slot {
+  width: 60px;
+  height: 60px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: radial-gradient(
+    circle at 35% 30%,
+    rgba(52, 36, 86, 0.92),
+    rgba(15, 11, 28, 0.98)
+  );
+  border: 1.5px solid rgba(229, 193, 128, 0.5);
+  box-shadow:
+    0 6px 18px rgba(0, 0, 0, 0.65),
+    inset 0 0 12px rgba(229, 193, 128, 0.16);
+}
+
+.lunoris-roster-avatar-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.lunoris-roster-initials {
+  font-family: var(--font-display);
+  font-size: 1.05rem;
+  letter-spacing: 0.1em;
+  color: #f5d698;
+}
+
+.lunoris-roster-info {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.lunoris-roster-meta {
+  margin-bottom: 0.25rem;
+}
+
+.lunoris-roster-dept-pill {
+  font-size: 0.68rem;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+  color: #e5c180;
+}
+
+.lunoris-roster-name {
+  font-family: var(--font-display);
+  font-size: 1.22rem;
+  line-height: 1.22;
+  color: #f7f3eb;
+  margin-bottom: 0.2rem;
+}
+
+.lunoris-roster-role {
+  font-size: 0.92rem;
+  line-height: 1.42;
+  color: #bdb5d1;
+}
+
+@media (max-width: 1024px) {
+  .lunoris-leaders-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .lunoris-roster-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 768px) {
+  .lunoris-leaders-grid,
+  .lunoris-roster-grid {
+    grid-template-columns: 1fr;
+  }
+  .lunoris-dept-header {
+    flex-wrap: wrap;
+  }
+}
+
+.lunoris-roster-bio {
+  position: relative;
+  z-index: 2;
+  margin-top: 0.9rem;
+  padding-top: 0.85rem;
+  border-top: 1px solid rgba(229, 193, 128, 0.14);
+  font-size: 0.92rem;
+  line-height: 1.54;
+  color: #c2bad6;
+}
+
+.lunoris-roster-links {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+}
+
+.lunoris-roster-link-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.22rem 0.68rem;
+  border-radius: 999px;
+  font-size: 0.74rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  text-decoration: none;
+  color: #f5d698;
+  background: rgba(24, 18, 38, 0.78);
+  border: 1px solid rgba(229, 193, 128, 0.38);
+  transition:
+    border-color 0.25s ease,
+    color 0.25s ease,
+    background 0.25s ease;
+}
+
+.lunoris-roster-link-chip:hover {
+  color: #fff8ea;
+  border-color: rgba(229, 193, 128, 0.85);
+  background: rgba(42, 31, 68, 0.88);
+}

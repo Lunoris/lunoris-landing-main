@@ -48,6 +48,7 @@ export const MAIN_NAV_LINKS: NavLinkItem[] = [
   { href: "#world", label: "The World" },
   { href: "#companions", label: "Companions" },
   { href: "#characters", label: "Characters" },
+  { href: "#team", label: "Team" },
   { href: "#roadmap", label: "Roadmap" },
 ];
 

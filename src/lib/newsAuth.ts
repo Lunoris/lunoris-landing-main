@@ -198,17 +198,19 @@ export function verifyNewsWriteAuth(
     signatureHeader &&
     configuredHmacSecret.length >= 32
   ) {
-    const tsSeconds = Number(timestampHeader);
+    const rawTs = Number(timestampHeader);
+    // Support both unix_seconds (~1.7e9) and unix_ms (~1.7e12)
+    const tsSeconds = rawTs > 1e11 ? Math.floor(rawTs / 1000) : rawTs;
     const nowSeconds = Math.floor(now / 1000);
 
     if (
-      Number.isFinite(tsSeconds) &&
+      Number.isFinite(rawTs) &&
       Math.abs(nowSeconds - tsSeconds) <= REPLAY_WINDOW_SECONDS
     ) {
       const normalizedSig = signatureHeader
         .replace(/^sha256=/i, "")
         .toLowerCase();
-      const replayKey = `${tsSeconds}:${normalizedSig}`;
+      const replayKey = `${timestampHeader}:${normalizedSig}`;
 
       // Reject replayed HMAC signatures within the 5-minute window unless Bearer token is also valid
       const alreadyUsedAt = usedHmacSignatures.get(replayKey);
@@ -216,7 +218,7 @@ export function verifyNewsWriteAuth(
 
       if (!isReplayed) {
         const hmac = crypto.createHmac("sha256", configuredHmacSecret);
-        hmac.update(`${tsSeconds}.`, "utf8");
+        hmac.update(`${timestampHeader}.`, "utf8");
         if (rawBodyForHmac !== undefined) {
           hmac.update(rawBodyForHmac);
         }
