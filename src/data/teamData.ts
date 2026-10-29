@@ -131,9 +131,16 @@ const EXECUTIVE_ROLE_SLOTS: ExecutiveRoleSlot[] = [
   },
 ];
 
+// Left to right on the page: the founder in the middle, flanked by the CTO and the CMO.
+// (Slots are still matched in EXECUTIVE_ROLE_SLOTS order, so the CEO claims a member first.)
+const DISPLAY_ORDER: ExecutiveRoleSlot["slotKey"][] = ["cto", "ceo-founder", "cmo"];
+const byDisplayOrder = (a: TeamLeader, b: TeamLeader) =>
+  DISPLAY_ORDER.indexOf(a.id as ExecutiveRoleSlot["slotKey"]) -
+  DISPLAY_ORDER.indexOf(b.id as ExecutiveRoleSlot["slotKey"]);
+
 export const TEAM_LEADERS: TeamLeader[] = EXECUTIVE_ROLE_SLOTS.map(
   (slot) => slot.fallbackLeader
-);
+).sort(byDisplayOrder);
 
 /**
  * Dynamically resolves the 3 main leaders (CEO/Founder, CTO, CMO) by matching
@@ -182,7 +189,7 @@ export function splitLeadersAndRosterByRole(members: PublicTeamMember[]): {
   const remainingMembers = members.filter((m) => !matchedMemberIds.has(m.id));
 
   return {
-    leaders,
+    leaders: leaders.sort(byDisplayOrder),
     remainingMembers,
   };
 }

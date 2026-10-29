@@ -3249,7 +3249,7 @@ body {
     rgba(10, 8, 19, 0.98) 100%
   );
   border-radius: 36px 12px 38px 14px;
-  padding: 1rem 1rem 1.85rem;
+  padding: 1.6rem 1.6rem 1.85rem;
   box-shadow:
     0 22px 48px rgba(0, 0, 0, 0.82),
     inset 0 0 38px rgba(229, 193, 128, 0.05);
@@ -3270,17 +3270,23 @@ body {
 /* Profile Portrait Slot */
 .lunoris-leader-portrait-slot {
   position: relative;
+  z-index: 4; /* above the deckled frame (z 3), which now only runs around the card edge */
   width: 100%;
-  aspect-ratio: 4 / 3.4;
-  border-radius: 28px 8px 24px 8px;
+  aspect-ratio: 4 / 4.4;
+  border-radius: 18px;
   overflow: hidden;
   background: radial-gradient(
     circle at 50% 38%,
     rgba(48, 34, 78, 0.78) 0%,
     rgba(12, 9, 22, 0.96) 75%
   );
-  border: 1px solid rgba(229, 193, 128, 0.26);
-  box-shadow: inset 0 0 28px rgba(0, 0, 0, 0.75);
+  /* gold hairline, dark mat, second gold line: a painted-portrait frame */
+  border: 1px solid rgba(229, 193, 128, 0.55);
+  box-shadow:
+    0 0 0 5px rgba(10, 8, 19, 0.92),
+    0 0 0 6px rgba(229, 193, 128, 0.28),
+    0 14px 30px rgba(0, 0, 0, 0.65),
+    inset 0 0 22px rgba(0, 0, 0, 0.55);
 }
 
 .lunoris-leader-photo {
@@ -3289,12 +3295,13 @@ body {
   width: 100%;
   height: 100%;
   object-fit: cover;
+  object-position: 50% 22%; /* keep heads in frame */
   display: block;
   transition: transform 0.65s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .lunoris-leader-card:hover .lunoris-leader-photo {
-  transform: scale(1.06);
+  transform: scale(1.03);
 }
 
 .lunoris-leader-portrait-placeholder {
@@ -3363,9 +3370,9 @@ body {
   z-index: 3;
   background: linear-gradient(
     180deg,
-    rgba(8, 6, 14, 0.06) 0%,
-    rgba(8, 6, 14, 0.14) 58%,
-    rgba(10, 8, 19, 0.88) 100%
+    rgba(8, 6, 14, 0) 0%,
+    rgba(8, 6, 14, 0) 62%,
+    rgba(10, 8, 19, 0.55) 100%
   );
   pointer-events: none;
 }
@@ -3578,9 +3585,30 @@ body {
   color: #bdb5d1;
 }
 
+/* The founder sits in the middle, a step forward from the two at his sides. */
+@media (min-width: 1025px) {
+  .lunoris-leaders-grid {
+    align-items: center;
+  }
+  .lunoris-leader-card[data-slot="ceo-founder"] {
+    transform: translateY(-18px) scale(1.04);
+    box-shadow:
+      0 28px 60px rgba(0, 0, 0, 0.9),
+      0 0 40px rgba(245, 184, 81, 0.18),
+      inset 0 0 38px rgba(229, 193, 128, 0.07);
+  }
+  .lunoris-leader-card[data-slot="ceo-founder"]:hover {
+    transform: translateY(-24px) scale(1.04);
+  }
+}
+
 @media (max-width: 1024px) {
   .lunoris-leaders-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  /* Stacked layouts: the founder comes first */
+  .lunoris-leader-card[data-slot="ceo-founder"] {
+    order: -1;
   }
   .lunoris-roster-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));

@@ -17,6 +17,7 @@ export function LeaderPortraitCard({ leader }: { leader: TeamLeader }) {
   return (
     <article
       className="lunoris-leader-card"
+      data-slot={leader.id}
       style={
         {
           "--leader-accent": leader.accentColor,
