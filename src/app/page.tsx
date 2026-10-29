@@ -8,6 +8,7 @@ import { LatestNewsSection } from "@/components/sections/LatestNewsSection";
 import { WorldPortalsSection } from "@/components/sections/WorldPortalsSection";
 import { CompanionsSection } from "@/components/sections/CompanionsSection";
 import { CharactersWallSection } from "@/components/sections/CharactersWallSection";
+import { TeamSection } from "@/components/sections/TeamSection";
 import { RoadmapSection } from "@/components/sections/RoadmapSection";
 import { FinalCtaSection } from "@/components/sections/FinalCtaSection";
 import { FooterBar } from "@/components/sections/FooterBar";
@@ -36,6 +37,7 @@ export default function LunorisLandingPage() {
         <WorldPortalsSection />
         <CompanionsSection />
         <CharactersWallSection />
+        <TeamSection />
         <RoadmapSection
           roadmapTimelineRef={roadmapTimelineRef}
           roadmapStep={roadmapStep}
