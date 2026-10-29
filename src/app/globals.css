@@ -995,7 +995,8 @@ body {
   position: relative;
   min-height: 550px;
   height: 100%;
-  border-radius: 230px 230px 32px 32px;
+  /* Proportional, so the arched frame SVG (ArchedCanvasFrame) traces this exact outline at every size */
+  border-radius: 50% 50% 6% 6% / 38% 38% 5.5% 5.5%;
   overflow: hidden;
   background: #080610;
   border: none;
@@ -3054,7 +3055,6 @@ body {
   /* World Arched Portal Cards on mobile */
   .lunoris-media-tile {
     min-height: 440px;
-    border-radius: 175px 175px 26px 26px;
   }
   .lunoris-tile-caption {
     padding: 1.65rem 1.35rem 1.95rem;

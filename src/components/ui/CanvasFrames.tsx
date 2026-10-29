@@ -224,10 +224,12 @@ export function ArchedCanvasFrame({
         preserveAspectRatio="none"
         aria-hidden="true"
       >
+        {/* All three paths trace the card's own outline (.lunoris-media-tile border-radius in globals.css),
+            so the neon runs along the container edge. Change both together. */}
         {/* Constant pulsing neon portal halo along the arched perimeter */}
         <path
           className="portal-arch-neon-halo"
-          d="M14,210 C14,88 94,14 200,14 C306,14 386,88 386,210 L386,482 C386,498 374,506 356,506 L44,506 C26,506 14,498 14,482 Z"
+          d="M1.5,197.6 A198.5,196.1 0 0 1 200,1.5 A198.5,196.1 0 0 1 398.5,197.6 L398.5,491.4 A22.5,27.1 0 0 1 376,518.5 L24,518.5 A22.5,27.1 0 0 1 1.5,491.4 Z"
           fill="none"
           stroke={accentColor}
           strokeWidth="5"
@@ -235,7 +237,7 @@ export function ArchedCanvasFrame({
         />
         {/* Subtle continuous base track along outer arch */}
         <path
-          d="M14,210 C14,88 94,14 200,14 C306,14 386,88 386,210 L386,482 C386,498 374,506 356,506 L44,506 C26,506 14,498 14,482 Z"
+          d="M1.5,197.6 A198.5,196.1 0 0 1 200,1.5 A198.5,196.1 0 0 1 398.5,197.6 L398.5,491.4 A22.5,27.1 0 0 1 376,518.5 L24,518.5 A22.5,27.1 0 0 1 1.5,491.4 Z"
           fill="none"
           stroke={strokeColor}
           strokeOpacity="0.28"
@@ -245,7 +247,7 @@ export function ArchedCanvasFrame({
         {/* Outer animated glowing dashed segments flowing around the card contour */}
         <path
           className="portal-arch-flow-outer"
-          d="M14,210 C14,88 94,14 200,14 C306,14 386,88 386,210 L386,482 C386,498 374,506 356,506 L44,506 C26,506 14,498 14,482 Z"
+          d="M1.5,197.6 A198.5,196.1 0 0 1 200,1.5 A198.5,196.1 0 0 1 398.5,197.6 L398.5,491.4 A22.5,27.1 0 0 1 376,518.5 L24,518.5 A22.5,27.1 0 0 1 1.5,491.4 Z"
           pathLength="1000"
           fill="none"
           stroke={strokeColor}
@@ -256,7 +258,7 @@ export function ArchedCanvasFrame({
         />
         {/* Bottom corner painterly flourishes */}
         <path
-          d="M18,465 C18,492 26,500 52,500 M382,465 C382,492 374,500 348,500"
+          d="M1.5,440 L1.5,491.4 A22.5,27.1 0 0 0 24,518.5 L70,518.5 M398.5,440 L398.5,491.4 A22.5,27.1 0 0 1 376,518.5 L330,518.5"
           fill="none"
           stroke={accentColor}
           strokeWidth="3.2"
