@@ -1,5 +1,4 @@
-import fs from "fs/promises";
-import path from "path";
+import { unstable_cache } from "next/cache";
 import {
   splitLeadersAndRosterByRole,
   type DepartmentSummary,
@@ -8,28 +7,17 @@ import {
   type TeamLeader,
 } from "@/data/teamData";
 
-const DATA_DIR = path.join(process.cwd(), "data");
-const TEAM_FILE = path.join(DATA_DIR, "published-team.json");
+// The wiki is the source of truth (GET /api/v1/team only lists people who opted in). The landing site keeps no
+// copy on disk (Vercel's disk does not persist): it reads the wiki through Next's data cache, and the wiki's
+// POST /api/team push expires that cache so a change shows up at once.
+const WIKI_URL = (process.env.LUNORIS_WIKI_URL || "https://lunoris-wiki.vercel.app").trim().replace(/\/+$/, "");
+export const TEAM_TAG = "team";
 
 export interface StoredTeamSnapshot {
-  event: string;
-  changed_person_id: string | null;
   updated_at: string;
   total: number;
   departments: DepartmentSummary[];
   members: PublicTeamMember[];
-}
-
-// In-process async mutex so concurrent webhook/pull writes never interleave
-let writeQueue: Promise<void> = Promise.resolve();
-
-function enqueueWrite<T>(task: () => Promise<T>): Promise<T> {
-  const next = writeQueue.then(task, task);
-  writeQueue = next.then(
-    () => undefined,
-    () => undefined
-  );
-  return next;
 }
 
 function sanitizeAvatarUrl(raw: unknown): string | null {
@@ -190,138 +178,46 @@ export function buildDepartmentsForMembers(
   ];
 }
 
-async function writeSnapshotAtomically(
-  snapshot: StoredTeamSnapshot
-): Promise<void> {
-  await fs.mkdir(DATA_DIR, { recursive: true });
-  const tempFile = `${TEAM_FILE}.${Date.now()}-${process.pid}.tmp`;
-  await fs.writeFile(tempFile, JSON.stringify(snapshot, null, 2), "utf8");
-  await fs.rename(tempFile, TEAM_FILE);
-}
-
-export async function saveTeamSnapshot(
-  rawPayload: Record<string, unknown>
-): Promise<StoredTeamSnapshot> {
-  return enqueueWrite(async () => {
-    const members = sanitizePublicTeamMembers(rawPayload.members);
-    const departments = buildDepartmentsForMembers(members);
-
-    const snapshot: StoredTeamSnapshot = {
-      event:
-        typeof rawPayload.event === "string"
-          ? rawPayload.event
-          : "team.updated",
-      changed_person_id:
-        typeof rawPayload.changed_person_id === "string"
-          ? rawPayload.changed_person_id
-          : null,
-      updated_at:
-        typeof rawPayload.updated_at === "string"
-          ? rawPayload.updated_at
-          : new Date().toISOString(),
-      total: members.length,
-      departments,
-      members,
-    };
-
-    await writeSnapshotAtomically(snapshot);
-    return snapshot;
+/** The opted-in team from the wiki. Throws when the wiki is unreachable, so a failure is never cached. */
+async function pullTeamFromWiki(): Promise<StoredTeamSnapshot> {
+  const res = await fetch(`${WIKI_URL}/api/v1/team`, {
+    headers: { Accept: "application/json" },
+    cache: "no-store",
+    signal: AbortSignal.timeout(4500),
   });
-}
-
-/**
- * Pulls the latest public team snapshot from Lunoris Wiki (`GET /api/v1/team`).
- * Tries configured `LUNORIS_WIKI_URL`, local dev ports (`3001`, `3000`), and
- * production `https://lunoris-wiki.vercel.app`.
- */
-export async function pullTeamFromWiki(): Promise<StoredTeamSnapshot | null> {
-  const candidateBaseUrls = Array.from(
-    new Set(
-      [
-        process.env.LUNORIS_WIKI_URL?.trim().replace(/\/+$/, ""),
-        "http://localhost:3001",
-        "http://localhost:3000",
-        "https://lunoris-wiki.vercel.app",
-      ].filter((u): u is string => Boolean(u))
-    )
-  );
-
-  for (const baseUrl of candidateBaseUrls) {
-    try {
-      const res = await fetch(`${baseUrl}/api/v1/team`, {
-        method: "GET",
-        headers: { Accept: "application/json" },
-        cache: "no-store",
-        signal: AbortSignal.timeout(4500),
-      });
-
-      if (!res.ok) continue;
-      const contentType = res.headers.get("content-type") || "";
-      if (!contentType.includes("application/json")) continue;
-
-      const data = (await res.json()) as Record<string, unknown>;
-      if (data && data.ok === true && Array.isArray(data.members)) {
-        return await saveTeamSnapshot({
-          event: "team.pulled",
-          changed_person_id: null,
-          updated_at: new Date().toISOString(),
-          members: data.members,
-        });
-      }
-    } catch {
-      // Try next candidate URL
-    }
+  const data = (await res.json()) as Record<string, unknown>;
+  if (!res.ok || data?.ok !== true || !Array.isArray(data.members)) {
+    throw new Error(`Wiki team API returned ${res.status}.`);
   }
-
-  return null;
+  const members = sanitizePublicTeamMembers(data.members);
+  return {
+    updated_at: new Date().toISOString(),
+    total: members.length,
+    departments: buildDepartmentsForMembers(members),
+    members,
+  };
 }
 
-const STALE_PULL_INTERVAL_MS = 5 * 1000; // Re-verify with Wiki if cache is >5s old or empty
+// Refreshed every 5 minutes at most, or at once when the wiki pushes.
+const pullTeamCached = unstable_cache(pullTeamFromWiki, ["team-snapshot"], {
+  tags: [TEAM_TAG],
+  revalidate: 300,
+});
 
 export async function getTeamSnapshot(options?: {
   forcePull?: boolean;
 }): Promise<StoredTeamSnapshot> {
-  if (options?.forcePull) {
-    const pulled = await pullTeamFromWiki();
-    if (pulled) return pulled;
-  }
-
-  let cached: StoredTeamSnapshot | null = null;
   try {
-    const raw = await fs.readFile(TEAM_FILE, "utf8");
-    const parsed = JSON.parse(raw) as StoredTeamSnapshot;
-    if (parsed && Array.isArray(parsed.members)) {
-      cached = parsed;
-    }
+    return options?.forcePull ? await pullTeamFromWiki() : await pullTeamCached();
   } catch {
-    // File does not exist yet
+    // Wiki unreachable: the pages fall back to their built-in leader slots
+    return {
+      updated_at: new Date().toISOString(),
+      total: 0,
+      departments: [{ key: "all", label: "All Departments", count: 0 }],
+      members: [],
+    };
   }
-
-  const ageMs = cached?.updated_at
-    ? Date.now() - Date.parse(cached.updated_at)
-    : Infinity;
-
-  // If no cache yet, or cache is empty, or cache is older than 5 seconds, try pulling fresh data from Wiki
-  if (!cached || cached.members.length === 0 || ageMs > STALE_PULL_INTERVAL_MS) {
-    const pulled = await pullTeamFromWiki();
-    if (pulled) return pulled;
-  }
-
-  if (cached) {
-    return cached;
-  }
-
-  const emptySnapshot: StoredTeamSnapshot = {
-    event: "team.initialized",
-    changed_person_id: null,
-    updated_at: new Date().toISOString(),
-    total: 0,
-    departments: [{ key: "all", label: "All Departments", count: 0 }],
-    members: [],
-  };
-
-  await enqueueWrite(() => writeSnapshotAtomically(emptySnapshot));
-  return emptySnapshot;
 }
 
 export interface ResolvedSiteTeamData {

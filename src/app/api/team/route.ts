@@ -1,18 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
-import { revalidatePath } from "next/cache";
+import { revalidatePath, revalidateTag } from "next/cache";
 import {
   readAuthenticatedJsonText,
   withSecurityHeaders,
 } from "@/lib/newsAuth";
-import {
-  getResolvedSiteTeamData,
-  saveTeamSnapshot,
-} from "@/lib/teamStore";
+import { getResolvedSiteTeamData, TEAM_TAG } from "@/lib/teamStore";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-// 10 MB limit to accommodate inline base64 avatar fallbacks when pushed from local dev
+// The push is only a "something changed" signal (the roster itself is read from the wiki), but it carries the
+// wiki's snapshot, which may hold inline base64 avatars.
 const MAX_TEAM_WEBHOOK_BYTES = 10 * 1024 * 1024;
 
 export async function GET(req: NextRequest) {
@@ -58,7 +56,7 @@ export async function GET(req: NextRequest) {
 }
 
 /**
- * Webhook endpoint receiving automatic Push updates from Lunoris Wiki
+ * Webhook endpoint receiving automatic Push signals from Lunoris Wiki
  * (`POST ${LUNORIS_SITE_URL}/api/team`) whenever a team member toggles `public`,
  * uploads a new `avatar_url`, or updates their `bio` / `title`.
  */
@@ -85,8 +83,8 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    await saveTeamSnapshot(payload);
-    const resolved = await getResolvedSiteTeamData();
+    revalidateTag(TEAM_TAG, { expire: 0 });
+    const resolved = await getResolvedSiteTeamData({ forcePull: true });
 
     // Immediately revalidate both the Main Landing Page (/#team) and /team
     revalidatePath("/");

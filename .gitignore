@@ -51,3 +51,4 @@ CLAUDE.md
 
 # runtime news store (written by the news API; the built-in articles in src/data/newsData.ts seed it)
 /data/published-news.json
+/data/published-team.json
