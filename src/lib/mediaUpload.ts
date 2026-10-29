@@ -3,6 +3,7 @@ import dns from "dns/promises";
 import fs from "fs/promises";
 import net from "net";
 import path from "path";
+import { put } from "@vercel/blob";
 
 export const MAX_IMAGE_BYTES = 15 * 1024 * 1024; // 15 MB
 export const MAX_VIDEO_BYTES = 60 * 1024 * 1024; // 60 MB
@@ -100,8 +101,8 @@ export interface SavedMediaAsset {
 const UPLOAD_DIR = path.join(process.cwd(), "public", "uploads", "news");
 
 /**
- * Validates binary buffer magic bytes, enforces size limits, and writes
- * atomically into `public/uploads/news/<timestamp>-<hash>.<ext>`.
+ * Validates binary buffer magic bytes, enforces size limits, and stores the file in Vercel Blob
+ * (`news/media/<timestamp>-<hash>.<ext>`), or without a Blob token atomically into `public/uploads/news/`.
  */
 export async function saveUploadedMediaBuffer(
   buf: Buffer,
@@ -136,6 +137,15 @@ export async function saveUploadedMediaBuffer(
   const sha256 = crypto.createHash("sha256").update(buf).digest("hex");
   const shortHash = sha256.slice(0, 16);
   const filename = `${Date.now()}-${shortHash}.${detected.ext}`;
+
+  if (process.env.BLOB_READ_WRITE_TOKEN) {
+    const blob = await put(`news/media/${filename}`, buf, {
+      access: "public",
+      contentType: detected.mime,
+      allowOverwrite: true, // same name = same content hash
+    });
+    return { url: blob.url, filename, mime: detected.mime, kind: detected.kind, size: buf.length, sha256 };
+  }
 
   await fs.mkdir(UPLOAD_DIR, { recursive: true });
   const targetPath = path.join(UPLOAD_DIR, filename);

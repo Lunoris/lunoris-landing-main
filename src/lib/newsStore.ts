@@ -1,9 +1,57 @@
 import fs from "fs/promises";
 import path from "path";
+import { del, list, put } from "@vercel/blob";
+import { revalidateTag, unstable_cache } from "next/cache";
 import { LUNORIS_NEWS, type NewsArticle } from "@/data/newsData";
 
 const DATA_DIR = path.join(process.cwd(), "data");
 const NEWS_FILE = path.join(DATA_DIR, "published-news.json");
+
+// On Vercel the disk does not persist, so articles live in Vercel Blob. Every save writes a new
+// immutable version (news/store/articles-<ms>-<suffix>.json) and readers take the newest one from list():
+// overwriting one file is not safe there, because a direct origin read can briefly return nothing or an old copy.
+// Without a Blob token (plain local dev) they stay in data/published-news.json.
+const USE_BLOB = !!process.env.BLOB_READ_WRITE_TOKEN;
+const BLOB_PREFIX = "news/store/articles-";
+const KEEP_VERSIONS = 10; // older versions are pruned; these double as a short undo history
+const NEWS_TAG = "news";
+
+/** All stored versions, newest first (the pathname carries the write time). */
+async function listBlobVersions() {
+  const { blobs } = await list({ prefix: BLOB_PREFIX });
+  return blobs.sort((x, y) => (x.pathname < y.pathname ? 1 : -1));
+}
+
+/** The newest stored article list, or null before the first save. Throws when Blob is unreachable. */
+async function readBlobStore(): Promise<NewsArticle[] | null> {
+  const [latest] = await listBlobVersions();
+  if (!latest) return null;
+  const res = await fetch(latest.url, { cache: "no-store" });
+  if (!res.ok) throw new Error(`News store read failed (${res.status}).`);
+  const parsed = await res.json();
+  if (!Array.isArray(parsed)) throw new Error("News store is not an article list.");
+  return parsed as NewsArticle[];
+}
+
+// Page views read through Next's shared data cache; every save expires it. Errors are not cached.
+const readBlobCached = unstable_cache(readBlobStore, ["news-store"], { tags: [NEWS_TAG] });
+
+// ponytail: two saves landing in the same instant on different instances keep only the later one;
+// news is written by a handful of editors, add a lock (e.g. ifMatch on a pointer blob) if that changes.
+async function updateBlobStore<T>(change: (all: NewsArticle[]) => { next: NewsArticle[] | null; result: T }): Promise<T> {
+  const { next, result } = change((await readBlobStore()) ?? [...LUNORIS_NEWS]);
+  if (next) {
+    await put(`${BLOB_PREFIX}${Date.now()}.json`, JSON.stringify(next, null, 2), {
+      access: "public",
+      contentType: "application/json",
+      addRandomSuffix: true,
+    });
+    revalidateTag(NEWS_TAG, { expire: 0 });
+    const stale = (await listBlobVersions()).slice(KEEP_VERSIONS);
+    if (stale.length) await del(stale.map((b) => b.url)).catch(() => undefined);
+  }
+  return result;
+}
 
 // Simple in-process async mutex so concurrent requests never interleave writes
 let writeQueue: Promise<void> = Promise.resolve();
@@ -18,6 +66,13 @@ function enqueueWrite<T>(task: () => Promise<T>): Promise<T> {
 }
 
 async function ensureNewsStoreInitialized(): Promise<NewsArticle[]> {
+  if (USE_BLOB) {
+    try {
+      return (await readBlobCached()) ?? [...LUNORIS_NEWS];
+    } catch {
+      return [...LUNORIS_NEWS]; // Blob unreachable: show the built-in articles rather than an error page
+    }
+  }
   try {
     const raw = await fs.readFile(NEWS_FILE, "utf8");
     const parsed = JSON.parse(raw);
@@ -64,8 +119,7 @@ export async function upsertNewsArticle(
     allowOverwrite: true,
   }
 ): Promise<{ article: NewsArticle; created: boolean }> {
-  return enqueueWrite(async () => {
-    const all = await ensureNewsStoreInitialized();
+  const change = (all: NewsArticle[]) => {
     const lookupSlug = options.targetSlug || article.slug;
     const existingIndex = all.findIndex((item) => item.slug === lookupSlug);
 
@@ -97,19 +151,25 @@ export async function upsertNewsArticle(
       all.unshift(article);
     }
 
-    await writeNewsAtomically(all);
-    return { article, created };
+    return { next: all, result: { article, created } };
+  };
+  if (USE_BLOB) return enqueueWrite(() => updateBlobStore(change));
+  return enqueueWrite(async () => {
+    const { next, result } = change(await ensureNewsStoreInitialized());
+    await writeNewsAtomically(next);
+    return result;
   });
 }
 
 export async function deleteNewsBySlug(slug: string): Promise<boolean> {
-  return enqueueWrite(async () => {
-    const all = await ensureNewsStoreInitialized();
+  const change = (all: NewsArticle[]) => {
     const next = all.filter((item) => item.slug !== slug);
-    if (next.length === all.length) {
-      return false;
-    }
-    await writeNewsAtomically(next);
-    return true;
+    return next.length === all.length ? { next: null, result: false } : { next, result: true };
+  };
+  if (USE_BLOB) return enqueueWrite(() => updateBlobStore(change));
+  return enqueueWrite(async () => {
+    const { next, result } = change(await ensureNewsStoreInitialized());
+    if (next) await writeNewsAtomically(next);
+    return result;
   });
 }
