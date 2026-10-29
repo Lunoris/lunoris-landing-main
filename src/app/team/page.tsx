@@ -50,17 +50,22 @@ function StudioMemberCard({ member }: { member: PublicTeamMember }) {
         </div>
 
         <div className="lunoris-roster-info">
-          <div className="lunoris-roster-meta">
-            <span className="lunoris-roster-dept-pill">
-              {member.department}
-            </span>
-          </div>
+          {/* Only what the member filled in: no empty department line or role */}
+          {member.department ? (
+            <div className="lunoris-roster-meta">
+              <span className="lunoris-roster-dept-pill">
+                {member.department}
+              </span>
+            </div>
+          ) : null}
           <h3 className="lunoris-roster-name">{member.name}</h3>
-          <p className="lunoris-roster-role">{member.title || member.role}</p>
+          {member.title || member.role ? (
+            <p className="lunoris-roster-role">{member.title || member.role}</p>
+          ) : null}
         </div>
       </div>
 
-      {member.bio ? (
+      {member.bio?.trim() ? (
         <p className="lunoris-roster-bio">{member.bio}</p>
       ) : null}
 

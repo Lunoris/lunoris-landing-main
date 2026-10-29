@@ -3481,6 +3481,10 @@ body {
 
 .lunoris-roster-card {
   position: relative;
+  /* a card without a bio sits centred in a row stretched by a neighbour's bio, not top-heavy over an empty band */
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
   background: linear-gradient(
     165deg,
     rgba(24, 19, 39, 0.92) 0%,
