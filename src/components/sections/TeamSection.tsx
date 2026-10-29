@@ -70,9 +70,8 @@ export function LeaderPortraitCard({ leader }: { leader: TeamLeader }) {
           <span className="lunoris-leader-photo-caption">Profile Portrait</span>
         </div>
 
-        <div className="lunoris-leader-portrait-vignette" aria-hidden="true" />
-        <span className="lunoris-leader-role-badge">{leader.role}</span>
       </div>
+      <span className="lunoris-leader-role-badge">{leader.role}</span>
 
       <div className="lunoris-leader-body">
         <span className="lunoris-leader-dept">{leader.department}</span>
