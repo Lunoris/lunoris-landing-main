@@ -38,10 +38,12 @@
 /* Desktop renders at 80% (same as browser zoom 80%). vw/vh lengths are
    multiplied by --vu so they keep their on-screen size under the zoom, and
    the 1400/1240 breakpoints are mapped to 1120/1100 (x0.8) to match. */
-@media (min-width: 1101px) {
-  :root {
-    --vu: 1.25;
-    zoom: 0.8;
+@supports (zoom: 0.8) {
+  @media (min-width: 1101px) {
+    :root {
+      --vu: 1.25;
+      zoom: 0.8;
+    }
   }
 }
 
@@ -87,6 +89,8 @@ html {
   background-color: var(--lunoris-black);
   color: #ffffff;
   line-height: 1.6;
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
   overflow-x: hidden;
   max-width: calc(100vw * var(--vu));
 }
@@ -165,6 +169,7 @@ body {
     rgba(5, 4, 12, 0.72) 68%,
     rgba(5, 4, 12, 0) 100%
   );
+  -webkit-backdrop-filter: blur(6px);
   backdrop-filter: blur(6px);
 }
 
@@ -249,7 +254,10 @@ body {
   isolation: isolate;
 }
 
-.canvas-brush-btn-svg {
+.canvas-brush-btn-svg,
+.canvas-brush-btn-bg {
+  display: block;
+  font-style: normal;
   position: absolute;
   inset: 0;
   width: 100%;
@@ -257,6 +265,53 @@ body {
   z-index: -1;
   pointer-events: none;
   transition: transform 0.3s ease, filter 0.3s ease;
+}
+
+.canvas-brush-pill {
+  display: block;
+  font-style: normal;
+  position: absolute;
+  inset: 6.9% 2.6% 6.9% 3.9%;
+  border-radius: 9999px;
+  background:
+    radial-gradient(
+      circle at 20% 50%,
+      rgba(233, 213, 255, 0.34) 0%,
+      rgba(168, 85, 247, 0.14) 22%,
+      rgba(168, 85, 247, 0) 44%
+    ),
+    linear-gradient(166deg, #2d1d54 0%, #1e133a 48%, #150d2a 100%);
+}
+
+.canvas-brush-pill::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1.5px;
+  background: linear-gradient(
+    90deg,
+    rgba(233, 213, 255, 0.9) 0%,
+    rgba(192, 132, 252, 0.48) 28%,
+    rgba(168, 85, 247, 0.28) 70%,
+    rgba(139, 92, 246, 0.22) 100%
+  );
+  -webkit-mask:
+    linear-gradient(#fff 0 0) content-box,
+    linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+}
+
+.canvas-brush-crescent-svg {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  pointer-events: none;
 }
 
 .lunoris-steam-btn:hover {
@@ -553,6 +608,10 @@ body {
   transition: filter 0.4s ease, transform 0.4s ease;
 }
 
+.canvas-arched-frame-svg {
+  overflow: visible;
+}
+
 .canvas-fixed-star {
   position: absolute;
   aspect-ratio: 1 / 1;
@@ -776,6 +835,7 @@ body {
   border-radius: 4px;
   background: transparent;
   box-shadow: none;
+  -webkit-backdrop-filter: none;
   backdrop-filter: none;
   border: none;
   isolation: isolate;
@@ -993,11 +1053,11 @@ body {
 
 .lunoris-media-tile {
   position: relative;
+  isolation: isolate;
   min-height: 550px;
   height: 100%;
   /* Proportional, so the arched frame SVG (ArchedCanvasFrame) traces this exact outline at every size */
   border-radius: 50% 50% 6% 6% / 38% 38% 5.5% 5.5%;
-  overflow: hidden;
   background: #080610;
   border: none;
   display: flex;
@@ -1008,6 +1068,23 @@ body {
   transition:
     transform 0.45s cubic-bezier(0.16, 1, 0.3, 1),
     box-shadow 0.45s ease;
+}
+
+/* Dedicated media clip layer so Safari/WebKit clips hardware-composited <video>
+   and scaled <img> strictly to the arch contour without clipping outer neon halos */
+.lunoris-tile-media-clip {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  border-radius: inherit;
+  overflow: hidden;
+  isolation: isolate;
+  -webkit-transform: translateZ(0);
+  transform: translateZ(0);
+  -webkit-mask-image: -webkit-radial-gradient(white, black);
+  -webkit-clip-path: inset(0 round 50% 50% 6% 6% / 38% 38% 5.5% 5.5%);
+  clip-path: inset(0 round 50% 50% 6% 6% / 38% 38% 5.5% 5.5%);
+  pointer-events: none;
 }
 
 .lunoris-media-tile.canvas-portal-center {
@@ -1041,6 +1118,7 @@ body {
   inset: 0;
   width: 100%;
   height: 100%;
+  border-radius: inherit;
   object-fit: cover;
   transition: transform 0.65s ease;
 }
@@ -1339,6 +1417,13 @@ body {
   flex-direction: column;
   gap: 1.5rem;
   padding: 1rem 0;
+  -webkit-mask-image: linear-gradient(
+    90deg,
+    transparent 0%,
+    #000 7%,
+    #000 93%,
+    transparent 100%
+  );
   mask-image: linear-gradient(
     90deg,
     transparent 0%,
@@ -2096,6 +2181,10 @@ body {
   aspect-ratio: 16 / 10;
   border-radius: 28px 8px 24px 8px;
   overflow: hidden;
+  isolation: isolate;
+  -webkit-transform: translateZ(0);
+  transform: translateZ(0);
+  -webkit-mask-image: -webkit-radial-gradient(white, black);
   background: #08060e;
   box-shadow: inset 0 0 22px rgba(0, 0, 0, 0.65);
 }
@@ -2103,6 +2192,7 @@ body {
 .lunoris-news-thumb {
   width: 100%;
   height: 100%;
+  border-radius: inherit;
   object-fit: cover;
   display: block;
   filter: saturate(1.06) contrast(1.04);
@@ -2139,6 +2229,7 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
+  -webkit-backdrop-filter: blur(6px);
   backdrop-filter: blur(6px);
   box-shadow:
     0 10px 28px rgba(0, 0, 0, 0.75),
@@ -2173,6 +2264,7 @@ body {
   font-size: 0.74rem;
   letter-spacing: 0.12em;
   text-transform: uppercase;
+  -webkit-backdrop-filter: blur(8px);
   backdrop-filter: blur(8px);
   background: rgba(24, 18, 38, 0.84);
   color: #f2d294;
@@ -2290,23 +2382,37 @@ body {
 
 .lunoris-all-news-btn {
   position: relative;
+  isolation: isolate;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-width: 220px;
-  padding: 0.95rem 2.6rem;
+  min-width: 228px;
+  max-width: 100%;
+  padding: 1.12rem 2.9rem 1.12rem 3.45rem;
+  white-space: nowrap;
+  text-align: center;
   text-decoration: none;
   color: #f6f2eb;
   font-size: 0.95rem;
-  letter-spacing: 0.2em;
+  letter-spacing: 0.18em;
   text-transform: uppercase;
+  filter: drop-shadow(0 12px 26px rgba(0, 0, 0, 0.72));
   transition:
     transform 0.35s cubic-bezier(0.16, 1, 0.3, 1),
     color 0.35s ease,
     filter 0.35s ease;
 }
 
-.lunoris-all-news-btn span {
+@media (max-width: 560px) {
+  .lunoris-all-news-btn {
+    min-width: 200px;
+    padding: 0.98rem 2rem 0.98rem 2.45rem;
+    font-size: 0.82rem;
+    letter-spacing: 0.13em;
+  }
+}
+
+.lunoris-all-news-btn > span:not(.canvas-brush-btn-bg) {
   position: relative;
   z-index: 2;
 }
@@ -2393,12 +2499,17 @@ body {
   aspect-ratio: 16 / 9;
   border-radius: 32px 10px 30px 12px;
   overflow: hidden;
+  isolation: isolate;
+  -webkit-transform: translateZ(0);
+  transform: translateZ(0);
+  -webkit-mask-image: -webkit-radial-gradient(white, black);
   background: #090710;
 }
 
 .news-featured-img {
   width: 100%;
   height: 100%;
+  border-radius: inherit;
   object-fit: cover;
   display: block;
   transition: transform 0.75s cubic-bezier(0.16, 1, 0.3, 1);
@@ -2627,10 +2738,20 @@ body {
   position: relative;
   z-index: 2;
   border-radius: 32px 12px 34px 12px;
-  overflow: hidden;
   margin-bottom: 3rem;
   border: 1px solid rgba(229, 193, 128, 0.34);
   box-shadow: 0 20px 48px rgba(0, 0, 0, 0.78);
+}
+
+.news-article-showcase-clip {
+  position: relative;
+  width: 100%;
+  border-radius: 31px 11px 33px 11px;
+  overflow: hidden;
+  isolation: isolate;
+  -webkit-transform: translateZ(0);
+  transform: translateZ(0);
+  -webkit-mask-image: -webkit-radial-gradient(white, black);
 }
 
 .news-article-video,
@@ -2741,6 +2862,10 @@ body {
   margin: 2rem 0 0.75rem;
   border-radius: 30px 10px 30px 10px;
   overflow: hidden;
+  isolation: isolate;
+  -webkit-transform: translateZ(0);
+  transform: translateZ(0);
+  -webkit-mask-image: -webkit-radial-gradient(white, black);
   border: 1px solid rgba(229, 193, 128, 0.28);
   background: rgba(9, 7, 16, 0.92);
 }
@@ -3274,6 +3399,7 @@ body {
   position: relative;
   z-index: 4; /* above the deckled frame (z 3) */
   width: 66%;
+  flex-shrink: 0;
   margin: 0.6rem auto 0;
   aspect-ratio: 1;
   border-radius: 50%;
@@ -3297,6 +3423,7 @@ body {
   z-index: 2;
   width: 100%;
   height: 100%;
+  border-radius: 50%;
   object-fit: cover;
   object-position: 50% 22%; /* keep heads in frame */
   display: block;
@@ -3380,6 +3507,7 @@ body {
   font-weight: 600;
   letter-spacing: 0.14em;
   text-transform: uppercase;
+  -webkit-backdrop-filter: blur(8px);
   backdrop-filter: blur(8px);
   background: rgba(22, 16, 36, 0.86);
   color: #f5d698;
@@ -3541,6 +3669,7 @@ body {
 .lunoris-roster-avatar-img {
   width: 100%;
   height: 100%;
+  border-radius: 50%;
   object-fit: cover;
   object-position: 50% 22%;
   display: block;
@@ -3645,26 +3774,60 @@ body {
   margin-top: 0.9rem;
 }
 
+.lunoris-leader-links {
+  justify-content: center;
+  margin-top: 1.05rem;
+}
+
 .lunoris-roster-link-chip {
   display: inline-flex;
   align-items: center;
-  padding: 0.22rem 0.68rem;
+  gap: 0.42rem;
+  padding: 0.28rem 0.78rem;
   border-radius: 999px;
-  font-size: 0.74rem;
+  font-size: 0.73rem;
   letter-spacing: 0.1em;
   text-transform: uppercase;
   text-decoration: none;
   color: #f5d698;
-  background: rgba(24, 18, 38, 0.78);
-  border: 1px solid rgba(229, 193, 128, 0.38);
+  background: rgba(24, 18, 38, 0.82);
+  border: 1px solid rgba(229, 193, 128, 0.4);
   transition:
+    transform 0.22s ease,
     border-color 0.25s ease,
     color 0.25s ease,
-    background 0.25s ease;
+    background 0.25s ease,
+    box-shadow 0.25s ease;
 }
 
 .lunoris-roster-link-chip:hover {
+  transform: translateY(-1px);
   color: #fff8ea;
-  border-color: rgba(229, 193, 128, 0.85);
-  background: rgba(42, 31, 68, 0.88);
+  border-color: rgba(229, 193, 128, 0.9);
+  background: rgba(46, 33, 76, 0.92);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.45);
+}
+
+.lunoris-social-chip-icon {
+  width: 13px;
+  height: 13px;
+  flex-shrink: 0;
+  color: #e5c180;
+}
+
+.lunoris-roster-link-chip:hover .lunoris-social-chip-icon {
+  color: #fff8ea;
+}
+
+.lunoris-social-chip-arrow {
+  width: 11px;
+  height: 11px;
+  flex-shrink: 0;
+  opacity: 0.65;
+  transition: transform 0.22s ease, opacity 0.22s ease;
+}
+
+.lunoris-roster-link-chip:hover .lunoris-social-chip-arrow {
+  opacity: 1;
+  transform: translate(1px, -1px);
 }

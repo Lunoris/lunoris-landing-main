@@ -1,4 +1,5 @@
 export interface PublicTeamLink {
+  platform?: string;
   label: string;
   url: string;
 }
@@ -16,6 +17,7 @@ export interface PublicTeamMember {
   avatar_url: string | null;
   bio: string | null;
   links: PublicTeamLink[];
+  social_links: Record<string, string>;
   public: true;
 }
 
@@ -37,6 +39,7 @@ export interface TeamLeader {
   accentColor: string;
   bio: string;
   links?: PublicTeamLink[];
+  social_links?: Record<string, string>;
 }
 
 interface ExecutiveRoleSlot {
@@ -75,6 +78,8 @@ const EXECUTIVE_ROLE_SLOTS: ExecutiveRoleSlot[] = [
       avatar: null,
       accentColor: "#f5b851",
       bio: "Founder and Creative Director of Lunoris Studios. Shapes the emotional core, narrative architecture, and painterly artistic direction across every Dream Island and Nightmare realm.",
+      links: [],
+      social_links: {},
     },
   },
   {
@@ -101,6 +106,8 @@ const EXECUTIVE_ROLE_SLOTS: ExecutiveRoleSlot[] = [
       avatar: null,
       accentColor: "#38bdf8",
       bio: "Leads technical architecture, production pipelines, and cross-disciplinary studio operations—uniting engineering, world-building workflows, and milestone execution.",
+      links: [],
+      social_links: {},
     },
   },
   {
@@ -127,13 +134,19 @@ const EXECUTIVE_ROLE_SLOTS: ExecutiveRoleSlot[] = [
       avatar: null,
       accentColor: "#c084fc",
       bio: "Directs global publishing strategy, industry partnerships, SAG-AFTRA voice talent collaborations, and community outreach from Gamescom Cologne to worldwide launch.",
+      links: [],
+      social_links: {},
     },
   },
 ];
 
 // Left to right on the page: the founder in the middle, flanked by the CTO and the CMO.
 // (Slots are still matched in EXECUTIVE_ROLE_SLOTS order, so the CEO claims a member first.)
-const DISPLAY_ORDER: ExecutiveRoleSlot["slotKey"][] = ["cto", "ceo-founder", "cmo"];
+const DISPLAY_ORDER: ExecutiveRoleSlot["slotKey"][] = [
+  "cto",
+  "ceo-founder",
+  "cmo",
+];
 const byDisplayOrder = (a: TeamLeader, b: TeamLeader) =>
   DISPLAY_ORDER.indexOf(a.id as ExecutiveRoleSlot["slotKey"]) -
   DISPLAY_ORDER.indexOf(b.id as ExecutiveRoleSlot["slotKey"]);
@@ -183,6 +196,7 @@ export function splitLeadersAndRosterByRole(members: PublicTeamMember[]): {
           ? matched.bio
           : slot.fallbackLeader.bio,
       links: matched.links && matched.links.length > 0 ? matched.links : [],
+      social_links: matched.social_links || {},
     };
   });
 

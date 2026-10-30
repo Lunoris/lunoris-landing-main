@@ -29,6 +29,7 @@ export function ResilientVideo({
     if (pauseWhenOffscreen && !isIntersectingRef.current) return;
     if (document.visibilityState === "hidden") return;
 
+    video.defaultMuted = true;
     video.muted = true;
     const playPromise = video.play();
     if (playPromise !== undefined) {
@@ -71,8 +72,10 @@ export function ResilientVideo({
     const video = videoRef.current;
     if (!video) return;
 
+    video.defaultMuted = true;
     video.muted = true;
     video.playsInline = true;
+    video.setAttribute("webkit-playsinline", "true");
 
     const observer = new IntersectionObserver(
       (entries) => {
@@ -143,6 +146,8 @@ export function ResilientVideo({
       loop
       muted
       playsInline
+      disablePictureInPicture={!controls}
+      disableRemotePlayback={!controls}
       preload={preload}
       controls={controls}
       style={

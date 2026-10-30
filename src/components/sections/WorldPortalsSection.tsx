@@ -33,22 +33,24 @@ function WorldPortalCard({
         } as React.CSSProperties
       }
     >
-      {location.isVideo && location.videoSrc ? (
-        <ResilientVideo
-          className="lunoris-tile-bg"
-          src={location.videoSrc}
-          poster={location.image}
-          preload="metadata"
-        />
-      ) : (
-        <img
-          src={location.image}
-          alt={location.title}
-          className="lunoris-tile-bg"
-        />
-      )}
-      <div className="lunoris-canvas-weave" aria-hidden="true" />
-      <div className="lunoris-tile-shade" />
+      <div className="lunoris-tile-media-clip">
+        {location.isVideo && location.videoSrc ? (
+          <ResilientVideo
+            className="lunoris-tile-bg"
+            src={location.videoSrc}
+            poster={location.image}
+            preload="metadata"
+          />
+        ) : (
+          <img
+            src={location.image}
+            alt={location.title}
+            className="lunoris-tile-bg"
+          />
+        )}
+        <div className="lunoris-canvas-weave" aria-hidden="true" />
+        <div className="lunoris-tile-shade" />
+      </div>
       <ArchedCanvasFrame
         strokeColor={location.strokeColor}
         accentColor={location.accentColor}
