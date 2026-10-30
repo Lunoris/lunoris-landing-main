@@ -1894,11 +1894,12 @@ body {
 .lunoris-news-section {
   position: relative;
   padding: 5.5rem 0 6.5rem;
+  /* starts and ends in the neighbours' pure black and has no gold rule on top, so sections join without a seam */
   background:
-    radial-gradient(ellipse 80% 55% at 50% 0%, rgba(169, 139, 255, 0.12) 0%, rgba(6, 5, 11, 0) 70%),
-    linear-gradient(180deg, #06050b 0%, #0b0814 50%, #06050b 100%);
+    linear-gradient(180deg, #000000 0%, rgba(0, 0, 0, 0) 22%, rgba(0, 0, 0, 0) 82%, #000000 100%), /* black edges over the glow */
+    radial-gradient(ellipse 80% 55% at 50% 14%, rgba(169, 139, 255, 0.1) 0%, rgba(0, 0, 0, 0) 70%),
+    linear-gradient(180deg, #000000 0%, #0b0814 32%, #0b0814 68%, #000000 100%);
   overflow: hidden;
-  border-top: 1px solid rgba(229, 193, 128, 0.14);
 }
 
 /* Centered container with clear side margins on the News pages (/news and /news/[slug]) */
@@ -3001,11 +3002,12 @@ body {
   .lunoris-news-section {
   position: relative;
   padding: 5.5rem 0 6.5rem;
+  /* starts and ends in the neighbours' pure black and has no gold rule on top, so sections join without a seam */
   background:
-    radial-gradient(ellipse 80% 55% at 50% 0%, rgba(169, 139, 255, 0.12) 0%, rgba(6, 5, 11, 0) 70%),
-    linear-gradient(180deg, #06050b 0%, #0b0814 50%, #06050b 100%);
+    linear-gradient(180deg, #000000 0%, rgba(0, 0, 0, 0) 22%, rgba(0, 0, 0, 0) 82%, #000000 100%), /* black edges over the glow */
+    radial-gradient(ellipse 80% 55% at 50% 14%, rgba(169, 139, 255, 0.1) 0%, rgba(0, 0, 0, 0) 70%),
+    linear-gradient(180deg, #000000 0%, #0b0814 32%, #0b0814 68%, #000000 100%);
   overflow: hidden;
-  border-top: 1px solid rgba(229, 193, 128, 0.14);
 }
   .lunoris-heading-stack {
     margin-bottom: 2.25rem;
@@ -3209,14 +3211,14 @@ body {
   position: relative;
   padding: clamp(5.5rem, calc(8vw * var(--vu)), 8rem) 0;
   background:
+    linear-gradient(180deg, #000000 0%, rgba(0, 0, 0, 0) 22%, rgba(0, 0, 0, 0) 82%, #000000 100%), /* black edges over the glow */
     radial-gradient(
-      ellipse 78% 52% at 50% 0%,
-      rgba(229, 193, 128, 0.08) 0%,
-      rgba(168, 85, 247, 0.06) 42%,
-      rgba(6, 5, 11, 0) 72%
+      ellipse 78% 52% at 50% 14%,
+      rgba(229, 193, 128, 0.07) 0%,
+      rgba(168, 85, 247, 0.05) 42%,
+      rgba(0, 0, 0, 0) 72%
     ),
-    linear-gradient(180deg, #06050b 0%, #0b0815 50%, #06050b 100%);
-  border-top: 1px solid rgba(229, 193, 128, 0.14);
+    linear-gradient(180deg, #000000 0%, #0b0815 32%, #0b0815 68%, #000000 100%); /* pure black at both edges: no seam */
   overflow: hidden;
 }
 
