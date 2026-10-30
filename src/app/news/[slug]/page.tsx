@@ -4,6 +4,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getAllNews, getNewsBySlug } from "@/lib/newsStore";
 import type { NavLinkItem } from "@/data/gameData";
+import { BrushstrokeButtonBg } from "@/components/ui/CanvasFrames";
 import { NewsArticleCard } from "@/components/ui/NewsArticleCard";
 import { ResilientVideo } from "@/components/ui/ResilientVideo";
 import { HeaderBar } from "@/components/sections/HeaderBar";
@@ -121,21 +122,23 @@ export default async function SingleNewsArticlePage({
               <div className="lunoris-canvas-weave" aria-hidden="true" />
 
               <div className="news-article-showcase-frame">
-                {article.isVideo && article.videoSrc ? (
-                  <ResilientVideo
-                    className="news-article-video"
-                    src={article.videoSrc}
-                    poster={article.image}
-                    controls
-                    preload="metadata"
-                  />
-                ) : (
-                  <img
-                    src={article.image}
-                    alt={article.title}
-                    className="news-article-banner-img"
-                  />
-                )}
+                <div className="news-article-showcase-clip">
+                  {article.isVideo && article.videoSrc ? (
+                    <ResilientVideo
+                      className="news-article-video"
+                      src={article.videoSrc}
+                      poster={article.image}
+                      controls
+                      preload="metadata"
+                    />
+                  ) : (
+                    <img
+                      src={article.image}
+                      alt={article.title}
+                      className="news-article-banner-img"
+                    />
+                  )}
+                </div>
               </div>
 
               {article.highlights.length > 0 && (
@@ -177,10 +180,12 @@ export default async function SingleNewsArticlePage({
 
               <div className="news-article-actions">
                 <Link href="/news" className="lunoris-all-news-btn">
-                  ← All News Chronicles
+                  <BrushstrokeButtonBg />
+                  <span>← All News Chronicles</span>
                 </Link>
                 <Link href="/" className="lunoris-all-news-btn">
-                  Return to Main World
+                  <BrushstrokeButtonBg />
+                  <span>Return to Main World</span>
                 </Link>
               </div>
             </article>

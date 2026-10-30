@@ -41,10 +41,30 @@ export function useLunorisScrollEffects() {
     let flightRafId: number | null = null;
     let lastTime = performance.now();
 
-    // Desktop CSS sets zoom on <html> (globals.css). Rects and scrollY are in
-    // screen px, while px values set inside the page get zoomed, so divide by it.
+    // Desktop CSS sets zoom on <html> (globals.css). Chrome 128+ / Firefox 126+ /
+    // Safari 18+ scale getBoundingClientRect() by CSS zoom, whereas Safari 15-17
+    // returns unzoomed CSS px in getBoundingClientRect(). Measuring the live ratio
+    // between getBoundingClientRect().width and offsetWidth keeps flight & scroll
+    // math pixel-accurate across all engines and versions.
     const pageZoom = () =>
       parseFloat(getComputedStyle(document.documentElement).zoom) || 1;
+
+    const getRectMetrics = () => {
+      const z = pageZoom();
+      const navSlot = navBtnSlotRef.current;
+      const rectScale =
+        navSlot && navSlot.offsetWidth > 0
+          ? navSlot.getBoundingClientRect().width / navSlot.offsetWidth
+          : z;
+      const safeRectScale = rectScale > 0.01 ? rectScale : 1;
+      const vpScale = safeRectScale / z;
+      return {
+        z,
+        rectScale: safeRectScale,
+        vpW: window.innerWidth * vpScale,
+        vpH: window.innerHeight * vpScale,
+      };
+    };
 
     const applySteamFlight = (p: number) => {
       const btn = steamBtnRef.current;
@@ -66,6 +86,7 @@ export function useLunorisScrollEffects() {
         return;
       }
 
+      const { rectScale, vpW, vpH } = getRectMetrics();
       const navRect = navSlot.getBoundingClientRect();
       const ctaRect = ctaSlot.getBoundingClientRect();
 
@@ -74,16 +95,16 @@ export function useLunorisScrollEffects() {
       const endX = ctaRect.left + ctaRect.width / 2;
       const rawEndY = ctaRect.top + ctaRect.height / 2;
       const endY = Math.min(
-        window.innerHeight - 68,
-        Math.max(startY + 120, rawEndY)
+        vpH - 68 * rectScale,
+        Math.max(startY + 120 * rectScale, rawEndY)
       );
 
       // Comfortable margin from the right edge (responsive for mobile, tablet, and desktop)
       const isMobile = window.innerWidth <= 768;
       const minRightMargin = isMobile
-        ? Math.max(24, window.innerWidth * 0.06)
-        : Math.max(105, window.innerWidth * 0.06);
-      const railX = Math.min(startX, window.innerWidth - minRightMargin);
+        ? Math.max(24 * rectScale, vpW * 0.06)
+        : Math.max(105 * rectScale, vpW * 0.06);
+      const railX = Math.min(startX, vpW - minRightMargin);
 
       // Silky-smooth sine ease-in-out parameter u in [0, 1]
       const u = 0.5 - 0.5 * Math.cos(p * Math.PI);
@@ -117,9 +138,8 @@ export function useLunorisScrollEffects() {
       const scale = 1 + arc * 0.08;
       const rot = Math.sin(u * Math.PI) * (-2.2 * dir);
 
-      const z = pageZoom();
-      btn.style.setProperty("--btn-fly-x", `${(dx / z).toFixed(2)}px`);
-      btn.style.setProperty("--btn-fly-y", `${(dy / z).toFixed(2)}px`);
+      btn.style.setProperty("--btn-fly-x", `${(dx / rectScale).toFixed(2)}px`);
+      btn.style.setProperty("--btn-fly-y", `${(dy / rectScale).toFixed(2)}px`);
       btn.style.setProperty("--btn-fly-scale", `${scale.toFixed(3)}`);
       btn.style.setProperty("--btn-fly-rot", `${rot.toFixed(2)}deg`);
       btn.style.setProperty("--cta-morph", `${ctaMorph.toFixed(3)}`);
@@ -162,14 +182,16 @@ export function useLunorisScrollEffects() {
     const onScroll = () => {
       if (!ticking) {
         window.requestAnimationFrame(() => {
+          const { z, vpH } = getRectMetrics();
+
           if (heroRef.current) {
-            const y = Math.min(window.scrollY / pageZoom(), 800);
+            const y = Math.min(window.scrollY / z, 800);
             heroRef.current.style.setProperty("--hero-scroll", `${y}`);
           }
 
           if (roadmapTimelineRef.current) {
             const rect = roadmapTimelineRef.current.getBoundingClientRect();
-            const triggerPoint = window.innerHeight * 0.68;
+            const triggerPoint = vpH * 0.68;
             const rawProgress =
               (triggerPoint - rect.top) / Math.max(1, rect.height);
             const clamped = Math.max(0, Math.min(1, rawProgress));
@@ -188,7 +210,7 @@ export function useLunorisScrollEffects() {
 
           if (finalCtaSlotRef.current) {
             const ctaRect = finalCtaSlotRef.current.getBoundingClientRect();
-            const shouldFlyDown = ctaRect.top < window.innerHeight * 0.88;
+            const shouldFlyDown = ctaRect.top < vpH * 0.88;
             const nextTarget = shouldFlyDown ? 1 : 0;
             if (nextTarget !== targetFlight) {
               targetFlight = nextTarget;

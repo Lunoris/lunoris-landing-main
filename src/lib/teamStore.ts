@@ -10,14 +10,307 @@ import {
 // The wiki is the source of truth (GET /api/v1/team only lists people who opted in). The landing site keeps no
 // copy on disk (Vercel's disk does not persist): it reads the wiki through Next's data cache, and the wiki's
 // POST /api/team push expires that cache so a change shows up at once.
-const WIKI_URL = (process.env.LUNORIS_WIKI_URL || "https://lunoris-wiki.vercel.app").trim().replace(/\/+$/, "");
+const DEFAULT_PROD_WIKI_URL = "https://lunoris-wiki.vercel.app";
 export const TEAM_TAG = "team";
 
 export interface StoredTeamSnapshot {
   updated_at: string;
+  allowed_social_platforms: string[];
   total: number;
   departments: DepartmentSummary[];
   members: PublicTeamMember[];
+}
+
+interface SocialPlatformDef {
+  key: string;
+  label: string;
+  domains: string[];
+  extraHosts?: string[];
+  allowSubdomains?: boolean;
+  requireSubdomain?: boolean;
+  requirePathOnRoot?: boolean;
+  requiredPathPrefix?: string;
+}
+
+export const ALLOWED_SOCIAL_PLATFORMS: readonly SocialPlatformDef[] = [
+  {
+    key: "github",
+    label: "GitHub",
+    domains: ["github.com"],
+    extraHosts: ["gist.github.com"],
+  },
+  {
+    key: "github_pages",
+    label: "GitHub Pages",
+    domains: ["github.io"],
+    allowSubdomains: true,
+    requireSubdomain: true,
+  },
+  {
+    key: "gitlab",
+    label: "GitLab",
+    domains: ["gitlab.com"],
+  },
+  {
+    key: "gitlab_pages",
+    label: "GitLab Pages",
+    domains: ["gitlab.io"],
+    allowSubdomains: true,
+    requireSubdomain: true,
+  },
+  {
+    key: "linkedin",
+    label: "LinkedIn",
+    domains: ["linkedin.com"],
+    allowSubdomains: true,
+    requirePathOnRoot: true,
+  },
+  {
+    key: "artstation",
+    label: "ArtStation",
+    domains: ["artstation.com"],
+    allowSubdomains: true,
+  },
+  {
+    key: "behance",
+    label: "Behance",
+    domains: ["behance.net"],
+  },
+  {
+    key: "dribbble",
+    label: "Dribbble",
+    domains: ["dribbble.com"],
+  },
+  {
+    key: "cara",
+    label: "Cara",
+    domains: ["cara.app"],
+  },
+  {
+    key: "deviantart",
+    label: "DeviantArt",
+    domains: ["deviantart.com"],
+    allowSubdomains: true,
+  },
+  {
+    key: "sketchfab",
+    label: "Sketchfab",
+    domains: ["sketchfab.com"],
+  },
+  {
+    key: "figma",
+    label: "Figma",
+    domains: ["figma.com"],
+  },
+  {
+    key: "x",
+    label: "X",
+    domains: ["x.com", "twitter.com"],
+  },
+  {
+    key: "bluesky",
+    label: "Bluesky",
+    domains: ["bsky.app"],
+  },
+  {
+    key: "telegram",
+    label: "Telegram",
+    domains: ["t.me", "telegram.me"],
+  },
+  {
+    key: "discord",
+    label: "Discord",
+    domains: ["discord.com", "discordapp.com"],
+    requiredPathPrefix: "/users/",
+  },
+  {
+    key: "instagram",
+    label: "Instagram",
+    domains: ["instagram.com"],
+  },
+  {
+    key: "threads",
+    label: "Threads",
+    domains: ["threads.net", "threads.com"],
+  },
+  {
+    key: "youtube",
+    label: "YouTube",
+    domains: ["youtube.com", "youtu.be"],
+    extraHosts: ["m.youtube.com"],
+  },
+  {
+    key: "twitch",
+    label: "Twitch",
+    domains: ["twitch.tv"],
+    extraHosts: ["m.twitch.tv"],
+  },
+  {
+    key: "tiktok",
+    label: "TikTok",
+    domains: ["tiktok.com"],
+  },
+  {
+    key: "reddit",
+    label: "Reddit",
+    domains: ["reddit.com"],
+    extraHosts: ["old.reddit.com"],
+  },
+  {
+    key: "facebook",
+    label: "Facebook",
+    domains: ["facebook.com", "fb.com"],
+  },
+  {
+    key: "vk",
+    label: "VK",
+    domains: ["vk.com"],
+  },
+  {
+    key: "soundcloud",
+    label: "SoundCloud",
+    domains: ["soundcloud.com"],
+    extraHosts: ["on.soundcloud.com"],
+  },
+  {
+    key: "bandcamp",
+    label: "Bandcamp",
+    domains: ["bandcamp.com"],
+    allowSubdomains: true,
+  },
+  {
+    key: "spotify",
+    label: "Spotify",
+    domains: ["open.spotify.com"],
+  },
+  {
+    key: "vimeo",
+    label: "Vimeo",
+    domains: ["vimeo.com"],
+  },
+  {
+    key: "itchio",
+    label: "itch.io",
+    domains: ["itch.io"],
+    allowSubdomains: true,
+  },
+  {
+    key: "steam",
+    label: "Steam",
+    domains: ["steamcommunity.com", "store.steampowered.com"],
+  },
+  {
+    key: "medium",
+    label: "Medium",
+    domains: ["medium.com"],
+    allowSubdomains: true,
+  },
+  {
+    key: "devto",
+    label: "DEV",
+    domains: ["dev.to"],
+  },
+];
+
+export const ALLOWED_SOCIAL_PLATFORM_KEYS: string[] =
+  ALLOWED_SOCIAL_PLATFORMS.map((p) => p.key);
+
+const SUBDOMAIN_LABEL_RE = /^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?$/;
+const MAX_SOCIAL_LINKS = 8;
+
+function matchHostToPlatform(hostname: string): {
+  platform: SocialPlatformDef;
+  isUserSubdomain: boolean;
+} | null {
+  const host = hostname.toLowerCase().replace(/\.$/, "");
+  for (const platform of ALLOWED_SOCIAL_PLATFORMS) {
+    if (platform.extraHosts?.includes(host)) {
+      return { platform, isUserSubdomain: false };
+    }
+    for (const domain of platform.domains) {
+      if (
+        !platform.requireSubdomain &&
+        (host === domain || host === `www.${domain}`)
+      ) {
+        return { platform, isUserSubdomain: false };
+      }
+      if (platform.allowSubdomains && host.endsWith(`.${domain}`)) {
+        const sub = host.slice(0, -(domain.length + 1));
+        if (sub && sub !== "www" && SUBDOMAIN_LABEL_RE.test(sub)) {
+          const isRegionalLinkedin = platform.key === "linkedin";
+          return { platform, isUserSubdomain: !isRegionalLinkedin };
+        }
+      }
+    }
+  }
+  return null;
+}
+
+function normalizeAllowedSocialLink(
+  rawUrl: string,
+  customLabel?: string | null
+): PublicTeamLink | null {
+  const trimmed = rawUrl.trim();
+  if (!trimmed || trimmed.length > 320 || /[\s<>"'`]/.test(trimmed)) {
+    return null;
+  }
+  if (
+    /^[a-zA-Z][a-zA-Z0-9+.-]*:/.test(trimmed) &&
+    !/^https?:\/\//i.test(trimmed)
+  ) {
+    return null;
+  }
+
+  let parsed: URL;
+  try {
+    parsed = new URL(
+      /^https?:\/\//i.test(trimmed) ? trimmed : `https://${trimmed}`
+    );
+  } catch {
+    return null;
+  }
+
+  if (parsed.protocol !== "https:" && parsed.protocol !== "http:") {
+    return null;
+  }
+  if (parsed.username || parsed.password || parsed.port) {
+    return null;
+  }
+
+  parsed.protocol = "https:";
+  parsed.hash = "";
+
+  const matched = matchHostToPlatform(parsed.hostname);
+  if (!matched) {
+    return null;
+  }
+
+  const { platform, isUserSubdomain } = matched;
+  const cleanPath = parsed.pathname.replace(/\/+/g, "/");
+
+  if (
+    platform.requiredPathPrefix &&
+    !cleanPath.toLowerCase().startsWith(platform.requiredPathPrefix)
+  ) {
+    return null;
+  }
+
+  const needsPath = (platform.requirePathOnRoot ?? true) && !isUserSubdomain;
+  if (needsPath && (!cleanPath || cleanPath === "/")) {
+    return null;
+  }
+
+  const rawLabel = typeof customLabel === "string" ? customLabel.trim() : "";
+  const isUrlLabel =
+    /^https?:\/\//i.test(rawLabel) || rawLabel.includes("/");
+  const label =
+    rawLabel && !isUrlLabel ? rawLabel.slice(0, 40) : platform.label;
+
+  return {
+    platform: platform.key,
+    label,
+    url: parsed.toString(),
+  };
 }
 
 function sanitizeAvatarUrl(raw: unknown): string | null {
@@ -46,21 +339,60 @@ function sanitizeAvatarUrl(raw: unknown): string | null {
   return null;
 }
 
-function sanitizeLinks(raw: unknown): PublicTeamLink[] {
-  if (!Array.isArray(raw)) return [];
+function sanitizeLinksAndSocialMap(
+  rawLinks: unknown,
+  rawSocialLinks?: unknown
+): {
+  links: PublicTeamLink[];
+  social_links: Record<string, string>;
+} {
   const result: PublicTeamLink[] = [];
-  for (const item of raw) {
-    if (!item || typeof item !== "object") continue;
-    const rec = item as Record<string, unknown>;
-    const url = typeof rec.url === "string" ? rec.url.trim() : "";
-    const label =
-      typeof rec.label === "string" ? rec.label.trim().slice(0, 60) : url;
-    if (/^https?:\/\//i.test(url) && url.length <= 2048) {
-      result.push({ label: label || url, url });
+  const seen = new Set<string>();
+
+  const pushCandidate = (urlVal: unknown, labelVal?: unknown) => {
+    if (result.length >= MAX_SOCIAL_LINKS || typeof urlVal !== "string") return;
+    const normalized = normalizeAllowedSocialLink(
+      urlVal,
+      typeof labelVal === "string" ? labelVal : null
+    );
+    if (!normalized) return;
+    const dedupeKey = normalized.url.toLowerCase().replace(/\/$/, "");
+    if (seen.has(dedupeKey)) return;
+    seen.add(dedupeKey);
+    result.push(normalized);
+  };
+
+  if (Array.isArray(rawLinks)) {
+    for (const item of rawLinks) {
+      if (typeof item === "string") {
+        pushCandidate(item);
+      } else if (item && typeof item === "object") {
+        const rec = item as Record<string, unknown>;
+        pushCandidate(rec.url, rec.label);
+      }
     }
-    if (result.length >= 8) break;
   }
-  return result;
+
+  if (
+    rawSocialLinks &&
+    typeof rawSocialLinks === "object" &&
+    !Array.isArray(rawSocialLinks)
+  ) {
+    for (const val of Object.values(
+      rawSocialLinks as Record<string, unknown>
+    )) {
+      pushCandidate(val);
+    }
+  }
+
+  const social_links: Record<string, string> = {};
+  for (const link of result) {
+    if (link.platform && !social_links[link.platform]) {
+      social_links[link.platform] = link.url;
+    }
+  }
+
+  return { links: result, social_links };
 }
 
 function getInitialsFallback(name: string): string {
@@ -133,6 +465,10 @@ export function sanitizePublicTeamMembers(
       typeof m.bio === "string" && m.bio.trim()
         ? m.bio.trim().slice(0, 4000)
         : null;
+    const { links, social_links } = sanitizeLinksAndSocialMap(
+      m.links,
+      m.social_links
+    );
 
     cleaned.push({
       id,
@@ -146,7 +482,8 @@ export function sanitizePublicTeamMembers(
       department_key,
       avatar_url: sanitizeAvatarUrl(m.avatar_url),
       bio,
-      links: sanitizeLinks(m.links),
+      links,
+      social_links,
       public: true,
     });
   }
@@ -178,27 +515,85 @@ export function buildDepartmentsForMembers(
   ];
 }
 
-/** The opted-in team from the wiki. Throws when the wiki is unreachable, so a failure is never cached. */
-async function pullTeamFromWiki(): Promise<StoredTeamSnapshot> {
-  const res = await fetch(`${WIKI_URL}/api/v1/team`, {
-    headers: { Accept: "application/json" },
-    cache: "no-store",
-    signal: AbortSignal.timeout(4500),
-  });
-  const data = (await res.json()) as Record<string, unknown>;
-  if (!res.ok || data?.ok !== true || !Array.isArray(data.members)) {
-    throw new Error(`Wiki team API returned ${res.status}.`);
+function getCandidateWikiUrls(): string[] {
+  const configured = (process.env.LUNORIS_WIKI_URL || "")
+    .trim()
+    .replace(/\/+$/, "");
+
+  if (process.env.NODE_ENV === "production") {
+    return [configured || DEFAULT_PROD_WIKI_URL];
   }
-  const members = sanitizePublicTeamMembers(data.members);
-  return {
-    updated_at: new Date().toISOString(),
-    total: members.length,
-    departments: buildDepartmentsForMembers(members),
-    members,
-  };
+
+  // In local development, probe explicit LUNORIS_WIKI_URL first, then local Wiki ports (3000 / 3001),
+  // and finally fall back to production Wiki if local Wiki isn't running.
+  return Array.from(
+    new Set(
+      [
+        configured,
+        "http://localhost:3000",
+        "http://localhost:3001",
+        DEFAULT_PROD_WIKI_URL,
+      ].filter(Boolean)
+    )
+  );
 }
 
-// Refreshed every 5 minutes at most, or at once when the wiki pushes.
+/** The opted-in team from the wiki. Throws when the wiki is unreachable, so a failure is never cached. */
+async function pullTeamFromWiki(): Promise<StoredTeamSnapshot> {
+  const candidates = getCandidateWikiUrls();
+  let lastError: Error | null = null;
+
+  for (const baseUrl of candidates) {
+    try {
+      const res = await fetch(`${baseUrl}/api/v1/team`, {
+        headers: { Accept: "application/json" },
+        cache: "no-store",
+        signal: AbortSignal.timeout(4500),
+      });
+      if (!res.ok) {
+        lastError = new Error(`${baseUrl} returned HTTP ${res.status}`);
+        continue;
+      }
+      const contentType = res.headers.get("content-type") || "";
+      if (!contentType.includes("application/json")) {
+        lastError = new Error(`${baseUrl} did not return JSON`);
+        continue;
+      }
+
+      const data = (await res.json()) as Record<string, unknown>;
+      if (data?.ok !== true || !Array.isArray(data.members)) {
+        lastError = new Error(`${baseUrl} returned invalid team payload`);
+        continue;
+      }
+
+      const members = sanitizePublicTeamMembers(data.members);
+      const allowedPlatforms = Array.isArray(data.allowed_social_platforms)
+        ? data.allowed_social_platforms.filter(
+            (k): k is string => typeof k === "string" && k.length <= 40
+          )
+        : ALLOWED_SOCIAL_PLATFORM_KEYS;
+
+      return {
+        updated_at:
+          typeof data.updated_at === "string" && data.updated_at
+            ? data.updated_at
+            : new Date().toISOString(),
+        allowed_social_platforms: allowedPlatforms,
+        total: members.length,
+        departments: buildDepartmentsForMembers(members),
+        members,
+      };
+    } catch (err) {
+      lastError =
+        err instanceof Error ? err : new Error(`Failed reaching ${baseUrl}`);
+    }
+  }
+
+  throw lastError || new Error("Wiki team API is unreachable.");
+}
+
+// Refreshed every 5 minutes in production (or instantly on POST /api/team push).
+// In local development we pull directly so local edits on port 3000 appear right away.
 const pullTeamCached = unstable_cache(pullTeamFromWiki, ["team-snapshot"], {
   tags: [TEAM_TAG],
   revalidate: 300,
@@ -207,12 +602,16 @@ const pullTeamCached = unstable_cache(pullTeamFromWiki, ["team-snapshot"], {
 export async function getTeamSnapshot(options?: {
   forcePull?: boolean;
 }): Promise<StoredTeamSnapshot> {
+  const bypassCache =
+    Boolean(options?.forcePull) || process.env.NODE_ENV !== "production";
+
   try {
-    return options?.forcePull ? await pullTeamFromWiki() : await pullTeamCached();
+    return bypassCache ? await pullTeamFromWiki() : await pullTeamCached();
   } catch {
     // Wiki unreachable: the pages fall back to their built-in leader slots
     return {
       updated_at: new Date().toISOString(),
+      allowed_social_platforms: ALLOWED_SOCIAL_PLATFORM_KEYS,
       total: 0,
       departments: [{ key: "all", label: "All Departments", count: 0 }],
       members: [],
@@ -222,6 +621,7 @@ export async function getTeamSnapshot(options?: {
 
 export interface ResolvedSiteTeamData {
   updated_at: string;
+  allowed_social_platforms: string[];
   /** The 3 department heads for the Main Landing Page (/#team) */
   leaders: TeamLeader[];
   /** All public members excluding the 3 main-page department heads (for /team) */
@@ -235,6 +635,8 @@ export interface ResolvedSiteTeamData {
 export async function getResolvedSiteTeamData(options?: {
   forcePull?: boolean;
   department?: string | null;
+  team?: string | null;
+  platform?: string | null;
   q?: string | null;
 }): Promise<ResolvedSiteTeamData> {
   const snapshot = await getTeamSnapshot({ forcePull: options?.forcePull });
@@ -246,6 +648,8 @@ export async function getResolvedSiteTeamData(options?: {
   const rosterDepartments = buildDepartmentsForMembers(baseRoster);
 
   const deptFilter = options?.department?.trim().toLowerCase() || "";
+  const teamFilter = options?.team?.trim().toLowerCase() || "";
+  const platformFilter = options?.platform?.trim().toLowerCase() || "";
   const qFilter = options?.q?.trim().toLowerCase() || "";
 
   const rosterMembers = baseRoster.filter((m) => {
@@ -257,9 +661,29 @@ export async function getResolvedSiteTeamData(options?: {
         return false;
       }
     }
+    if (teamFilter) {
+      if (
+        (m.team || "").toLowerCase() !== teamFilter &&
+        m.department.toLowerCase() !== teamFilter &&
+        m.department_key.toLowerCase() !== teamFilter
+      ) {
+        return false;
+      }
+    }
+    if (platformFilter) {
+      const hasPlatform = m.links.some(
+        (l) =>
+          (l.platform || "").toLowerCase() === platformFilter ||
+          l.label.toLowerCase() === platformFilter
+      );
+      if (!hasPlatform) return false;
+    }
     if (qFilter) {
+      const linksHay = m.links
+        .map((l) => `${l.platform || ""} ${l.label} ${l.url}`)
+        .join(" ");
       const hay =
-        `${m.name} ${m.title} ${m.role} ${m.department} ${m.bio || ""}`.toLowerCase();
+        `${m.name} ${m.title} ${m.role} ${m.department} ${m.bio || ""} ${linksHay}`.toLowerCase();
       if (!hay.includes(qFilter)) return false;
     }
     return true;
@@ -267,6 +691,7 @@ export async function getResolvedSiteTeamData(options?: {
 
   return {
     updated_at: snapshot.updated_at,
+    allowed_social_platforms: snapshot.allowed_social_platforms,
     leaders,
     rosterMembers,
     rosterDepartments,

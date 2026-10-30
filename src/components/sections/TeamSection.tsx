@@ -8,6 +8,7 @@ import {
   OrnamentDivider,
   TallDeckledCanvasFrame,
 } from "@/components/ui/CanvasFrames";
+import { TeamSocialLinks } from "@/components/ui/SocialPlatformIcon";
 
 export function LeaderPortraitCard({ leader }: { leader: TeamLeader }) {
   const [failedSrc, setFailedSrc] = useState<string | null>(null);
@@ -77,6 +78,11 @@ export function LeaderPortraitCard({ leader }: { leader: TeamLeader }) {
         <span className="lunoris-leader-dept">{leader.department}</span>
         <h3 className="lunoris-leader-name">{leader.name}</h3>
         <p className="lunoris-leader-bio">{leader.bio}</p>
+        <TeamSocialLinks
+          links={leader.links}
+          memberName={leader.name}
+          variant="leader"
+        />
       </div>
     </article>
   );

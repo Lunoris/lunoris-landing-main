@@ -16,8 +16,12 @@ const MAX_TEAM_WEBHOOK_BYTES = 10 * 1024 * 1024;
 export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url);
-    const department = searchParams.get("department");
-    const q = searchParams.get("q");
+    const department =
+      searchParams.get("department") || searchParams.get("dept");
+    const team = searchParams.get("team");
+    const platform =
+      searchParams.get("platform") || searchParams.get("social");
+    const q = searchParams.get("q") || searchParams.get("search");
     const forcePull =
       searchParams.get("refresh") === "1" ||
       searchParams.get("pull") === "1";
@@ -25,6 +29,8 @@ export async function GET(req: NextRequest) {
     const resolved = await getResolvedSiteTeamData({
       forcePull,
       department,
+      team,
+      platform,
       q,
     });
 
@@ -33,6 +39,7 @@ export async function GET(req: NextRequest) {
         {
           ok: true,
           updated_at: resolved.updated_at,
+          allowed_social_platforms: resolved.allowed_social_platforms,
           leaders: resolved.leaders,
           total: resolved.rosterMembers.length,
           departments: resolved.rosterDepartments,
@@ -58,7 +65,7 @@ export async function GET(req: NextRequest) {
 /**
  * Webhook endpoint receiving automatic Push signals from Lunoris Wiki
  * (`POST ${LUNORIS_SITE_URL}/api/team`) whenever a team member toggles `public`,
- * uploads a new `avatar_url`, or updates their `bio` / `title`.
+ * uploads a new `avatar_url`, or updates their `bio`, `title`, or `links`.
  */
 export async function POST(req: NextRequest) {
   const bodyResult = await readAuthenticatedJsonText(
@@ -96,6 +103,7 @@ export async function POST(req: NextRequest) {
           ok: true,
           event: payload.event || "team.updated",
           updated_at: resolved.updated_at,
+          allowed_social_platforms: resolved.allowed_social_platforms,
           leaders: resolved.leaders,
           total: resolved.rosterMembers.length,
           departments: resolved.rosterDepartments,

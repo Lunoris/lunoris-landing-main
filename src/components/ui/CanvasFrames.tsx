@@ -71,92 +71,75 @@ export function OrnamentDivider() {
 }
 
 export function BrushstrokeButtonBg() {
+  const rawId = React.useId().replace(/[^a-zA-Z0-9_-]/g, "");
+  const crescentFillId = `crescentFill-${rawId}`;
+  const crescentRimId = `crescentRim-${rawId}`;
+  const crescentGlowId = `crescentGlow-${rawId}`;
+
   return (
-    <svg
-      className="canvas-brush-btn-svg"
-      viewBox="0 0 460 116"
-      aria-hidden="true"
-    >
-      <defs>
-        {/* Deep velvety twilight-purple pill fill */}
-        <linearGradient id="moonPillFill" x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" stopColor="#2d1d54" />
-          <stop offset="48%" stopColor="#1e133a" />
-          <stop offset="100%" stopColor="#150d2a" />
-        </linearGradient>
+    <i className="canvas-brush-btn-bg" aria-hidden="true">
+      <i className="canvas-brush-pill">
+        <svg
+          className="canvas-brush-crescent-svg"
+          viewBox="0 0 100 100"
+          preserveAspectRatio="xMinYMid meet"
+          aria-hidden="true"
+        >
+          <defs>
+            {/* Crescent moon translucent lavender-purple fill */}
+            <linearGradient
+              id={crescentFillId}
+              x1="0%"
+              y1="0%"
+              x2="100%"
+              y2="100%"
+            >
+              <stop offset="0%" stopColor="#f3e8ff" stopOpacity="0.42" />
+              <stop offset="50%" stopColor="#d8b4fe" stopOpacity="0.28" />
+              <stop offset="100%" stopColor="#c084fc" stopOpacity="0.4" />
+            </linearGradient>
 
-        {/* Pill rim gradient: bright near the left crescent, subtle violet around the capsule */}
-        <linearGradient id="moonPillStroke" x1="0%" y1="50%" x2="100%" y2="50%">
-          <stop offset="0%" stopColor="rgba(233, 213, 255, 0.9)" />
-          <stop offset="28%" stopColor="rgba(192, 132, 252, 0.48)" />
-          <stop offset="70%" stopColor="rgba(168, 85, 247, 0.28)" />
-          <stop offset="100%" stopColor="rgba(139, 92, 246, 0.22)" />
-        </linearGradient>
+            {/* Crescent moon bright glowing rim */}
+            <linearGradient
+              id={crescentRimId}
+              x1="0%"
+              y1="0%"
+              x2="50%"
+              y2="100%"
+            >
+              <stop offset="0%" stopColor="#faf5ff" />
+              <stop offset="50%" stopColor="#e9d5ff" />
+              <stop offset="100%" stopColor="#d8b4fe" />
+            </linearGradient>
 
-        {/* Crescent moon translucent lavender-purple fill */}
-        <linearGradient id="crescentFill" x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" stopColor="rgba(243, 232, 255, 0.42)" />
-          <stop offset="50%" stopColor="rgba(216, 180, 254, 0.28)" />
-          <stop offset="100%" stopColor="rgba(192, 132, 252, 0.4)" />
-        </linearGradient>
+            <filter
+              id={crescentGlowId}
+              filterUnits="userSpaceOnUse"
+              x="-32"
+              y="-20"
+              width="104"
+              height="140"
+            >
+              <feGaussianBlur stdDeviation="3.2" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+          </defs>
 
-        {/* Crescent moon bright glowing rim */}
-        <linearGradient id="crescentRim" x1="0%" y1="0%" x2="50%" y2="100%">
-          <stop offset="0%" stopColor="#faf5ff" />
-          <stop offset="50%" stopColor="#e9d5ff" />
-          <stop offset="100%" stopColor="#d8b4fe" />
-        </linearGradient>
-
-        {/* Soft radial moonlight glow behind the Steam icon */}
-        <radialGradient id="iconMoonGlow" cx="20%" cy="50%" r="32%">
-          <stop offset="0%" stopColor="rgba(233, 213, 255, 0.34)" />
-          <stop offset="55%" stopColor="rgba(168, 85, 247, 0.14)" />
-          <stop offset="100%" stopColor="rgba(168, 85, 247, 0)" />
-        </radialGradient>
-
-        <filter id="crescentGlow" x="-25%" y="-25%" width="150%" height="150%">
-          <feGaussianBlur stdDeviation="3.2" result="blur" />
-          <feMerge>
-            <feMergeNode in="blur" />
-            <feMergeNode in="SourceGraphic" />
-          </feMerge>
-        </filter>
-      </defs>
-
-      {/* Main capsule / pill body */}
-      <rect
-        x="18"
-        y="8"
-        width="430"
-        height="100"
-        rx="50"
-        ry="50"
-        fill="url(#moonPillFill)"
-        stroke="url(#moonPillStroke)"
-        strokeWidth="1.5"
-      />
-
-      {/* Ambient radial glow around the left Steam icon */}
-      <rect
-        x="18"
-        y="8"
-        width="430"
-        height="100"
-        rx="50"
-        ry="50"
-        fill="url(#iconMoonGlow)"
-      />
-
-      {/* Glowing Crescent Moon hugging the left semicircle of the pill */}
-      <path
-        d="M 68 8 A 62 50 0 0 0 68 108 A 50 50 0 0 1 68 8 Z"
-        fill="url(#crescentFill)"
-        stroke="url(#crescentRim)"
-        strokeWidth="2.2"
-        strokeLinejoin="round"
-        filter="url(#crescentGlow)"
-      />
-    </svg>
+          {/* Glowing Crescent Moon hugging the left semicircle of the pill */}
+          <path
+            d="M 50 0 A 62 50 0 0 0 50 100 A 50 50 0 0 1 50 0 Z"
+            fill={`url(#${crescentFillId})`}
+            stroke={`url(#${crescentRimId})`}
+            strokeWidth="2.2"
+            strokeLinejoin="round"
+            filter={`url(#${crescentGlowId})`}
+          />
+        </svg>
+      </i>
+    </i>
   );
 }
 

@@ -10,9 +10,11 @@ import {
   type TeamLeader,
 } from "@/data/teamData";
 import {
+  BrushstrokeButtonBg,
   DeckledCanvasFrame,
   OrnamentDivider,
 } from "@/components/ui/CanvasFrames";
+import { TeamSocialLinks } from "@/components/ui/SocialPlatformIcon";
 import { HeaderBar } from "@/components/sections/HeaderBar";
 import { FooterBar } from "@/components/sections/FooterBar";
 import { LeaderPortraitCard } from "@/components/sections/TeamSection";
@@ -69,21 +71,11 @@ function StudioMemberCard({ member }: { member: PublicTeamMember }) {
         <p className="lunoris-roster-bio">{member.bio}</p>
       ) : null}
 
-      {member.links && member.links.length > 0 ? (
-        <div className="lunoris-roster-links">
-          {member.links.map((link) => (
-            <a
-              key={link.url}
-              href={link.url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="lunoris-roster-link-chip"
-            >
-              {link.label || "Portfolio"}
-            </a>
-          ))}
-        </div>
-      ) : null}
+      <TeamSocialLinks
+        links={member.links}
+        memberName={member.name}
+        variant="roster"
+      />
     </article>
   );
 }
@@ -245,9 +237,13 @@ export default function LunorisTeamPage() {
               </p>
             )}
 
-            <div className="news-article-actions" style={{ marginTop: "4rem" }}>
+            <div
+              className="news-article-actions"
+              style={{ marginTop: "4rem", justifyContent: "center" }}
+            >
               <Link href="/#team" className="lunoris-all-news-btn">
-                ← Return to Main World
+                <BrushstrokeButtonBg />
+                <span>← Return to Main World</span>
               </Link>
             </div>
           </div>
