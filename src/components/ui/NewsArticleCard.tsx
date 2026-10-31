@@ -1,3 +1,5 @@
+"use client";
+
 import React from "react";
 import Link from "next/link";
 import type { NewsArticle } from "@/data/newsData";
@@ -6,6 +8,8 @@ import {
   TallDeckledCanvasFrame,
 } from "@/components/ui/CanvasFrames";
 import { ResilientVideo } from "@/components/ui/ResilientVideo";
+import { useLanguage } from "@/i18n/LanguageContext";
+import { localizeNewsArticle, localizeNewsCategory } from "@/i18n/helpers";
 
 interface NewsArticleCardProps {
   article: NewsArticle;
@@ -20,9 +24,13 @@ export function NewsArticleCard({
   forceVisible = false,
   frameVariant = "standard",
 }: NewsArticleCardProps) {
+  const { locale, t } = useLanguage();
+  const localized = localizeNewsArticle(article, locale, t);
+  const categoryLabel = localizeNewsCategory(localized.category, t);
+
   return (
     <Link
-      href={`/news/${article.slug}`}
+      href={`/news/${localized.slug}`}
       className={`lunoris-news-card${forceVisible ? " is-visible" : ""}`}
       style={
         {
@@ -35,24 +43,24 @@ export function NewsArticleCard({
       {frameVariant === "tall" && <TallDeckledCanvasFrame />}
 
       <div className="lunoris-news-media">
-        {article.isVideo && article.videoSrc ? (
+        {localized.isVideo && localized.videoSrc ? (
           <ResilientVideo
             className="lunoris-news-thumb"
-            src={article.videoSrc}
-            poster={article.image}
+            src={localized.videoSrc}
+            poster={localized.image}
             preload="metadata"
           />
         ) : (
           <img
-            src={article.image}
-            alt={article.title}
+            src={localized.image}
+            alt={localized.title}
             className="lunoris-news-thumb"
           />
         )}
         <div className="lunoris-news-media-shade" />
-        <span className="news-corner-tag">{article.category}</span>
+        <span className="news-corner-tag">{categoryLabel}</span>
 
-        {article.isVideo && (
+        {localized.isVideo && (
           <div className="lunoris-news-play-circle" aria-hidden="true">
             <svg viewBox="0 0 24 24" fill="currentColor">
               <path d="M8 5v14l11-7z" />
@@ -63,16 +71,16 @@ export function NewsArticleCard({
 
       <div className="lunoris-news-body">
         <div className="lunoris-news-meta">
-          <span>{article.date}</span>
+          <span>{localized.date}</span>
           <span className="news-meta-sep">|</span>
-          <span>{article.readTime}</span>
+          <span>{localized.readTime}</span>
         </div>
-        <h3 className="lunoris-news-title">{article.title}</h3>
-        <p className="lunoris-news-excerpt">{article.excerpt}</p>
+        <h3 className="lunoris-news-title">{localized.title}</h3>
+        <p className="lunoris-news-excerpt">{localized.excerpt}</p>
 
         <div className="lunoris-news-footer">
           <span className="lunoris-news-cta">
-            {article.ctaLabel}
+            {t.news.readMore}
             <span className="lunoris-news-cta-line" />
           </span>
         </div>

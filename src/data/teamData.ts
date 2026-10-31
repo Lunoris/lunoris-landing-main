@@ -37,25 +37,20 @@ export interface TeamLeader {
   initials: string;
   avatar?: string | null;
   accentColor: string;
-  bio: string;
+  bio: string | null;
   links?: PublicTeamLink[];
   social_links?: Record<string, string>;
 }
 
 interface ExecutiveRoleSlot {
   slotKey: "ceo-founder" | "cto" | "cmo";
-  targetRoleLabel: "CEO/Founder" | "CTO" | "CMO";
-  defaultSubtitle: string;
   accentColor: string;
   matchesRole: (roleOrTitle: string) => boolean;
-  fallbackLeader: TeamLeader;
 }
 
 const EXECUTIVE_ROLE_SLOTS: ExecutiveRoleSlot[] = [
   {
     slotKey: "ceo-founder",
-    targetRoleLabel: "CEO/Founder",
-    defaultSubtitle: "Creative Direction & Studio Vision",
     accentColor: "#f5b851",
     matchesRole: (raw) => {
       const r = raw.toLowerCase().trim();
@@ -67,25 +62,9 @@ const EXECUTIVE_ROLE_SLOTS: ExecutiveRoleSlot[] = [
         r.includes("founder")
       );
     },
-    fallbackLeader: {
-      id: "ceo-founder",
-      personId: "14d4e4aa-0bdb-4cf9-b292-35ea0a6726e8",
-      slug: "aziz",
-      name: "Aziz",
-      role: "CEO/Founder",
-      department: "Creative Direction & Studio Vision",
-      initials: "AZ",
-      avatar: null,
-      accentColor: "#f5b851",
-      bio: "Founder and Creative Director of Lunoris Studios. Shapes the emotional core, narrative architecture, and painterly artistic direction across every Dream Island and Nightmare realm.",
-      links: [],
-      social_links: {},
-    },
   },
   {
     slotKey: "cto",
-    targetRoleLabel: "CTO",
-    defaultSubtitle: "Technology, Engineering & Production",
     accentColor: "#38bdf8",
     matchesRole: (raw) => {
       const r = raw.toLowerCase().trim();
@@ -95,25 +74,9 @@ const EXECUTIVE_ROLE_SLOTS: ExecutiveRoleSlot[] = [
         r.includes("chief technology officer")
       );
     },
-    fallbackLeader: {
-      id: "cto",
-      personId: "354f90f7-2dec-4590-a8fb-536c807dd375",
-      slug: "andrew",
-      name: "Andrew",
-      role: "CTO",
-      department: "Technology, Engineering & Production",
-      initials: "AN",
-      avatar: null,
-      accentColor: "#38bdf8",
-      bio: "Leads technical architecture, production pipelines, and cross-disciplinary studio operations—uniting engineering, world-building workflows, and milestone execution.",
-      links: [],
-      social_links: {},
-    },
   },
   {
     slotKey: "cmo",
-    targetRoleLabel: "CMO",
-    defaultSubtitle: "Marketing, Partnerships & Talent",
     accentColor: "#c084fc",
     matchesRole: (raw) => {
       const r = raw.toLowerCase().trim();
@@ -122,20 +85,6 @@ const EXECUTIVE_ROLE_SLOTS: ExecutiveRoleSlot[] = [
         /\bcmo\b/.test(r) ||
         r.includes("chief marketing officer")
       );
-    },
-    fallbackLeader: {
-      id: "cmo",
-      personId: "665f9f93-d02c-4635-b7f5-583a1004716d",
-      slug: "nick-pain",
-      name: "Nick Pain",
-      role: "CMO",
-      department: "Marketing, Partnerships & Talent",
-      initials: "NP",
-      avatar: null,
-      accentColor: "#c084fc",
-      bio: "Directs global publishing strategy, industry partnerships, SAG-AFTRA voice talent collaborations, and community outreach from Gamescom Cologne to worldwide launch.",
-      links: [],
-      social_links: {},
     },
   },
 ];
@@ -151,22 +100,19 @@ const byDisplayOrder = (a: TeamLeader, b: TeamLeader) =>
   DISPLAY_ORDER.indexOf(a.id as ExecutiveRoleSlot["slotKey"]) -
   DISPLAY_ORDER.indexOf(b.id as ExecutiveRoleSlot["slotKey"]);
 
-export const TEAM_LEADERS: TeamLeader[] = EXECUTIVE_ROLE_SLOTS.map(
-  (slot) => slot.fallbackLeader
-).sort(byDisplayOrder);
-
 /**
- * Dynamically resolves the 3 main leaders (CEO/Founder, CTO, CMO) by matching
- * their `title` / `role` from the live `members[]` array returned by Lunoris Wiki,
- * and returns both the 3 `leaders` and the `remainingMembers` (everyone else).
+ * Dynamically resolves the executive leaders (CEO/Founder, CTO, CMO) strictly from
+ * the live `members[]` array returned by Lunoris Wiki API, with zero fallback cards
+ * or invented text, and returns both `leaders` and `remainingMembers` (everyone else).
  */
 export function splitLeadersAndRosterByRole(members: PublicTeamMember[]): {
   leaders: TeamLeader[];
   remainingMembers: PublicTeamMember[];
 } {
   const matchedMemberIds = new Set<string>();
+  const leaders: TeamLeader[] = [];
 
-  const leaders: TeamLeader[] = EXECUTIVE_ROLE_SLOTS.map((slot) => {
+  for (const slot of EXECUTIVE_ROLE_SLOTS) {
     const matched = members.find((m) => {
       if (matchedMemberIds.has(m.id)) return false;
       const candidateRole = m.title || m.role || "";
@@ -174,31 +120,27 @@ export function splitLeadersAndRosterByRole(members: PublicTeamMember[]): {
     });
 
     if (!matched) {
-      return slot.fallbackLeader;
+      continue;
     }
 
     matchedMemberIds.add(matched.id);
-    const resolvedRole =
-      matched.title || matched.role || slot.targetRoleLabel;
+    const resolvedRole = (matched.title || matched.role || "").trim();
 
-    return {
+    leaders.push({
       id: slot.slotKey,
       personId: matched.id,
       slug: matched.slug,
       name: matched.name,
       role: resolvedRole,
-      department: matched.department || slot.defaultSubtitle,
-      initials: matched.initials || slot.fallbackLeader.initials,
+      department: matched.department || "",
+      initials: matched.initials,
       avatar: matched.avatar_url || null,
       accentColor: slot.accentColor,
-      bio:
-        matched.bio && matched.bio.trim()
-          ? matched.bio
-          : slot.fallbackLeader.bio,
+      bio: matched.bio && matched.bio.trim() ? matched.bio.trim() : null,
       links: matched.links && matched.links.length > 0 ? matched.links : [],
       social_links: matched.social_links || {},
-    };
-  });
+    });
+  }
 
   const remainingMembers = members.filter((m) => !matchedMemberIds.has(m.id));
 

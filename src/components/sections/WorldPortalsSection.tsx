@@ -1,3 +1,5 @@
+"use client";
+
 import React from "react";
 import {
   WORLD_LOCATIONS_SHOWCASE,
@@ -5,13 +7,18 @@ import {
 } from "@/data/gameData";
 import { ArchedCanvasFrame } from "@/components/ui/CanvasFrames";
 import { ResilientVideo } from "@/components/ui/ResilientVideo";
+import { useLanguage } from "@/i18n/LanguageContext";
 
 function WorldPortalCard({
   location,
   index,
+  title,
+  desc,
 }: {
   location: WorldLocationItem;
   index: number;
+  title: string;
+  desc: string;
 }) {
   const positionClass =
     index % 3 === 1
@@ -42,11 +49,7 @@ function WorldPortalCard({
             preload="metadata"
           />
         ) : (
-          <img
-            src={location.image}
-            alt={location.title}
-            className="lunoris-tile-bg"
-          />
+          <img src={location.image} alt={title} className="lunoris-tile-bg" />
         )}
         <div className="lunoris-canvas-weave" aria-hidden="true" />
         <div className="lunoris-tile-shade" />
@@ -56,17 +59,19 @@ function WorldPortalCard({
         accentColor={location.accentColor}
       />
       <div className="lunoris-tile-caption">
-        <h3>{location.title}</h3>
+        <h3>{title}</h3>
         <div className="lunoris-tile-divider" aria-hidden="true">
           <span className="lunoris-tile-divider-gem" />
         </div>
-        <p>{location.desc}</p>
+        <p>{desc}</p>
       </div>
     </article>
   );
 }
 
 export function WorldPortalsSection() {
+  const { t } = useLanguage();
+
   return (
     <section id="world" className="lunoris-mural-section">
       <div
@@ -79,21 +84,26 @@ export function WorldPortalsSection() {
 
       <div className="lunoris-wide-wrap lunoris-mural-center">
         <div className="lunoris-heading-stack" data-reveal="up">
-          <span className="lunoris-title-minor">Awaken the Inner Sanctuary</span>
-          <h2 className="lunoris-title-major">Break the Endless Dream Loop</h2>
+          <span className="lunoris-title-minor">{t.world.minor}</span>
+          <h2 className="lunoris-title-major">{t.world.major}</h2>
           <div className="lunoris-center-bar" />
-          <p className="lunoris-mural-body">
-            From the lavender-lit sanctuary of Lunora&apos;s House, step through
-            stroked Dream Doors, swirling Van Gogh canvases, the sky-cyan Well
-            of Elar, and deep-indigo Nightmare rifts—each realm bound by its own
-            living portal spectrum.
-          </p>
+          <p className="lunoris-mural-body">{t.world.body}</p>
         </div>
 
         <div className="lunoris-3tile-row lunoris-locations-grid">
-          {WORLD_LOCATIONS_SHOWCASE.map((loc, idx) => (
-            <WorldPortalCard key={loc.id} location={loc} index={idx} />
-          ))}
+          {WORLD_LOCATIONS_SHOWCASE.map((loc, idx) => {
+            const locKey = loc.id as "dream-levels" | "retro-games" | "nightmare";
+            const localizedLoc = t.world.locations[locKey];
+            return (
+              <WorldPortalCard
+                key={loc.id}
+                location={loc}
+                index={idx}
+                title={localizedLoc?.title ?? loc.title}
+                desc={localizedLoc?.desc ?? loc.desc}
+              />
+            );
+          })}
         </div>
       </div>
     </section>

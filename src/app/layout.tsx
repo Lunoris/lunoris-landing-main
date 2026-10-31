@@ -1,5 +1,12 @@
 import type { Metadata } from "next";
+import { cookies } from "next/headers";
 import localFont from "next/font/local";
+import { LanguageProvider } from "@/i18n/LanguageContext";
+import {
+  LOCALE_COOKIE_NAME,
+  getLocaleOption,
+  normalizeLocale,
+} from "@/i18n/types";
 import "./globals.css";
 
 const ovoFont = localFont({
@@ -8,6 +15,7 @@ const ovoFont = localFont({
   style: "normal",
   variable: "--font-ovo-local",
   display: "swap",
+  adjustFontFallback: false,
 });
 
 const title = "Lunoris: Piece of Mind | Official Game Experience";
@@ -34,13 +42,23 @@ export const metadata: Metadata = {
   },
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const cookieStore = await cookies();
+  const initialLocale = normalizeLocale(
+    cookieStore.get(LOCALE_COOKIE_NAME)?.value
+  );
+  const localeMeta = getLocaleOption(initialLocale);
+
   return (
-    <html lang="en" className={`${ovoFont.variable} ${ovoFont.className}`}>
+    <html
+      lang={initialLocale}
+      dir={localeMeta.dir}
+      className={ovoFont.variable}
+    >
       <head>
         <link
           rel="preload"
@@ -50,9 +68,11 @@ export default function RootLayout({
           crossOrigin="anonymous"
         />
       </head>
-      <body className={ovoFont.className}>
-        <div className="ambient-stars" aria-hidden="true" />
-        {children}
+      <body>
+        <LanguageProvider initialLocale={initialLocale}>
+          <div className="ambient-stars" aria-hidden="true" />
+          {children}
+        </LanguageProvider>
       </body>
     </html>
   );

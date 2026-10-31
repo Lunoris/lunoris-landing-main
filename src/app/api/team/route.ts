@@ -5,6 +5,7 @@ import {
   withSecurityHeaders,
 } from "@/lib/newsAuth";
 import { getResolvedSiteTeamData, TEAM_TAG } from "@/lib/teamStore";
+import { LOCALE_COOKIE_NAME, normalizeLocale } from "@/i18n/types";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -22,6 +23,11 @@ export async function GET(req: NextRequest) {
     const platform =
       searchParams.get("platform") || searchParams.get("social");
     const q = searchParams.get("q") || searchParams.get("search");
+    const langParam =
+      searchParams.get("lang") ||
+      searchParams.get("locale") ||
+      req.cookies.get(LOCALE_COOKIE_NAME)?.value;
+    const lang = normalizeLocale(langParam);
     const forcePull =
       searchParams.get("refresh") === "1" ||
       searchParams.get("pull") === "1";
@@ -32,12 +38,14 @@ export async function GET(req: NextRequest) {
       team,
       platform,
       q,
+      lang,
     });
 
     return withSecurityHeaders(
       NextResponse.json(
         {
           ok: true,
+          lang,
           updated_at: resolved.updated_at,
           allowed_social_platforms: resolved.allowed_social_platforms,
           leaders: resolved.leaders,

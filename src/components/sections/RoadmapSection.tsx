@@ -1,3 +1,5 @@
+"use client";
+
 import React from "react";
 import {
   GAME_ROADMAP,
@@ -5,6 +7,7 @@ import {
   type RoadmapMilestone,
 } from "@/data/gameData";
 import { DeckledCanvasFrame } from "@/components/ui/CanvasFrames";
+import { useLanguage } from "@/i18n/LanguageContext";
 
 function RoadmapMilestoneRow({
   item,
@@ -77,12 +80,14 @@ export function RoadmapSection({
   roadmapTimelineRef,
   roadmapStep,
 }: RoadmapSectionProps) {
+  const { t } = useLanguage();
+
   return (
     <section id="roadmap" className="lunoris-roadmap-section">
       <div className="lunoris-wide-wrap">
         <div className="lunoris-heading-stack" data-reveal="up">
-          <span className="lunoris-title-minor">The Path to Awakening</span>
-          <h2 className="lunoris-title-major">World &amp; Release Roadmap</h2>
+          <span className="lunoris-title-minor">{t.roadmap.minor}</span>
+          <h2 className="lunoris-title-major">{t.roadmap.major}</h2>
           <div className="lunoris-center-bar" />
         </div>
 
@@ -95,14 +100,28 @@ export function RoadmapSection({
             </div>
           </div>
 
-          {GAME_ROADMAP.map((item, idx) => (
-            <RoadmapMilestoneRow
-              key={item.phase}
-              item={item}
-              index={idx}
-              roadmapStep={roadmapStep}
-            />
-          ))}
+          {GAME_ROADMAP.map((item, idx) => {
+            const trItem = t.roadmap.milestones[idx];
+            const localizedMilestone: RoadmapMilestone = trItem
+              ? {
+                  ...item,
+                  phase: trItem.phase,
+                  date: trItem.date,
+                  title: trItem.title,
+                  desc: trItem.desc,
+                  highlight: trItem.highlight,
+                }
+              : item;
+
+            return (
+              <RoadmapMilestoneRow
+                key={item.phase}
+                item={localizedMilestone}
+                index={idx}
+                roadmapStep={roadmapStep}
+              />
+            );
+          })}
         </div>
       </div>
     </section>

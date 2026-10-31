@@ -1,6 +1,11 @@
+"use client";
+
 import React from "react";
+import { useLanguage } from "@/i18n/LanguageContext";
 
 export function FooterBar() {
+  const { t } = useLanguage();
+
   return (
     <footer className="lunoris-footer">
       <div className="lunoris-wide-wrap lunoris-footer-inner">
@@ -9,10 +14,7 @@ export function FooterBar() {
           alt="Lunoris: Piece of Mind"
           className="lunoris-footer-logo"
         />
-        <p className="lunoris-footer-legal">
-          Lunoris and the Lunoris logo are trademarks and/or registered
-          trademarks. 2026 Lunoris: Piece of Mind, all rights reserved.
-        </p>
+        <p className="lunoris-footer-legal">{t.footer.legal}</p>
       </div>
     </footer>
   );
