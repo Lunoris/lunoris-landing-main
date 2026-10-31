@@ -1,12 +1,17 @@
+"use client";
+
 import React from "react";
 import { AwardBrushWash, LaurelBranchSvg } from "@/components/ui/CanvasFrames";
 import { ResilientVideo } from "@/components/ui/ResilientVideo";
+import { useLanguage } from "@/i18n/LanguageContext";
 
 interface HeroSectionProps {
   heroRef: React.RefObject<HTMLElement | null>;
 }
 
 export function HeroSection({ heroRef }: HeroSectionProps) {
+  const { t } = useLanguage();
+
   return (
     <section className="lunoris-hero" ref={heroRef}>
       <div className="lunoris-hero-video-bg" aria-hidden="true">
@@ -24,14 +29,12 @@ export function HeroSection({ heroRef }: HeroSectionProps) {
         <div className="lunoris-hero-clean-layout">
           <div className="lunoris-hero-quote-block">
             <h1 className="lunoris-hero-quote">
-              &ldquo;Some dreams aren&apos;t sleep.
+              &ldquo;{t.hero.quoteLine1}
               <br />
-              <span>They&apos;re worlds you can&apos;t leave.&rdquo;</span>
+              <span>{t.hero.quoteLine2}&rdquo;</span>
             </h1>
 
-            <div className="lunoris-quote-source">
-              LUNORIS: PIECE OF MIND · PC, PLAYSTATION 5 &amp; XBOX SERIES X|S
-            </div>
+            <div className="lunoris-quote-source">{t.hero.platformsLine}</div>
 
             <div className="lunoris-divider-bar" />
           </div>
@@ -43,10 +46,10 @@ export function HeroSection({ heroRef }: HeroSectionProps) {
               <LaurelBranchSvg />
               <div className="lunoris-laurel-copy">
                 <span className="lunoris-laurel-kicker">
-                  WINNER · INDIE CASTLE AWARDS · GAMESCOM COLOGNE 2026
+                  {t.hero.awardKicker}
                 </span>
-                <h3>The &ldquo;Van Gogh&rdquo; Award</h3>
-                <p>&ldquo;For the game that should be in an art museum&rdquo;</p>
+                <h3>{t.hero.awardTitle}</h3>
+                <p>{t.hero.awardQuote}</p>
               </div>
               <LaurelBranchSvg flip />
             </div>

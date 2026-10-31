@@ -8,18 +8,13 @@ import { OrnamentDivider } from "@/components/ui/CanvasFrames";
 import { NewsArticleCard } from "@/components/ui/NewsArticleCard";
 import { HeaderBar } from "@/components/sections/HeaderBar";
 import { FooterBar } from "@/components/sections/FooterBar";
+import { useLanguage } from "@/i18n/LanguageContext";
+import { localizeNewsArticle, localizeNewsCategory } from "@/i18n/helpers";
 
 const CATEGORIES = ["All", "Update", "World & Lore", "Video"] as const;
 
-const NEWS_ARCHIVE_NAV: NavLinkItem[] = [
-  { href: "/", label: "← Return to Game World" },
-  { href: "/#world", label: "The World" },
-  { href: "/#companions", label: "Companions" },
-  { href: "/#characters", label: "Characters" },
-  { href: "/#roadmap", label: "Roadmap" },
-];
-
 export default function LunorisNewsArchivePage() {
+  const { locale, t } = useLanguage();
   const [articles, setArticles] = useState<NewsArticle[]>(LUNORIS_NEWS);
   const [selectedCategory, setSelectedCategory] =
     useState<(typeof CATEGORIES)[number]>("All");
@@ -46,13 +41,23 @@ export default function LunorisNewsArchivePage() {
       ? articles
       : articles.filter((item) => item.category === selectedCategory);
 
-  const featuredArticle = articles[0];
+  const featuredArticle = articles[0]
+    ? localizeNewsArticle(articles[0], locale, t)
+    : undefined;
+
+  const newsArchiveNav: NavLinkItem[] = [
+    { href: "/", label: t.nav.returnToGameWorld },
+    { href: "/#world", label: t.nav.theWorld },
+    { href: "/#companions", label: t.nav.companions },
+    { href: "/#characters", label: t.nav.characters },
+    { href: "/#roadmap", label: t.nav.roadmap },
+  ];
 
   return (
     <div className="lunoris-page news-archive-page">
       <HeaderBar
         logoHref="/"
-        navLinks={NEWS_ARCHIVE_NAV}
+        navLinks={newsArchiveNav}
         enableFlyingCta={false}
       />
 
@@ -68,14 +73,10 @@ export default function LunorisNewsArchivePage() {
 
           <div className="lunoris-wide-wrap news-page-hero-inner">
             <OrnamentDivider />
-            <span className="lunoris-title-minor">
-              Chronicles of the Subconscious
-            </span>
-            <h1 className="lunoris-title-major">Latest News &amp; Updates</h1>
+            <span className="lunoris-title-minor">{t.news.archiveMinor}</span>
+            <h1 className="lunoris-title-major">{t.news.archiveMajor}</h1>
             <p className="lunoris-mural-body" style={{ marginTop: "1rem" }}>
-              Dispatches from inside Lunora&apos;s dreamscape: major sanctuary
-              updates, Gamescom accolades, playable memory teasers, and deep
-              dives into the realms of Lunoris: Piece of Mind.
+              {t.news.archiveBody}
             </p>
 
             {featuredArticle && (
@@ -90,7 +91,9 @@ export default function LunorisNewsArchivePage() {
                     className="news-featured-img"
                   />
                   <div className="lunoris-canvas-weave" aria-hidden="true" />
-                  <span className="news-category-pill">Featured Chronicle</span>
+                  <span className="news-category-pill">
+                    {t.news.featuredBadge}
+                  </span>
                 </div>
                 <div className="news-featured-content">
                   <div className="lunoris-news-meta">
@@ -105,7 +108,7 @@ export default function LunorisNewsArchivePage() {
                     {featuredArticle.lead}
                   </p>
                   <span className="lunoris-news-cta">
-                    {featuredArticle.ctaLabel}
+                    {t.news.readMore}
                     <span className="lunoris-news-cta-line" />
                   </span>
                 </div>
@@ -126,7 +129,9 @@ export default function LunorisNewsArchivePage() {
                     selectedCategory === cat ? "is-active" : ""
                   }`}
                 >
-                  {cat === "All" ? "All Chronicles" : cat}
+                  {cat === "All"
+                    ? t.news.allChroniclesFilter
+                    : localizeNewsCategory(cat, t)}
                 </button>
               ))}
             </div>
@@ -153,7 +158,7 @@ export default function LunorisNewsArchivePage() {
                   opacity: 0.72,
                 }}
               >
-                No chronicles published yet.
+                {t.news.emptyArchive}
               </p>
             )}
           </div>

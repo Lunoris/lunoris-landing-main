@@ -6,6 +6,7 @@ import {
   type PublicTeamMember,
   type TeamLeader,
 } from "@/data/teamData";
+import { buildTranslatedBiosMap } from "@/lib/teamBioTranslator";
 
 // The wiki is the source of truth (GET /api/v1/team only lists people who opted in). The landing site keeps no
 // copy on disk (Vercel's disk does not persist): it reads the wiki through Next's data cache, and the wiki's
@@ -428,21 +429,11 @@ export function sanitizePublicTeamMembers(
         ? m.slug.trim().slice(0, 80)
         : name.toLowerCase().replace(/[^a-z0-9]+/g, "-");
 
-    const lowerName = name.toLowerCase();
-    const defaultExecutiveRole =
-      lowerName === "aziz"
-        ? "CEO/Founder"
-        : lowerName === "andrew"
-          ? "CTO"
-          : lowerName === "nick" || lowerName === "nick pain"
-            ? "CMO"
-            : "";
-
     const rawTitle =
       typeof m.title === "string" ? m.title.trim().slice(0, 160) : "";
     const rawRole =
       typeof m.role === "string" ? m.role.trim().slice(0, 160) : "";
-    const resolvedTitle = rawTitle || rawRole || defaultExecutiveRole;
+    const resolvedTitle = rawTitle || rawRole;
     const role = resolvedTitle;
     const title = resolvedTitle;
     const team =
@@ -452,11 +443,13 @@ export function sanitizePublicTeamMembers(
     const department =
       typeof m.department === "string" && m.department.trim()
         ? m.department.trim().slice(0, 80)
-        : "Game Production";
+        : "";
     const department_key =
       typeof m.department_key === "string" && m.department_key.trim()
         ? m.department_key.trim().slice(0, 80)
-        : department.toLowerCase().replace(/[^a-z0-9]+/g, "-");
+        : department
+          ? department.toLowerCase().replace(/[^a-z0-9]+/g, "-")
+          : "";
     const initials =
       typeof m.initials === "string" && m.initials.trim()
         ? m.initials.trim().slice(0, 4).toUpperCase()
@@ -497,13 +490,15 @@ export function buildDepartmentsForMembers(
   const counts = new Map<string, { key: string; label: string; count: number }>();
 
   for (const m of members) {
-    const existing = counts.get(m.department_key);
+    const bucketKey = m.department_key || "studio";
+    const bucketLabel = m.department || "Studio Team";
+    const existing = counts.get(bucketKey);
     if (existing) {
       existing.count += 1;
     } else {
-      counts.set(m.department_key, {
-        key: m.department_key,
-        label: m.department,
+      counts.set(bucketKey, {
+        key: bucketKey,
+        label: bucketLabel,
         count: 1,
       });
     }
@@ -524,16 +519,13 @@ function getCandidateWikiUrls(): string[] {
     return [configured || DEFAULT_PROD_WIKI_URL];
   }
 
-  // In local development, probe explicit LUNORIS_WIKI_URL first, then local Wiki ports (3000 / 3001),
+  // In local development, probe explicit LUNORIS_WIKI_URL first, then local Wiki port 3000,
   // and finally fall back to production Wiki if local Wiki isn't running.
   return Array.from(
     new Set(
-      [
-        configured,
-        "http://localhost:3000",
-        "http://localhost:3001",
-        DEFAULT_PROD_WIKI_URL,
-      ].filter(Boolean)
+      [configured, "http://localhost:3000", DEFAULT_PROD_WIKI_URL].filter(
+        Boolean
+      )
     )
   );
 }
@@ -544,56 +536,72 @@ async function pullTeamFromWiki(): Promise<StoredTeamSnapshot> {
   let lastError: Error | null = null;
 
   for (const baseUrl of candidates) {
-    try {
-      const res = await fetch(`${baseUrl}/api/v1/team`, {
-        headers: { Accept: "application/json" },
-        cache: "no-store",
-        signal: AbortSignal.timeout(4500),
-      });
-      if (!res.ok) {
-        lastError = new Error(`${baseUrl} returned HTTP ${res.status}`);
-        continue;
-      }
-      const contentType = res.headers.get("content-type") || "";
-      if (!contentType.includes("application/json")) {
-        lastError = new Error(`${baseUrl} did not return JSON`);
-        continue;
-      }
+    const isLocalProbe = /^https?:\/\/(?:localhost|127\.0\.0\.1)(?::|\/|$)/i.test(
+      baseUrl
+    );
+    const maxAttempts = isLocalProbe ? 1 : 2;
 
-      const data = (await res.json()) as Record<string, unknown>;
-      if (data?.ok !== true || !Array.isArray(data.members)) {
-        lastError = new Error(`${baseUrl} returned invalid team payload`);
-        continue;
+    for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+      try {
+        const res = await fetch(`${baseUrl}/api/v1/team`, {
+          headers: { Accept: "application/json" },
+          cache: "no-store",
+          signal: AbortSignal.timeout(5000),
+        });
+        if (!res.ok) {
+          lastError = new Error(`${baseUrl} returned HTTP ${res.status}`);
+          break;
+        }
+        const contentType = res.headers.get("content-type") || "";
+        if (!contentType.includes("application/json")) {
+          lastError = new Error(`${baseUrl} did not return JSON`);
+          break;
+        }
+
+        const data = (await res.json()) as Record<string, unknown>;
+        if (data?.ok !== true || !Array.isArray(data.members)) {
+          lastError = new Error(`${baseUrl} returned invalid team payload`);
+          break;
+        }
+
+        const members = sanitizePublicTeamMembers(data.members);
+        const allowedPlatforms = Array.isArray(data.allowed_social_platforms)
+          ? data.allowed_social_platforms.filter(
+              (k): k is string => typeof k === "string" && k.length <= 40
+            )
+          : ALLOWED_SOCIAL_PLATFORM_KEYS;
+
+        return {
+          updated_at:
+            typeof data.updated_at === "string" && data.updated_at
+              ? data.updated_at
+              : new Date().toISOString(),
+          allowed_social_platforms: allowedPlatforms,
+          total: members.length,
+          departments: buildDepartmentsForMembers(members),
+          members,
+        };
+      } catch (err) {
+        lastError =
+          err instanceof Error ? err : new Error(`Failed reaching ${baseUrl}`);
+        if (attempt < maxAttempts) {
+          await new Promise((resolve) => setTimeout(resolve, 180));
+        }
       }
-
-      const members = sanitizePublicTeamMembers(data.members);
-      const allowedPlatforms = Array.isArray(data.allowed_social_platforms)
-        ? data.allowed_social_platforms.filter(
-            (k): k is string => typeof k === "string" && k.length <= 40
-          )
-        : ALLOWED_SOCIAL_PLATFORM_KEYS;
-
-      return {
-        updated_at:
-          typeof data.updated_at === "string" && data.updated_at
-            ? data.updated_at
-            : new Date().toISOString(),
-        allowed_social_platforms: allowedPlatforms,
-        total: members.length,
-        departments: buildDepartmentsForMembers(members),
-        members,
-      };
-    } catch (err) {
-      lastError =
-        err instanceof Error ? err : new Error(`Failed reaching ${baseUrl}`);
     }
   }
 
   throw lastError || new Error("Wiki team API is unreachable.");
 }
 
+let lastFetchedSnapshot: {
+  data: StoredTeamSnapshot;
+  fetchedAt: number;
+} | null = null;
+const DEV_SNAPSHOT_TTL_MS = 15_000;
+
 // Refreshed every 5 minutes in production (or instantly on POST /api/team push).
-// In local development we pull directly so local edits on port 3000 appear right away.
+// In local development we refresh every 15s (or immediately on forcePull) so switching languages is instant.
 const pullTeamCached = unstable_cache(pullTeamFromWiki, ["team-snapshot"], {
   tags: [TEAM_TAG],
   revalidate: 300,
@@ -602,13 +610,28 @@ const pullTeamCached = unstable_cache(pullTeamFromWiki, ["team-snapshot"], {
 export async function getTeamSnapshot(options?: {
   forcePull?: boolean;
 }): Promise<StoredTeamSnapshot> {
-  const bypassCache =
-    Boolean(options?.forcePull) || process.env.NODE_ENV !== "production";
+  const force = Boolean(options?.forcePull);
+  const isDev = process.env.NODE_ENV !== "production";
+
+  if (
+    isDev &&
+    !force &&
+    lastFetchedSnapshot &&
+    Date.now() - lastFetchedSnapshot.fetchedAt < DEV_SNAPSHOT_TTL_MS
+  ) {
+    return lastFetchedSnapshot.data;
+  }
 
   try {
-    return bypassCache ? await pullTeamFromWiki() : await pullTeamCached();
+    const fresh =
+      force || isDev ? await pullTeamFromWiki() : await pullTeamCached();
+    lastFetchedSnapshot = { data: fresh, fetchedAt: Date.now() };
+    return fresh;
   } catch {
-    // Wiki unreachable: the pages fall back to their built-in leader slots
+    if (lastFetchedSnapshot) {
+      return lastFetchedSnapshot.data;
+    }
+    // Wiki unreachable and no prior API response: return empty snapshot (strictly API-only, zero fake cards)
     return {
       updated_at: new Date().toISOString(),
       allowed_social_platforms: ALLOWED_SOCIAL_PLATFORM_KEYS,
@@ -622,13 +645,13 @@ export async function getTeamSnapshot(options?: {
 export interface ResolvedSiteTeamData {
   updated_at: string;
   allowed_social_platforms: string[];
-  /** The 3 department heads for the Main Landing Page (/#team) */
+  /** The department heads resolved strictly from the API for the Main Landing Page (/#team) */
   leaders: TeamLeader[];
-  /** All public members excluding the 3 main-page department heads (for /team) */
+  /** All public members excluding the main-page department heads (for /team) */
   rosterMembers: PublicTeamMember[];
   /** Department filter tabs with counts for /team */
   rosterDepartments: DepartmentSummary[];
-  /** Raw full list of public members received from Wiki */
+  /** Full list of public members received from Wiki */
   allPublicMembers: PublicTeamMember[];
 }
 
@@ -638,56 +661,87 @@ export async function getResolvedSiteTeamData(options?: {
   team?: string | null;
   platform?: string | null;
   q?: string | null;
+  lang?: string | null;
 }): Promise<ResolvedSiteTeamData> {
   const snapshot = await getTeamSnapshot({ forcePull: options?.forcePull });
 
-  // 1. Dynamically pick the 3 main leaders by their roles (CEO/Founder, CTO, CMO)
+  // 1. Dynamically pick the main leaders strictly by their API roles (CEO/Founder, CTO, CMO)
   //    and keep everyone else in `remainingMembers` for the /team roster
-  const { leaders, remainingMembers: baseRoster } =
+  const { leaders: rawLeaders, remainingMembers: baseRoster } =
     splitLeadersAndRosterByRole(snapshot.members);
   const rosterDepartments = buildDepartmentsForMembers(baseRoster);
+
+  // 2. Translate non-empty short `bio` fields from the API when a target language is requested
+  const translatedBiosMap = await buildTranslatedBiosMap(
+    snapshot.members.map((m) => m.bio),
+    options?.lang
+  );
+
+  const applyBioTranslation = (bio: string | null): string | null => {
+    if (!bio) return null;
+    const trimmed = bio.trim();
+    if (!trimmed) return null;
+    return translatedBiosMap.get(trimmed) ?? bio;
+  };
 
   const deptFilter = options?.department?.trim().toLowerCase() || "";
   const teamFilter = options?.team?.trim().toLowerCase() || "";
   const platformFilter = options?.platform?.trim().toLowerCase() || "";
   const qFilter = options?.q?.trim().toLowerCase() || "";
 
-  const rosterMembers = baseRoster.filter((m) => {
-    if (deptFilter && deptFilter !== "all") {
-      if (
-        m.department_key.toLowerCase() !== deptFilter &&
-        m.department.toLowerCase() !== deptFilter
-      ) {
-        return false;
+  const rosterMembers = baseRoster
+    .filter((m) => {
+      if (deptFilter && deptFilter !== "all") {
+        const memberBucketKey = (m.department_key || "studio").toLowerCase();
+        if (
+          memberBucketKey !== deptFilter &&
+          m.department.toLowerCase() !== deptFilter
+        ) {
+          return false;
+        }
       }
-    }
-    if (teamFilter) {
-      if (
-        (m.team || "").toLowerCase() !== teamFilter &&
-        m.department.toLowerCase() !== teamFilter &&
-        m.department_key.toLowerCase() !== teamFilter
-      ) {
-        return false;
+      if (teamFilter) {
+        if (
+          (m.team || "").toLowerCase() !== teamFilter &&
+          m.department.toLowerCase() !== teamFilter &&
+          m.department_key.toLowerCase() !== teamFilter
+        ) {
+          return false;
+        }
       }
-    }
-    if (platformFilter) {
-      const hasPlatform = m.links.some(
-        (l) =>
-          (l.platform || "").toLowerCase() === platformFilter ||
-          l.label.toLowerCase() === platformFilter
-      );
-      if (!hasPlatform) return false;
-    }
-    if (qFilter) {
-      const linksHay = m.links
-        .map((l) => `${l.platform || ""} ${l.label} ${l.url}`)
-        .join(" ");
-      const hay =
-        `${m.name} ${m.title} ${m.role} ${m.department} ${m.bio || ""} ${linksHay}`.toLowerCase();
-      if (!hay.includes(qFilter)) return false;
-    }
-    return true;
-  });
+      if (platformFilter) {
+        const hasPlatform = m.links.some(
+          (l) =>
+            (l.platform || "").toLowerCase() === platformFilter ||
+            l.label.toLowerCase() === platformFilter
+        );
+        if (!hasPlatform) return false;
+      }
+      if (qFilter) {
+        const linksHay = m.links
+          .map((l) => `${l.platform || ""} ${l.label} ${l.url}`)
+          .join(" ");
+        const localizedBio = applyBioTranslation(m.bio) || "";
+        const hay =
+          `${m.name} ${m.title} ${m.role} ${m.department} ${m.bio || ""} ${localizedBio} ${linksHay}`.toLowerCase();
+        if (!hay.includes(qFilter)) return false;
+      }
+      return true;
+    })
+    .map((m) => ({
+      ...m,
+      bio: applyBioTranslation(m.bio),
+    }));
+
+  const leaders = rawLeaders.map((leader) => ({
+    ...leader,
+    bio: applyBioTranslation(leader.bio),
+  }));
+
+  const allPublicMembers = snapshot.members.map((m) => ({
+    ...m,
+    bio: applyBioTranslation(m.bio),
+  }));
 
   return {
     updated_at: snapshot.updated_at,
@@ -695,6 +749,6 @@ export async function getResolvedSiteTeamData(options?: {
     leaders,
     rosterMembers,
     rosterDepartments,
-    allPublicMembers: snapshot.members,
+    allPublicMembers,
   };
 }

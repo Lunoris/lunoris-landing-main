@@ -3,11 +3,10 @@
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import type { NavLinkItem } from "@/data/gameData";
-import {
-  TEAM_LEADERS,
-  type DepartmentSummary,
-  type PublicTeamMember,
-  type TeamLeader,
+import type {
+  DepartmentSummary,
+  PublicTeamMember,
+  TeamLeader,
 } from "@/data/teamData";
 import {
   BrushstrokeButtonBg,
@@ -18,19 +17,17 @@ import { TeamSocialLinks } from "@/components/ui/SocialPlatformIcon";
 import { HeaderBar } from "@/components/sections/HeaderBar";
 import { FooterBar } from "@/components/sections/FooterBar";
 import { LeaderPortraitCard } from "@/components/sections/TeamSection";
-
-const TEAM_PAGE_NAV: NavLinkItem[] = [
-  { href: "/#team", label: "← Return to Leadership" },
-  { href: "/#world", label: "The World" },
-  { href: "/#companions", label: "Companions" },
-  { href: "/#characters", label: "Characters" },
-  { href: "/#roadmap", label: "Roadmap" },
-];
+import { useLanguage } from "@/i18n/LanguageContext";
+import { localizeDepartmentLabel } from "@/i18n/helpers";
 
 function StudioMemberCard({ member }: { member: PublicTeamMember }) {
+  const { t } = useLanguage();
   const [failedSrc, setFailedSrc] = useState<string | null>(null);
   const avatarSrc = member.avatar_url || null;
   const showAvatar = Boolean(avatarSrc) && failedSrc !== avatarSrc;
+  const localizedDept = member.department
+    ? localizeDepartmentLabel(member.department, t)
+    : "";
 
   return (
     <article className="lunoris-roster-card">
@@ -53,11 +50,9 @@ function StudioMemberCard({ member }: { member: PublicTeamMember }) {
 
         <div className="lunoris-roster-info">
           {/* Only what the member filled in: no empty department line or role */}
-          {member.department ? (
+          {localizedDept ? (
             <div className="lunoris-roster-meta">
-              <span className="lunoris-roster-dept-pill">
-                {member.department}
-              </span>
+              <span className="lunoris-roster-dept-pill">{localizedDept}</span>
             </div>
           ) : null}
           <h3 className="lunoris-roster-name">{member.name}</h3>
@@ -81,7 +76,8 @@ function StudioMemberCard({ member }: { member: PublicTeamMember }) {
 }
 
 export default function LunorisTeamPage() {
-  const [leaders, setLeaders] = useState<TeamLeader[]>(TEAM_LEADERS);
+  const { locale, t } = useLanguage();
+  const [leaders, setLeaders] = useState<TeamLeader[]>([]);
   const [members, setMembers] = useState<PublicTeamMember[]>([]);
   const [departments, setDepartments] = useState<DepartmentSummary[]>([
     { key: "all", label: "All Departments", count: 0 },
@@ -91,7 +87,7 @@ export default function LunorisTeamPage() {
 
   useEffect(() => {
     let active = true;
-    fetch("/api/team", { cache: "no-store" })
+    fetch(`/api/team?lang=${encodeURIComponent(locale)}`, { cache: "no-store" })
       .then((res) => (res.ok ? res.json() : null))
       .then((data) => {
         if (!active || !data) return;
@@ -106,7 +102,7 @@ export default function LunorisTeamPage() {
         }
       })
       .catch(() => {
-        // Keep fallback state on network error
+        // Keep current API state on network error
       })
       .finally(() => {
         if (active) setLoaded(true);
@@ -115,7 +111,7 @@ export default function LunorisTeamPage() {
     return () => {
       active = false;
     };
-  }, []);
+  }, [locale]);
 
   const deptGroups = departments.filter((d) => d.key !== "all" && d.count > 0);
   const visibleGroups =
@@ -123,13 +119,17 @@ export default function LunorisTeamPage() {
       ? deptGroups
       : deptGroups.filter((d) => d.key === selectedDept);
 
+  const teamPageNav: NavLinkItem[] = [
+    { href: "/#team", label: t.nav.returnToLeadership },
+    { href: "/#world", label: t.nav.theWorld },
+    { href: "/#companions", label: t.nav.companions },
+    { href: "/#characters", label: t.nav.characters },
+    { href: "/#roadmap", label: t.nav.roadmap },
+  ];
+
   return (
     <div className="lunoris-page team-roster-page">
-      <HeaderBar
-        logoHref="/"
-        navLinks={TEAM_PAGE_NAV}
-        enableFlyingCta={false}
-      />
+      <HeaderBar logoHref="/" navLinks={teamPageNav} enableFlyingCta={false} />
 
       <main className="news-archive-main">
         {/* Hero Header */}
@@ -144,22 +144,25 @@ export default function LunorisTeamPage() {
 
           <div className="lunoris-wide-wrap news-page-hero-inner">
             <OrnamentDivider />
-            <span className="lunoris-title-minor">
-              The Collective Behind the Canvas
-            </span>
-            <h1 className="lunoris-title-major">Lunoris Studios Team</h1>
+            <span className="lunoris-title-minor">{t.team.pageMinor}</span>
+            <h1 className="lunoris-title-major">{t.team.pageMajor}</h1>
             <p className="lunoris-mural-body" style={{ marginTop: "1rem" }}>
-              Meet the department heads, developers, environment and character
-              artists, composers, and narrative designers crafting the
-              subconscious world of <em>Lunoris: Piece of Mind</em>.
+              {t.team.pageBodyPrefix}
+              <em>{t.team.pageBodyGameTitle}</em>
+              {t.team.pageBodySuffix}
             </p>
 
-            {/* Executive Department Heads */}
-            <div className="lunoris-leaders-grid team-page-leaders-grid">
-              {leaders.map((leader) => (
-                <LeaderPortraitCard key={leader.id} leader={leader} />
-              ))}
-            </div>
+            {/* Executive Department Heads (strictly from API) */}
+            {leaders.length > 0 ? (
+              <div
+                className="lunoris-leaders-grid team-page-leaders-grid"
+                data-count={leaders.length}
+              >
+                {leaders.map((leader) => (
+                  <LeaderPortraitCard key={leader.personId} leader={leader} />
+                ))}
+              </div>
+            ) : null}
           </div>
         </section>
 
@@ -168,18 +171,24 @@ export default function LunorisTeamPage() {
           <div className="lunoris-wide-wrap">
             {members.length > 0 && (
               <div className="news-filter-bar">
-                {departments.map((dept) => (
-                  <button
-                    key={dept.key}
-                    type="button"
-                    onClick={() => setSelectedDept(dept.key)}
-                    className={`news-filter-pill ${
-                      selectedDept === dept.key ? "is-active" : ""
-                    }`}
-                  >
-                    {dept.label} ({dept.count})
-                  </button>
-                ))}
+                {departments.map((dept) => {
+                  const deptTitle = localizeDepartmentLabel(
+                    dept.key === "all" ? "all" : dept.label,
+                    t
+                  );
+                  return (
+                    <button
+                      key={dept.key}
+                      type="button"
+                      onClick={() => setSelectedDept(dept.key)}
+                      className={`news-filter-pill ${
+                        selectedDept === dept.key ? "is-active" : ""
+                      }`}
+                    >
+                      {deptTitle} ({dept.count})
+                    </button>
+                  );
+                })}
               </div>
             )}
 
@@ -187,17 +196,21 @@ export default function LunorisTeamPage() {
               <div className="lunoris-team-departments-stack">
                 {visibleGroups.map((dept) => {
                   const deptMembers = members.filter(
-                    (m) => m.department_key === dept.key
+                    (m) => (m.department_key || "studio") === dept.key
                   );
                   if (deptMembers.length === 0) return null;
+
+                  const deptTitle = localizeDepartmentLabel(dept.label, t);
 
                   return (
                     <div key={dept.key} className="lunoris-dept-group">
                       <div className="lunoris-dept-header">
-                        <h2 className="lunoris-dept-title">{dept.label}</h2>
+                        <h2 className="lunoris-dept-title">{deptTitle}</h2>
                         <span className="lunoris-dept-count">
                           {deptMembers.length}{" "}
-                          {deptMembers.length === 1 ? "Member" : "Members"}
+                          {deptMembers.length === 1
+                            ? t.team.memberSingular
+                            : t.team.memberPlural}
                         </span>
                         <div className="lunoris-dept-line" />
                       </div>
@@ -231,9 +244,7 @@ export default function LunorisTeamPage() {
                   opacity: 0.76,
                 }}
               >
-                {loaded
-                  ? "Team member profiles will appear here automatically as studio members enable their public profile cards."
-                  : "Loading studio roster..."}
+                {loaded ? t.team.emptyRoster : t.team.loadingRoster}
               </p>
             )}
 
@@ -243,7 +254,7 @@ export default function LunorisTeamPage() {
             >
               <Link href="/#team" className="lunoris-all-news-btn">
                 <BrushstrokeButtonBg />
-                <span>← Return to Main World</span>
+                <span>{t.team.returnMainWorldBtn}</span>
               </Link>
             </div>
           </div>

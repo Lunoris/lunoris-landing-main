@@ -2,26 +2,30 @@
 
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
-import { TEAM_LEADERS, type TeamLeader } from "@/data/teamData";
+import type { TeamLeader } from "@/data/teamData";
 import {
   BrushstrokeButtonBg,
   OrnamentDivider,
   TallDeckledCanvasFrame,
 } from "@/components/ui/CanvasFrames";
 import { TeamSocialLinks } from "@/components/ui/SocialPlatformIcon";
+import { useLanguage } from "@/i18n/LanguageContext";
+import { localizeLeader } from "@/i18n/helpers";
 
 export function LeaderPortraitCard({ leader }: { leader: TeamLeader }) {
+  const { locale, t } = useLanguage();
+  const localized = localizeLeader(leader, locale, t);
   const [failedSrc, setFailedSrc] = useState<string | null>(null);
-  const avatarSrc = leader.avatar || null;
+  const avatarSrc = localized.avatar || null;
   const showPhoto = Boolean(avatarSrc) && failedSrc !== avatarSrc;
 
   return (
     <article
       className="lunoris-leader-card"
-      data-slot={leader.id}
+      data-slot={localized.id}
       style={
         {
-          "--leader-accent": leader.accentColor,
+          "--leader-accent": localized.accentColor,
         } as React.CSSProperties
       }
     >
@@ -33,7 +37,11 @@ export function LeaderPortraitCard({ leader }: { leader: TeamLeader }) {
         {showPhoto && avatarSrc ? (
           <img
             src={avatarSrc}
-            alt={`${leader.name} — ${leader.role}`}
+            alt={
+              localized.role
+                ? `${localized.name} — ${localized.role}`
+                : localized.name
+            }
             className="lunoris-leader-photo"
             onError={() => setFailedSrc(avatarSrc)}
           />
@@ -67,20 +75,28 @@ export function LeaderPortraitCard({ leader }: { leader: TeamLeader }) {
               strokeLinecap="round"
             />
           </svg>
-          <span className="lunoris-leader-monogram">{leader.initials}</span>
-          <span className="lunoris-leader-photo-caption">Profile Portrait</span>
+          <span className="lunoris-leader-monogram">{localized.initials}</span>
+          <span className="lunoris-leader-photo-caption">
+            {t.team.portraitCaption}
+          </span>
         </div>
-
       </div>
-      <span className="lunoris-leader-role-badge">{leader.role}</span>
+
+      {localized.role ? (
+        <span className="lunoris-leader-role-badge">{localized.role}</span>
+      ) : null}
 
       <div className="lunoris-leader-body">
-        <span className="lunoris-leader-dept">{leader.department}</span>
-        <h3 className="lunoris-leader-name">{leader.name}</h3>
-        <p className="lunoris-leader-bio">{leader.bio}</p>
+        {localized.department ? (
+          <span className="lunoris-leader-dept">{localized.department}</span>
+        ) : null}
+        <h3 className="lunoris-leader-name">{localized.name}</h3>
+        {localized.bio?.trim() ? (
+          <p className="lunoris-leader-bio">{localized.bio}</p>
+        ) : null}
         <TeamSocialLinks
-          links={leader.links}
-          memberName={leader.name}
+          links={localized.links}
+          memberName={localized.name}
           variant="leader"
         />
       </div>
@@ -89,11 +105,13 @@ export function LeaderPortraitCard({ leader }: { leader: TeamLeader }) {
 }
 
 export function TeamSection() {
-  const [leaders, setLeaders] = useState<TeamLeader[]>(TEAM_LEADERS);
+  const { locale, t } = useLanguage();
+  const [leaders, setLeaders] = useState<TeamLeader[]>([]);
+  const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
     let active = true;
-    fetch("/api/team", { cache: "no-store" })
+    fetch(`/api/team?lang=${encodeURIComponent(locale)}`, { cache: "no-store" })
       .then((res) => (res.ok ? res.json() : null))
       .then((data) => {
         if (active && data && Array.isArray(data.leaders)) {
@@ -101,35 +119,51 @@ export function TeamSection() {
         }
       })
       .catch(() => {
-        // Fallback to default TEAM_LEADERS
+        // Keep current API state on transient network failure
+      })
+      .finally(() => {
+        if (active) setLoaded(true);
       });
     return () => {
       active = false;
     };
-  }, []);
+  }, [locale]);
 
   return (
     <section id="team" className="lunoris-team-section">
       <div className="lunoris-wide-wrap">
         <div className="lunoris-heading-stack" data-reveal="up">
           <OrnamentDivider />
-          <span className="lunoris-title-minor">
-            The Architects Behind the Dream
-          </span>
-          <h2 className="lunoris-title-major">Lunoris Team</h2>
+          <span className="lunoris-title-minor">{t.team.minor}</span>
+          <h2 className="lunoris-title-major">{t.team.major}</h2>
           <div className="lunoris-center-bar" />
           <p className="lunoris-mural-body lunoris-team-intro">
-            Guided by three department heads and brought to life by our
-            international collective of developers, artists, composers, and
-            storytellers.
+            {t.team.intro}
           </p>
         </div>
 
-        <div className="lunoris-leaders-grid" data-reveal="up">
-          {leaders.map((leader) => (
-            <LeaderPortraitCard key={leader.id} leader={leader} />
-          ))}
-        </div>
+        {leaders.length > 0 ? (
+          <div
+            className="lunoris-leaders-grid"
+            data-count={leaders.length}
+            data-reveal="up"
+          >
+            {leaders.map((leader) => (
+              <LeaderPortraitCard key={leader.personId} leader={leader} />
+            ))}
+          </div>
+        ) : (
+          <p
+            className="lunoris-mural-body"
+            style={{
+              margin: "2.5rem auto 0",
+              textAlign: "center",
+              opacity: 0.76,
+            }}
+          >
+            {loaded ? t.team.emptyRoster : t.team.loadingRoster}
+          </p>
+        )}
 
         <div className="lunoris-news-bottom-bar" data-reveal="up">
           <Link
@@ -137,7 +171,7 @@ export function TeamSection() {
             className="lunoris-all-news-btn lunoris-team-cta-btn"
           >
             <BrushstrokeButtonBg />
-            <span>Meet the Full Studio</span>
+            <span>{t.team.ctaBtn}</span>
           </Link>
         </div>
       </div>

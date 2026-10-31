@@ -1,15 +1,15 @@
+"use client";
+
 import React from "react";
 import Link from "next/link";
-import {
-  MAIN_NAV_LINKS,
-  STEAM_STORE_URL,
-  type NavLinkItem,
-} from "@/data/gameData";
+import { STEAM_STORE_URL, type NavLinkItem } from "@/data/gameData";
 import {
   BrushstrokeButtonBg,
   CanvasStar,
   SteamLogoSvg,
 } from "@/components/ui/CanvasFrames";
+import { LanguageSwitcher } from "@/components/ui/LanguageSwitcher";
+import { useLanguage } from "@/i18n/LanguageContext";
 
 const SPARKLE_STARS = [
   { className: "magic-sparkle sp-1", color: "#fbbf24" },
@@ -31,11 +31,21 @@ interface HeaderBarProps {
 export function HeaderBar({
   navBtnSlotRef,
   steamBtnRef,
-  navLinks = MAIN_NAV_LINKS,
+  navLinks,
   logoHref = "#top",
   enableFlyingCta = true,
 }: HeaderBarProps) {
+  const { t } = useLanguage();
   const isAnchorLogo = logoHref.startsWith("#");
+
+  const resolvedNavLinks: NavLinkItem[] = navLinks ?? [
+    { href: "#news", label: t.nav.latestNews },
+    { href: "#world", label: t.nav.theWorld },
+    { href: "#companions", label: t.nav.companions },
+    { href: "#characters", label: t.nav.characters },
+    { href: "#team", label: t.nav.team },
+    { href: "#roadmap", label: t.nav.roadmap },
+  ];
 
   return (
     <header className="lunoris-header">
@@ -60,7 +70,7 @@ export function HeaderBar({
           )}
 
           <nav className="lunoris-nav">
-            {navLinks.map((link) =>
+            {resolvedNavLinks.map((link) =>
               link.href.startsWith("#") ? (
                 <a key={link.href} href={link.href}>
                   {link.label}
@@ -75,6 +85,8 @@ export function HeaderBar({
         </div>
 
         <div className="lunoris-header-right">
+          <LanguageSwitcher />
+
           {enableFlyingCta ? (
             <div ref={navBtnSlotRef} className="lunoris-steam-nav-slot">
               <a
@@ -82,7 +94,7 @@ export function HeaderBar({
                 href={STEAM_STORE_URL}
                 target="_blank"
                 rel="noopener noreferrer"
-                aria-label="Play Free Demo and Wishlist on Steam"
+                aria-label={t.steamCta.ariaLabel}
                 className="lunoris-steam-btn lunoris-steam-btn-nav"
               >
                 <span className="steam-magic-sparkles" aria-hidden="true">
@@ -95,7 +107,7 @@ export function HeaderBar({
                   ))}
                 </span>
 
-                {/* Clean white transparent Steam logo in top header & during right-edge flight */}
+                {/* Clean white transparent Steam logo in top header & during edge flight */}
                 <SteamLogoSvg className="steam-nav-solo-icon" />
 
                 {/* Larger full brushstroke Steam CTA button revealed at the bottom of the page */}
@@ -103,8 +115,12 @@ export function HeaderBar({
                   <BrushstrokeButtonBg />
                   <SteamLogoSvg className="steam-icon" />
                   <div className="steam-btn-text">
-                    <span className="steam-btn-main">Play Free Demo</span>
-                    <span className="steam-btn-sub">Wishlist on Steam</span>
+                    <span className="steam-btn-main">
+                      {t.steamCta.playFreeDemo}
+                    </span>
+                    <span className="steam-btn-sub">
+                      {t.steamCta.wishlistOnSteam}
+                    </span>
                   </div>
                 </div>
               </a>
@@ -114,7 +130,7 @@ export function HeaderBar({
               href={STEAM_STORE_URL}
               target="_blank"
               rel="noopener noreferrer"
-              aria-label="Play Free Demo and Wishlist on Steam"
+              aria-label={t.steamCta.ariaLabel}
               className="lunoris-steam-btn lunoris-steam-btn-nav"
             >
               <SteamLogoSvg className="steam-nav-solo-icon" />

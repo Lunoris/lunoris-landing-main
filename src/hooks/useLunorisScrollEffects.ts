@@ -99,12 +99,15 @@ export function useLunorisScrollEffects() {
         Math.max(startY + 120 * rectScale, rawEndY)
       );
 
-      // Comfortable margin from the right edge (responsive for mobile, tablet, and desktop)
+      // Comfortable margin from the active side edge (LTR right rail, RTL left rail)
       const isMobile = window.innerWidth <= 768;
-      const minRightMargin = isMobile
+      const minSideMargin = isMobile
         ? Math.max(24 * rectScale, vpW * 0.06)
         : Math.max(105 * rectScale, vpW * 0.06);
-      const railX = Math.min(startX, vpW - minRightMargin);
+      const isLeftRail = startX < vpW * 0.5;
+      const railX = isLeftRail
+        ? Math.max(startX, minSideMargin)
+        : Math.min(startX, vpW - minSideMargin);
 
       // Silky-smooth sine ease-in-out parameter u in [0, 1]
       const u = 0.5 - 0.5 * Math.cos(p * Math.PI);

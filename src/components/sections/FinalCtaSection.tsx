@@ -1,10 +1,15 @@
+"use client";
+
 import React from "react";
+import { useLanguage } from "@/i18n/LanguageContext";
 
 interface FinalCtaSectionProps {
   finalCtaSlotRef: React.RefObject<HTMLDivElement | null>;
 }
 
 export function FinalCtaSection({ finalCtaSlotRef }: FinalCtaSectionProps) {
+  const { t } = useLanguage();
+
   return (
     <section className="lunoris-final-cta">
       <div
@@ -17,8 +22,8 @@ export function FinalCtaSection({ finalCtaSlotRef }: FinalCtaSectionProps) {
 
       <div className="lunoris-wide-wrap lunoris-final-cta-inner">
         <div className="lunoris-final-cta-headings">
-          <span className="lunoris-title-minor">Step Inside the Dream</span>
-          <h2 className="lunoris-title-major">Find Your Way Back</h2>
+          <span className="lunoris-title-minor">{t.finalCta.minor}</span>
+          <h2 className="lunoris-title-major">{t.finalCta.major}</h2>
           <div
             className="lunoris-center-bar"
             style={{ margin: "1.5rem auto 2.6rem" }}

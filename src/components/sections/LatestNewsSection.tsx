@@ -8,8 +8,10 @@ import {
   OrnamentDivider,
 } from "@/components/ui/CanvasFrames";
 import { NewsArticleCard } from "@/components/ui/NewsArticleCard";
+import { useLanguage } from "@/i18n/LanguageContext";
 
 export function LatestNewsSection() {
+  const { t } = useLanguage();
   const [articles, setArticles] = useState<NewsArticle[]>(LUNORIS_NEWS);
   const [newsOffset, setNewsOffset] = useState(0);
 
@@ -58,7 +60,7 @@ export function LatestNewsSection() {
         >
           <OrnamentDivider />
           <h2 className="lunoris-title-major lunoris-news-heading">
-            Latest News
+            {t.news.sectionTitle}
           </h2>
         </div>
 
@@ -69,7 +71,7 @@ export function LatestNewsSection() {
                 type="button"
                 onClick={handlePrevNews}
                 className="lunoris-news-arrow-btn arrow-prev"
-                aria-label="Previous news articles"
+                aria-label={t.news.prevAria}
               >
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
                   <path
@@ -107,7 +109,7 @@ export function LatestNewsSection() {
                 type="button"
                 onClick={handleNextNews}
                 className="lunoris-news-arrow-btn arrow-next"
-                aria-label="Next news articles"
+                aria-label={t.news.nextAria}
               >
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
                   <path
@@ -123,7 +125,7 @@ export function LatestNewsSection() {
             <div className="lunoris-news-bottom-bar is-visible">
               <Link href="/news" className="lunoris-all-news-btn">
                 <BrushstrokeButtonBg />
-                <span>All News</span>
+                <span>{t.news.allNewsBtn}</span>
               </Link>
             </div>
           </>
@@ -136,7 +138,7 @@ export function LatestNewsSection() {
               opacity: 0.72,
             }}
           >
-            New chronicles from the subconscious will appear here soon.
+            {t.news.emptySoon}
           </p>
         )}
       </div>
