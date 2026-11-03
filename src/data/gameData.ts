@@ -3,6 +3,9 @@ export interface CharacterCardItem {
   lore: string;
   image: string;
   accent: string;
+  /** Primary & secondary RGB triplets ("r, g, b") for Cursor Glow when hovering this character */
+  glowPrimary: string;
+  glowSecondary: string;
 }
 
 export interface CompanionItem {
@@ -11,6 +14,9 @@ export interface CompanionItem {
   species: string;
   image: string;
   desc: string;
+  /** Primary & secondary RGB triplets ("r, g, b") for Cursor Glow when hovering this companion */
+  glowPrimary: string;
+  glowSecondary: string;
 }
 
 export interface WorldLocationItem {
@@ -59,6 +65,8 @@ export const COMPANIONS_SHOWCASE: CompanionItem[] = [
     species: "Scottish Fold Munchkin Cat",
     image: "/assets/fareeda-portrait.png",
     desc: "Glowing Arabic calligraphy of serenity ripples across her fur, projecting a warmth aura that suppresses Fear distortion and keeps shifting corridors stable.",
+    glowPrimary: "56, 189, 248",
+    glowSecondary: "251, 191, 36",
   },
   {
     name: "Kurtam",
@@ -66,6 +74,8 @@ export const COMPANIONS_SHOWCASE: CompanionItem[] = [
     species: "Sugar Glider Companion",
     image: "/assets/kurtam-portrait.png",
     desc: "A tiny pocket glider from Lunora's waking life who transforms into a bear-sized aerial mount, riding thermal updrafts across shattered Dream Island chasms.",
+    glowPrimary: "52, 211, 153",
+    glowSecondary: "34, 211, 238",
   },
   {
     name: "Freddy",
@@ -73,6 +83,8 @@ export const COMPANIONS_SHOWCASE: CompanionItem[] = [
     species: "Miniature Dachshund",
     image: "/assets/freddy-portrait.png",
     desc: "His collar and tail blaze with blue fire whenever unseen threats or buried Echo Shards are near, warning you seconds before Nightmare stalkers strike.",
+    glowPrimary: "96, 165, 250",
+    glowSecondary: "56, 189, 248",
   },
   {
     name: "Centric",
@@ -80,6 +92,8 @@ export const COMPANIONS_SHOWCASE: CompanionItem[] = [
     species: "Blue & Gold Macaw",
     image: "/assets/centric-portrait.png",
     desc: "Soars above floating ruins on translucent wings, revealing secret memory doors through dense mist and marking boss weak points from the sky.",
+    glowPrimary: "245, 158, 11",
+    glowSecondary: "56, 189, 248",
   },
 ];
 
@@ -126,60 +140,80 @@ export const CHARACTERS_GALLERY: CharacterCardItem[] = [
     lore: "An 18-year-old artist adrift inside her own painted subconscious after a midnight crash on Wahm Lane, fighting to piece her fractured memories back together.",
     image: "/assets/lunora-render.png",
     accent: "#c084fc",
+    glowPrimary: "192, 132, 252",
+    glowSecondary: "129, 140, 248",
   },
   {
     name: "Fareeda",
     lore: "Lunora's Scottish Fold Munchkin cat. In the dream world, glowing Arabic calligraphy of serenity appears word by word across her fur, dampening incoming fear.",
     image: "/assets/fareeda-portrait.png",
     accent: "#38bdf8",
+    glowPrimary: "56, 189, 248",
+    glowSecondary: "251, 191, 36",
   },
   {
     name: "Kurtam",
     lore: "A tiny pet sugar glider in reality who manifests as a bear-sized aerial mount in the Dream Realm, carrying Lunora across shattered chasms.",
     image: "/assets/kurtam-portrait.png",
     accent: "#34d399",
+    glowPrimary: "52, 211, 153",
+    glowSecondary: "34, 211, 238",
   },
   {
     name: "Freddy",
     lore: "Steals socks at home and guards Lunora in the dark. His collar and tail blaze with blue fire as he sniffs out hidden Echo Shards and warns of Nightmare ambushes.",
     image: "/assets/freddy-portrait.png",
     accent: "#60a5fa",
+    glowPrimary: "96, 165, 250",
+    glowSecondary: "56, 189, 248",
   },
   {
     name: "John Ford",
     lore: "Lunora's greatest supporter and painting partner. His distant presence from the waking world echoes across every realm: 'Find me, Little Bug.'",
     image: "/assets/dad-portrait.png",
     accent: "#fbbf24",
+    glowPrimary: "251, 191, 36",
+    glowSecondary: "245, 158, 11",
   },
   {
     name: "Centric",
     lore: "Soars high above the Dream Islands with translucent wings, scouting elevated Echo Shards and hidden vantage points.",
     image: "/assets/centric-portrait.png",
     accent: "#f59e0b",
+    glowPrimary: "245, 158, 11",
+    glowSecondary: "56, 189, 248",
   },
   {
     name: "Young Lunora",
     lore: "Echoes of Lunora at age ten, preserved inside watercolor flashbacks and childhood moments before her mother Lulwah left.",
     image: "/assets/young-lunora-portrait.png",
     accent: "#e879f9",
+    glowPrimary: "232, 121, 249",
+    glowSecondary: "244, 114, 182",
   },
   {
     name: "Kai",
     lore: "The quiet, remorseful presence on the other side of the Wahm Lane crash who made the emergency call that saved Lunora's life.",
     image: "/assets/kai-portrait.png",
     accent: "#38bdf8",
+    glowPrimary: "56, 189, 248",
+    glowSecondary: "99, 102, 241",
   },
   {
     name: "Kane",
     lore: "A sixteen-year-old fleeing his own guilt after the collision on Wahm Lane, manifesting inside the storm of the first Nightmare realm.",
     image: "/assets/kane-portrait.png",
     accent: "#f43f5e",
+    glowPrimary: "244, 63, 94",
+    glowSecondary: "168, 85, 247",
   },
   {
     name: "Samantha",
     lore: "Lunora's friend whose house party triggered the fateful midnight phone call and the drive home down Wahm Lane.",
     image: "/assets/samantha-portrait.png",
     accent: "#34d399",
+    glowPrimary: "52, 211, 153",
+    glowSecondary: "96, 165, 250",
   },
 ];
 

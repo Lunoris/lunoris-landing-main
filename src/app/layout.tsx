@@ -2,6 +2,11 @@ import type { Metadata } from "next";
 import { cookies } from "next/headers";
 import localFont from "next/font/local";
 import { LanguageProvider } from "@/i18n/LanguageContext";
+import { DreamDissolveTransition } from "@/components/ui/DreamDissolveTransition";
+import { NightmareRiftTransition } from "@/components/ui/NightmareRiftTransition";
+import { RetroArcadeTransition } from "@/components/ui/RetroArcadeTransition";
+import { DreamParticles } from "@/components/ui/DreamParticles";
+import { LivingPaintingBackground } from "@/components/ui/LivingPaintingBackground";
 import {
   LOCALE_COOKIE_NAME,
   getLocaleOption,
@@ -70,7 +75,11 @@ export default async function RootLayout({
       </head>
       <body>
         <LanguageProvider initialLocale={initialLocale}>
-          <div className="ambient-stars" aria-hidden="true" />
+          <LivingPaintingBackground />
+          <DreamParticles />
+          <DreamDissolveTransition />
+          <NightmareRiftTransition />
+          <RetroArcadeTransition />
           {children}
         </LanguageProvider>
       </body>
