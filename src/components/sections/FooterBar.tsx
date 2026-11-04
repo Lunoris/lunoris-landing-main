@@ -8,20 +8,35 @@ import { useLanguage } from "@/i18n/LanguageContext";
 export function FooterBar({
   floatingLetters = false,
   retroCrt = false,
+  floatingGlowColor,
+  floatingIntensity,
+  floatingWordmark = false,
 }: {
   floatingLetters?: boolean;
   retroCrt?: boolean;
+  floatingGlowColor?: string;
+  floatingIntensity?: number;
+  floatingWordmark?: boolean;
 }) {
   const { t } = useLanguage();
 
   return (
     <footer className="lunoris-footer">
       <div className="lunoris-wide-wrap lunoris-footer-inner">
-        <img
-          src="/assets/logo-wordmark.svg"
-          alt="Lunoris: Piece of Mind"
-          className="lunoris-footer-logo"
-        />
+        {floatingWordmark ? (
+          <FloatingLetters
+            text="LUNORIS"
+            className="dream-levels-footer-wordmark"
+            glowColor={floatingGlowColor ?? "rgba(34, 211, 238, 0.88)"}
+            intensity={floatingIntensity ?? 1.08}
+          />
+        ) : (
+          <img
+            src="/assets/logo-wordmark.svg"
+            alt="Lunoris: Piece of Mind"
+            className="lunoris-footer-logo"
+          />
+        )}
         <p className="lunoris-footer-legal">
           {retroCrt ? (
             <MagneticLetters
@@ -32,8 +47,8 @@ export function FooterBar({
           ) : floatingLetters ? (
             <FloatingLetters
               text={t.footer.legal}
-              glowColor="rgba(167, 139, 250, 0.72)"
-              intensity={0.58}
+              glowColor={floatingGlowColor ?? "rgba(167, 139, 250, 0.72)"}
+              intensity={floatingIntensity ?? 0.58}
             />
           ) : (
             t.footer.legal

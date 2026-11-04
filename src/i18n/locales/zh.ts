@@ -229,13 +229,149 @@ export const zh: SiteTranslations = {
         desc: "推开露诺拉学校的校门，踏入全部三重梦境关卡——在《回应之界》的浮空群岛间展翼翱翔，步入《记忆中的男人》那幅鲜活流动的梵高画卷，并向着《突破》中象征希望的金色传送门拾级而上。",
       },
       "retro-games": {
-        title: "复古街机",
+        title: "复古关卡",
         desc: "驾驶一辆 1967 Chevrolet Impala 驰骋在梦境夹缝间无尽延伸的午夜公路上，家族旧物与仪表盘电台频率将把 3D 记忆化作可亲手游玩的 2D 复古街机篇章。",
       },
       nightmare: {
         title: "梦魇深渊",
         desc: "纵身跃入雾气氤氲的镜面或地下室紫靛交织的漩涡，闯入变幻莫测的梦魇长廊——跨越洋红色的消融裂隙直面首领“惧爪”，或在玛奇玛奇避难所暂作喘息。",
       },
+    },
+  },
+  portalPages: {
+    dreamRiddle: {
+      eyebrow: "三扇门 · 唯一出路",
+      title: "哪一扇门，你永远不会打开？",
+      body: "一扇门后，是你记得的痛；另一扇门后，是你藏起的愧疚；第三扇门后，是你最害怕的东西——真相。露诺拉已经做出了选择。你呢？",
+      cue: "向下滑动——如果你敢的话",
+    },
+    retroComingSoon: {
+      kicker: "街机仍在继续",
+      title: "更多关卡即将推出",
+    },
+    navWorld: "世界传送门",
+    dream: {
+      heroMinor: "主线战役模式 · 梦境领域",
+      heroSubtitle: "穿越悲伤七阶段的 3D 平台跳跃",
+      heroOverview: "在七个超现实的梦境世界中，每一次跳跃、滑翔与攀爬，都映照着露诺拉的内心状态。",
+      mapLabel: "Dream Levels 进度地图",
+      levels: [
+        {
+          description: "超现实的森林与德拉伊耶的废墟交融，并随着你的目光不断变幻。",
+          hook: "你确定眼前的路值得信任吗？",
+        },
+        {
+          description: "与库尔塔姆一同滑翔于破碎的浮岛之上，找到通往噩梦世界的第一道裂隙。",
+          hook: "如果裂隙早已找到了你呢？",
+        },
+        {
+          description: "直面 FearClaw 之后，散落的石块化作深渊之上的阶梯。",
+          hook: "顶端有一个答案——还有一道你无法甩开的阴影。",
+        },
+      ],
+      comingSoon: "更多关卡即将推出",
+    },
+    retro: {
+      introMinor: "约翰·福特的地下室 · 回声记忆",
+      introSubtitle: "约翰·福特地下室里的街机。每一台都藏着一段可游玩的记忆。有些还没有通电……",
+      ui: {
+        rowLabel: "街机列表",
+        cabinetLabel: "街机",
+        nowPlaying: "正在游玩",
+        mysteryHint: "尚未通电",
+        selectHint: "选择一台街机，查看它的记忆",
+        challengeLabel: "你的挑战",
+      },
+      levels: {
+        "car-level": {
+          roleSuffix: "1988 德拉伊耶 · 1967 雪佛兰 Impala",
+          overview: "驾驶约翰·福特的 1967 年雪佛兰 Impala 驶过 1988 年德拉伊耶的笔直公路，而露瓦·阿尔拉希德正赶往母亲家中，准备生下露诺拉。",
+          challenge: "在 1988 年的公路上穿梭避让，在比赛计时结束前抵达门口。",
+          chapters: [
+            {
+              title: "玩具雪佛兰与车库钥匙",
+              bullets: [
+                "在 Dream Level 2 中与弗雷迪一起追随隐藏的 Lucid Orb 足迹，找回玩具车。",
+                "在 Dream Hub 中用 Retro Vision（R3）扫描真正的 1967 年 Impala，开始比赛。",
+              ],
+            },
+            {
+              title: "横版卷轴竞速：1988 德拉伊耶",
+              bullets: [
+                "锁定的 Dreamcast 时代风格 2D 横版镜头，配有胜负计时器与障碍闪避。",
+                "终点是外祖母家的门口，并解锁对话日志第 9 条（《母亲与女儿》）。",
+              ],
+            },
+          ],
+        },
+        "falcon-hunting": {
+          roleSuffix: "与露瓦·阿尔拉希德的最后记忆（6 岁）",
+          overview: "亲手操控露瓦的鹰隼，飞越 1988 年温暖的沙特沙漠，再让它落回她戴着手套的手臂上，六岁的露诺拉在一旁注视。",
+          challenge: "引导鹰隼飞越沙漠，在记忆消散之前让它回到露瓦的手臂上。",
+          chapters: [
+            {
+              title: "Al-Ghashwa（鹰隼头罩）",
+              bullets: [
+                "在 Dream Level 1 第 7 区，轻轻取下栖架上那只鹰隼的皮革头罩。",
+                "完成 Nightmare Zone 1 右侧的 Puzzle Shrine 以解锁 Retro Vision，并在 Dream Hub 中扫描头罩。",
+              ],
+            },
+            {
+              title: "俯视视角沙漠飞行",
+              bullets: [
+                "固定的俯视正交镜头，搭配 PS1 与 Dreamcast 风格的复古沙漠画面。",
+                "体现关卡的核心主题：鹰隼飞走又归来，正如露诺拉与母亲的最后记忆。",
+              ],
+            },
+          ],
+        },
+      },
+    },
+    arcade: {
+      triggerLabel: "秘密街机 · 1967 Impala",
+      triggerTitle: "彩蛋：启动 1967 Impala 街机",
+      badge: "✦ 1988 · 街机",
+      close: "关闭街机",
+      cabinetTitle: "约翰·福特的秘密街机 · 1988 德拉伊耶",
+      attractMode: "演示模式 · 按 START 开始",
+      controls: "操作 · A / D 或 ◀ / ▶",
+      echoMemory: "回声记忆 01 · 1988 德拉伊耶",
+      driveHint: "驾驶 1967 年雪佛兰 Impala 驶过午夜公路",
+      startRace: "✦ INSERT COIN · 开始比赛 ✦",
+      memoryCompleted: "记忆完成 · 1988 德拉伊耶",
+      arrived: "抵达外祖母家！",
+      quote: "“又倔又急躁，跟她妈妈一模一样。”",
+      interrupted: "记忆中断",
+      retry: "INSERT COIN · 重试",
+      playAgain: "再玩一次",
+      buildVideo: "观看游戏视频",
+      exitToVideo: "✦ 返回视频",
+    },
+    nightmare: {
+      navWasteland: "荒原",
+      kicker: "冰封荒原实地手记",
+      settingIndex: "故事舞台",
+      settingTitle: "冰封荒原",
+      panoramaAlt: "噩梦世界中由七个区域组成的荒原",
+      panoramaCaption: "七个区域 · 五个在地上 · 两个在地下",
+      notes: "这是一片彼此相连的广袤之地，而不是布满目标标记的走廊。借助紫色篝火、隧道与圣坛信标来解读地形。",
+      countsLabel: "世界内容",
+      safeSpots: "个安全点",
+      matchiAlt: "Matchi Matchi 山间圣所",
+      matchiCaption: "荒原中的一处宁静角落",
+      matchiIndex: "可选支线 · 区域 1",
+      matchiBody: "穿过区域 1 那条无尽的左侧隧道，便是 Matchi Mountain——一个难得能喘口气、顺便光顾抹茶摊的地方。",
+      matchiCondition: "打破循环的方法：将 Hope 提升至最高，并带上父亲的装框画作。",
+      matchiReward: "片刻喘息 · 一位商人 · 情感碎片",
+      fearclawAlt: "FearClaw 从竞技场的猩红雾气中现身",
+      fearclawIndex: "高潮 · 区域 2 竞技场",
+      fearclawBody: "在 Party School Path 的尽头，三阶段的狩猎就此展开。把握时机用 Breaker 招架，填满眩晕槽，将 FearClaw 净化为 FrayClaw。",
+      phases: [
+        "读懂攻击节奏",
+        "用 Breaker 招架",
+        "眩晕并净化",
+      ],
+      fearclawReward: "奖励：Stillness 手枪 · 开启 Dream Island 1 的第 3 扇门",
     },
   },
   companions: {

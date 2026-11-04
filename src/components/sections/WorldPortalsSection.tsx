@@ -8,10 +8,12 @@ import {
 } from "@/data/gameData";
 import { ArchedCanvasFrame } from "@/components/ui/CanvasFrames";
 import {
+  preloadShatteredAudio,
   triggerShatteredReality,
   unlockShatteredAudio,
 } from "@/components/ui/DreamDissolveTransition";
 import {
+  preloadBreakerAudio,
   triggerNightmareRift,
   unlockNightmareAudio,
 } from "@/components/ui/NightmareRiftTransition";
@@ -25,6 +27,7 @@ import { DreamRevealLetters } from "@/components/ui/DreamRevealLetters";
 import { ResilientVideo } from "@/components/ui/ResilientVideo";
 import { ScrollTextReveal } from "@/components/ui/ScrollTextReveal";
 import { useLanguage } from "@/i18n/LanguageContext";
+import { waitForRoute } from "@/components/ui/routeReady";
 
 const PORTAL_ENTER_LABELS: Record<string, string> = {
   en: "ENTER DREAM PORTAL",
@@ -38,6 +41,12 @@ const PORTAL_ENTER_LABELS: Record<string, string> = {
 };
 
 type PortalTransitionPhase = "idle" | "centering" | "expanding";
+
+/** Transition SFX are only needed here, so they load once the home page is idle. */
+function preloadPortalAudio() {
+  preloadShatteredAudio();
+  preloadBreakerAudio();
+}
 
 function WorldPortalCard({
   location,
@@ -127,6 +136,8 @@ function WorldPortalCard({
       onClick={isClickablePortal ? handleClick : undefined}
       onKeyDown={isClickablePortal ? handleKeyDown : undefined}
       onMouseEnter={isNightmarePortal ? handleMouseEnter : undefined}
+      onPointerEnter={isClickablePortal ? preloadPortalAudio : undefined}
+      onFocus={isClickablePortal ? preloadPortalAudio : undefined}
       style={
         {
           "--stagger": index % 3,
@@ -240,8 +251,11 @@ export function WorldPortalsSection() {
   }, []);
 
   useEffect(() => {
+    // Every route is dynamic (the root layout reads cookies()), so without a
+    // loading.tsx these prefetches are skipped; the transitions instead hold until
+    // the route has painted (see waitForRoute).
     router.prefetch("/dream-levels");
-    router.prefetch("/retro-games");
+    router.prefetch("/retro-levels");
     router.prefetch("/nightmare");
     resetPortalState();
 
@@ -264,13 +278,34 @@ export function WorldPortalsSection() {
 
     window.addEventListener("pageshow", onPageShowOrPop);
     window.addEventListener("popstate", onPageShowOrPop);
+
+    const idleWindow = window as Window & {
+      requestIdleCallback?: (cb: () => void, opts?: { timeout: number }) => number;
+      cancelIdleCallback?: (id: number) => void;
+    };
+    const idleId = idleWindow.requestIdleCallback
+      ? idleWindow.requestIdleCallback(preloadPortalAudio, { timeout: 6000 })
+      : window.setTimeout(preloadPortalAudio, 2500);
+
     return () => {
+      if (idleWindow.cancelIdleCallback) idleWindow.cancelIdleCallback(idleId);
+      else window.clearTimeout(idleId);
       window.removeEventListener("pageshow", onPageShowOrPop);
       window.removeEventListener("popstate", onPageShowOrPop);
       timersRef.current.forEach((id) => window.clearTimeout(id));
       timersRef.current = [];
     };
   }, [router, resetPortalState]);
+
+  // Holds the transition at full coverage until the route paints. If it never does
+  // (timeout, failed navigation) the home grid is restored so it isn't left zoomed.
+  const waitForPortalRoute = useCallback(
+    (path: string) =>
+      waitForRoute(path).then(() => {
+        if (window.location.pathname !== path) resetPortalState();
+      }),
+    [resetPortalState]
+  );
 
   const computePortalCenterOffset = useCallback(
     (cardEl: HTMLElement): { dx: number; dy: number } => {
@@ -347,17 +382,19 @@ export function WorldPortalsSection() {
       const t2 = window.setTimeout(() => {
         triggerShatteredReality({
           sourceImageUrl: "/assets/dream-level-1.png",
+          // Portal state resets on unmount / pageshow / popstate. Resetting it here would
+          // re-show the idle home grid under the overlay while the route is still loading.
           onMidTransition: () => {
-            resetPortalState();
             router.push("/dream-levels");
             window.scrollTo({ top: 0, behavior: "instant" });
           },
+          waitUntil: () => waitForPortalRoute("/dream-levels"),
         });
       }, 840);
 
       timersRef.current.push(t1, t2);
     },
-    [router, activePortalId, resetPortalState, computePortalCenterOffset]
+    [router, activePortalId, waitForPortalRoute, computePortalCenterOffset]
   );
 
   const handleRetroPortalActivate = useCallback(
@@ -371,7 +408,7 @@ export function WorldPortalsSection() {
       setZoomOffset({ dx, dy });
       setActivePortalId("retro-games");
 
-      // Phase 1 (0 - 460ms): Other portals disappear & Retro Games portal moves to the center
+      // Phase 1 (0 - 460ms): Other portals disappear & Retro Levels portal moves to the center
       setPortalPhase("centering");
 
       // Phase 2 (460 - 820ms): Portal cell expands across the screen
@@ -384,17 +421,19 @@ export function WorldPortalsSection() {
       const t2 = window.setTimeout(() => {
         triggerRetroTransition({
           mode: "pixel",
+          // Portal state resets on unmount / pageshow / popstate. Resetting it here would
+          // re-show the idle home grid under the overlay while the route is still loading.
           onMidTransition: () => {
-            resetPortalState();
-            router.push("/retro-games");
+            router.push("/retro-levels");
             window.scrollTo({ top: 0, behavior: "instant" });
           },
+          waitUntil: () => waitForPortalRoute("/retro-levels"),
         });
       }, 760);
 
       timersRef.current.push(t1, t2);
     },
-    [router, activePortalId, resetPortalState, computePortalCenterOffset]
+    [router, activePortalId, waitForPortalRoute, computePortalCenterOffset]
   );
 
   const handleNightmarePortalActivate = useCallback(
@@ -408,18 +447,19 @@ export function WorldPortalsSection() {
       // Immediately launch the full-screen, dead-center Breaker Sword Pull transition
       // (`VFX-42 Breaker Rift Pull` + `DeliverBreakerSword` + FMOD `The Breaker Rift Event.wav` & `The Breaker Equip-001.wav`)
       triggerNightmareRift({
+        // Portal state resets on unmount / pageshow / popstate. Resetting it here would
+        // re-show the idle home grid under the overlay while the route is still loading.
         onMidTransition: () => {
-          resetPortalState();
           router.push("/nightmare");
           window.scrollTo({ top: 0, behavior: "instant" });
         },
+        waitUntil: () => waitForPortalRoute("/nightmare"),
       });
     },
-    [router, activePortalId, resetPortalState]
+    [router, activePortalId, waitForPortalRoute]
   );
 
   const enterLabel = PORTAL_ENTER_LABELS[locale] || PORTAL_ENTER_LABELS.en;
-
   return (
     <section
       ref={sectionRef}
@@ -490,6 +530,7 @@ export function WorldPortalsSection() {
             );
           })}
         </div>
+
       </div>
 
       {/* Fullscreen Dream Gate portal dissolve overlay during zoom-to-center transition */}

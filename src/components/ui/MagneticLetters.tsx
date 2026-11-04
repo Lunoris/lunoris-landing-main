@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useMemo } from "react";
+import React, { useEffect, useMemo, useRef } from "react";
+import { observeInView } from "@/components/ui/inViewObserver";
 
 export interface RetroArcadeTextProps {
   text: string;
@@ -27,6 +28,7 @@ function seededFlickerClass(seed: number): string {
  * - Subtle CRT phosphor flicker & occasional barely-perceptible H-sync distortion
  * - Arcade cabinet Neon Flicker glow around letters with smooth intensity breathing
  * - Intensifies glow & phosphor brilliance on hover
+ * - Infinite animations only run while the root carries `is-in-view`
  */
 export function RetroArcadeText({
   text,
@@ -36,6 +38,14 @@ export function RetroArcadeText({
   intensity = 1,
 }: RetroArcadeTextProps) {
   const resolvedVariant = variant ?? (intensity >= 0.85 ? "heading" : "body");
+  const rootRef = useRef<HTMLSpanElement | null>(null);
+
+  useEffect(() => {
+    const root = rootRef.current;
+    if (!root) return;
+    return observeInView(root);
+  }, [resolvedVariant]);
+
   const isArabicCursive = useMemo(() => /[\u0600-\u06FF]/.test(text), [text]);
 
   const wordTokens = useMemo(() => {
@@ -67,6 +77,7 @@ export function RetroArcadeText({
   if (resolvedVariant === "body") {
     return (
       <span
+        ref={rootRef}
         className={`retro-crt-neon-root is-body ${className}`.trim()}
         aria-label={text}
         style={{ "--retro-neon-color": glowColor } as React.CSSProperties}
@@ -84,6 +95,7 @@ export function RetroArcadeText({
 
   return (
     <span
+      ref={rootRef}
       className={`retro-crt-neon-root is-heading ${className}`.trim()}
       aria-label={text}
       style={{ "--retro-neon-color": glowColor } as React.CSSProperties}

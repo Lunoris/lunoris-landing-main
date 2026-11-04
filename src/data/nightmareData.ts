@@ -427,7 +427,7 @@ const EN_NIGHTMARE_COPY: NightmarePageCopy = {
   ],
   returnCtaTitle: "SLASH BACK THROUGH THE RIFT",
   returnCtaBody:
-    "Return to the World Portals to soar across Dream Levels or replay 1988 Diriyah memories in Retro Games.",
+    "Return to the World Portals to soar across Dream Levels or replay 1988 Diriyah memories in Retro Levels.",
   returnCtaBtn: "Return to World Portals",
 };
 

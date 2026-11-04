@@ -111,7 +111,7 @@ export const WORLD_LOCATIONS_SHOWCASE: WorldLocationItem[] = [
   },
   {
     id: "retro-games",
-    title: "Retro Games",
+    title: "Retro Levels",
     image: "/assets/car-level-poster.jpg",
     videoSrc: "/assets/car-level-loop.mp4",
     isVideo: true,

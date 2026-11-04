@@ -101,6 +101,14 @@ export interface LocalizedNewsEntry {
   sections: LocalizedNewsSection[];
 }
 
+/** Copy for one Retro Levels arcade cabinet (see `src/data/retroLevels.ts`). */
+export interface RetroLevelText {
+  roleSuffix: string;
+  overview: string;
+  challenge: string;
+  chapters: { title: string; bullets: string[] }[];
+}
+
 export interface SiteTranslations {
   meta: {
     siteTitle: string;
@@ -171,6 +179,96 @@ export interface SiteTranslations {
         desc: string;
       }
     >;
+  };
+  /** Copy for the World Portal subpages (Dream Levels, Retro Levels). */
+  portalPages: {
+    /** Riddle teaser above the Dream Levels route map. */
+    dreamRiddle: {
+      eyebrow: string;
+      title: string;
+      body: string;
+      cue: string;
+    };
+    /** Closing block under the Retro Levels showcase. */
+    retroComingSoon: {
+      kicker: string;
+      title: string;
+    };
+    /** Header link back to the home page World Portals section. */
+    navWorld: string;
+    /** Dream Levels page (level names Pain / Guilt / Breakthrough stay as-is). */
+    dream: {
+      heroMinor: string;
+      heroSubtitle: string;
+      heroOverview: string;
+      mapLabel: string;
+      /** One entry per level card, in route order. */
+      levels: { description: string; hook: string }[];
+      comingSoon: string;
+    };
+    /** Retro Levels page: John Ford's basement arcade. */
+    retro: {
+      introMinor: string;
+      introSubtitle: string;
+      ui: {
+        rowLabel: string;
+        cabinetLabel: string;
+        nowPlaying: string;
+        mysteryHint: string;
+        selectHint: string;
+        challengeLabel: string;
+      };
+      /**
+       * Text per retro level, keyed by the id in `src/data/retroLevels.ts`.
+       * Only English is required: other locales fall back to it per level.
+       */
+      levels: Partial<Record<string, RetroLevelText>>;
+    };
+    /** 1967 Impala easter-egg arcade cabinet on Retro Levels. */
+    arcade: {
+      triggerLabel: string;
+      triggerTitle: string;
+      badge: string;
+      close: string;
+      cabinetTitle: string;
+      attractMode: string;
+      controls: string;
+      echoMemory: string;
+      driveHint: string;
+      startRace: string;
+      memoryCompleted: string;
+      arrived: string;
+      quote: string;
+      interrupted: string;
+      retry: string;
+      playAgain: string;
+      buildVideo: string;
+      exitToVideo: string;
+    };
+    /** Nightmare page sections: wasteland, Matchi Matchi, FearClaw. */
+    nightmare: {
+      navWasteland: string;
+      kicker: string;
+      settingIndex: string;
+      settingTitle: string;
+      panoramaAlt: string;
+      panoramaCaption: string;
+      notes: string;
+      countsLabel: string;
+      safeSpots: string;
+      matchiAlt: string;
+      matchiCaption: string;
+      matchiIndex: string;
+      matchiBody: string;
+      matchiCondition: string;
+      matchiReward: string;
+      fearclawAlt: string;
+      fearclawIndex: string;
+      fearclawBody: string;
+      /** The three FearClaw fight phases, in order. */
+      phases: string[];
+      fearclawReward: string;
+    };
   };
   companions: {
     minor: string;

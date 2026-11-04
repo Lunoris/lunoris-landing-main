@@ -106,7 +106,7 @@ const EN_RETRO_GAMES_COPY: RetroGamesPageCopy = {
     blinds: "04 · BLINDS",
   },
   heroMinor: "ECHO MEMORIES · 7 PLAYABLE RETRO CHAPTERS",
-  heroTitle: "RETRO GAMES",
+  heroTitle: "RETRO LEVELS",
   heroSubtitle: "1988 Diriyah Memories & Basement Arcade Cabinets",
   heroOverview:
     "Cruise a 1967 Chevrolet Impala down an endless midnight highway between dreams, where family keepsakes and Retro Vision transform 3D memories into playable 2D retro arcade chapters.",
@@ -367,7 +367,7 @@ const EN_RETRO_GAMES_COPY: RetroGamesPageCopy = {
     },
   ],
   systemsMinor: "HARDWARE & DIEGETIC SYSTEMS · 1988–2026",
-  systemsMajor: "SYSTEMS GOVERNING RETRO GAMES",
+  systemsMajor: "SYSTEMS GOVERNING RETRO LEVELS",
   systemsBody:
     "Four interconnected systems power the discovery, presentation, and replay of Lunoris's retro chapters.",
   systems: [
@@ -436,7 +436,7 @@ const RU_RETRO_GAMES_COPY: RetroGamesPageCopy = {
     blinds: "04 · BLINDS",
   },
   heroMinor: "ЭХО-ВОСПОМИНАНИЯ · 7 ИГРАБЕЛЬНЫХ РЕТРО-ГЛАВ",
-  heroTitle: "RETRO GAMES",
+  heroTitle: "RETRO LEVELS",
   heroSubtitle: "Воспоминания Эд-Диръии 1988 и аркадные автоматы в подвале",
   heroOverview:
     "Мчитесь на Chevrolet Impala 1967 года по полуночному шоссе между снами, где семейные реликвии и Retro Vision превращают 3D-память в играбельные 2D ретро-аркады.",
@@ -464,7 +464,7 @@ const RU_RETRO_GAMES_COPY: RetroGamesPageCopy = {
     },
   ],
   architectureMinor: "СИСТЕМА ДВУХ КЛЮЧЕЙ · ОТ РЕЛИКВИИ К АВТОМАТУ",
-  architectureMajor: "КАК ОТКРЫВАЮТСЯ РЕТРО-ИГРЫ",
+  architectureMajor: "КАК ОТКРЫВАЮТСЯ РЕТРО-УРОВНИ",
   architectureBody:
     "Каждое из 7 Эхо-воспоминаний связывает секретный предмет из Уровня Снов, алтарь Кошмара и аркадный автомат в подвале.",
   levelsMinor: "ИГРАБЕЛЬНЫЕ ЭХО-ВОСПОМИНАНИЯ · ЭПОХА CRT И DREAMCAST",
@@ -476,7 +476,7 @@ const RU_RETRO_GAMES_COPY: RetroGamesPageCopy = {
   connectedSystemsLabel: "Связанные системы и реликвии",
   inGameCapturesLabel: "Кадры из билда и вики",
   systemsMinor: "ТЕХНОЛОГИИ И ЗВУК · 1988–2026",
-  systemsMajor: "СИСТЕМЫ МИРА RETRO GAMES",
+  systemsMajor: "СИСТЕМЫ МИРА RETRO LEVELS",
   systemsBody:
     "Четыре взаимосвязанные системы отвечают за поиск, ЭЛТ-визуализацию и повторное прохождение ретро-глав.",
   returnCtaTitle: "Вернуться к порогу порталов",

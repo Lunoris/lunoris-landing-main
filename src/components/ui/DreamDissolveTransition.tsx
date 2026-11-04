@@ -17,6 +17,11 @@ export interface DreamDissolveOptions {
   phaseDurationMs?: number;
   /** Callback fired at midpoint (when screen is fully shattered) so the new route mounts underneath */
   onMidTransition?: () => void;
+  /**
+   * Called right after `onMidTransition`. The screen stays fully shattered until the
+   * returned promise settles (e.g. the new route has painted), then DissolveOut runs.
+   */
+  waitUntil?: () => Promise<unknown>;
   /** Callback fired when DissolveOut finishes reassembling the new world */
   onComplete?: () => void;
 }
@@ -73,6 +78,11 @@ async function preloadGameSfxBuffers() {
       }
     })
   );
+}
+
+/** Fetch + decode the glass transition SFX ahead of time (idempotent). */
+export function preloadShatteredAudio() {
+  void preloadGameSfxBuffers();
 }
 
 /**
@@ -524,7 +534,8 @@ export function DreamDissolveTransition() {
         preloadedImagesRef.current.set(url, img);
       };
     });
-    preloadGameSfxBuffers();
+    // Glass SFX (~3.8 MB of WAV) are no longer fetched on every page load; the
+    // home portals call `preloadShatteredAudio()` on idle / hover instead.
   }, []);
 
   useEffect(() => {
@@ -540,6 +551,7 @@ export function DreamDissolveTransition() {
         gravityStrength = 1.35,
         phaseDurationMs = 1250,
         onMidTransition,
+        waitUntil,
         onComplete,
       } = customEvt.detail || {};
 
@@ -672,9 +684,28 @@ export function DreamDissolveTransition() {
         const startTime = performance.now();
         let midpointFired = false;
         let dissolveOutSfxPlayed = false;
+        // Time spent holding at full coverage while the new route renders
+        let pausedMs = 0;
+        let routeReady = !waitUntil;
+        const holdEnd = phaseDurationMs + HOLD_MS;
+
+        const fireMidpoint = () => {
+          midpointFired = true;
+          onMidTransition?.();
+          if (waitUntil) {
+            const markReady = () => {
+              routeReady = true;
+            };
+            waitUntil().then(markReady, markReady);
+          }
+        };
 
         const renderFrame = (now: number) => {
-          const elapsed = now - startTime;
+          let elapsed = now - startTime - pausedMs;
+          if (midpointFired && !routeReady && elapsed >= holdEnd - 1) {
+            pausedMs += elapsed - (holdEnd - 1);
+            elapsed = holdEnd - 1;
+          }
 
           let shaderProgress = 0;
           let isDissolveOut = 0;
@@ -689,14 +720,12 @@ export function DreamDissolveTransition() {
             shaderProgress = 1.0;
             isDissolveOut = 1;
             if (!midpointFired) {
-              midpointFired = true;
-              onMidTransition?.();
+              fireMidpoint();
             }
           } else {
             // Phase 2: DissolveOut (progress 1 -> 0, world assembles from shards)
             if (!midpointFired) {
-              midpointFired = true;
-              onMidTransition?.();
+              fireMidpoint();
             }
             if (!dissolveOutSfxPlayed) {
               dissolveOutSfxPlayed = true;

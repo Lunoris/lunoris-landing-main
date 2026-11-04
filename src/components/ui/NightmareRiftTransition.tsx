@@ -5,6 +5,11 @@ import React, { useEffect, useRef } from "react";
 export interface NightmareRiftTransitionOptions {
   /** Called at climax when 100% of the screen is covered by the Breaker Rift eruption so `/nightmare` mounts underneath */
   onMidTransition?: () => void;
+  /**
+   * Called right after `onMidTransition`. The rift stays at full coverage until the
+   * returned promise settles (e.g. `/nightmare` has painted), then it parts.
+   */
+  waitUntil?: () => Promise<unknown>;
   /** Called when the transition finishes parting to reveal `/nightmare` */
   onComplete?: () => void;
   /** Total duration in ms (defaults to 3100ms, synchronized to FMOD `The Breaker Rift Event.wav` + `The Breaker Equip-001.wav`) */
@@ -61,7 +66,8 @@ async function fetchAndDecode(
   }
 }
 
-function preloadBreakerAudio(): void {
+/** Fetch + decode the Breaker SFX ahead of time (idempotent). */
+export function preloadBreakerAudio(): void {
   if (typeof window === "undefined" || preloadStarted) return;
   preloadStarted = true;
 
@@ -612,10 +618,10 @@ export function NightmareRiftTransition(): React.JSX.Element {
     const canvas = canvasRef.current;
     if (!overlay || !canvas) return;
 
-    // Preload audio & convert Unity `GroundCrack01_b2.png` (black crack on white square)
-    // into true transparent-background canvases (alpha = 0 on all white pixels) so the
-    // square image boundary can NEVER be visible.
-    preloadBreakerAudio();
+    // Convert Unity `GroundCrack01_b2.png` (black crack on white square) into true
+    // transparent-background canvases (alpha = 0 on all white pixels) so the square
+    // image boundary can NEVER be visible. Breaker SFX (~1.35 MB of WAV) are fetched
+    // by the home portals via `preloadBreakerAudio()` on idle / hover, not on every page.
     let crackDarkCanvas: HTMLCanvasElement | null = null;
     let crackGlowCanvas: HTMLCanvasElement | null = null;
 
@@ -707,13 +713,23 @@ export function NightmareRiftTransition(): React.JSX.Element {
       let lastTime = startTime;
       let midFired = false;
       let equipSfxFired = false;
+      // Progress freezes here (still full coverage) until the new route has painted
+      const HOLD_P = 0.68;
+      let pausedMs = 0;
+      let routeReady = !options.waitUntil;
 
       const renderFrame = (now: number) => {
         const dt = Math.min(0.05, Math.max(0.001, (now - lastTime) / 1000));
         lastTime = now;
 
+        // `elapsed` keeps running for shake/rotation; only progress `p` is held
         const elapsed = now - startTime;
-        const p = clamp01(elapsed / totalMs);
+        let progressMs = elapsed - pausedMs;
+        if (midFired && !routeReady && progressMs > totalMs * HOLD_P) {
+          pausedMs += progressMs - totalMs * HOLD_P;
+          progressMs = totalMs * HOLD_P;
+        }
+        const p = clamp01(progressMs / totalMs);
 
         // Measure full-viewport overlay with compensation for `html { zoom: 0.8 }`
         const rect = overlay.getBoundingClientRect();
@@ -749,6 +765,12 @@ export function NightmareRiftTransition(): React.JSX.Element {
           midFired = true;
           try {
             options.onMidTransition?.();
+            if (options.waitUntil) {
+              const markReady = () => {
+                routeReady = true;
+              };
+              options.waitUntil().then(markReady, markReady);
+            }
           } catch (err) {
             console.error("NightmareRiftTransition onMidTransition error:", err);
           }

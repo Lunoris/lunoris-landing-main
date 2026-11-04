@@ -4,6 +4,12 @@ const nextConfig: NextConfig = {
   reactStrictMode: true,
   devIndicators: false,
   poweredByHeader: false,
+  // The Retro Games world was renamed to Retro Levels; keep old links working.
+  async redirects() {
+    return [
+      { source: "/retro-games", destination: "/retro-levels", permanent: true },
+    ];
+  },
   async headers() {
     return [
       {

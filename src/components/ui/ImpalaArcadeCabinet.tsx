@@ -135,8 +135,8 @@ function playArcadeSound(
 }
 
 export function ImpalaArcadeCabinet() {
-  const { locale } = useLanguage();
-  const isRu = locale === "ru";
+  const { t } = useLanguage();
+  const arcade = t.portalPages.arcade;
 
   const [isOpen, setIsOpen] = useState(false);
   const [gameState, setGameState] = useState<ArcadeState>("attract");
@@ -823,20 +823,16 @@ export function ImpalaArcadeCabinet() {
 
   return (
     <>
-      {/* Subtle Corner Easter Egg Trigger on /retro-games */}
+      {/* Subtle Corner Easter Egg Trigger on /retro-levels */}
       <button
         type="button"
         onClick={handleOpenEasterEgg}
         className={`impala-easter-egg-trigger ${isOpen ? "is-hidden" : ""}`}
         aria-label={
-          isRu
-            ? "Секретный аркадный автомат · 1967 Impala"
-            : "Secret Arcade Cabinet · 1967 Impala"
+          arcade.triggerLabel
         }
         title={
-          isRu
-            ? "Пасхалка: запустить аркадный автомат 1967 Impala"
-            : "Easter Egg: Launch 1967 Impala Arcade Cabinet"
+          arcade.triggerTitle
         }
       >
         <span className="impala-egg-icon-box" aria-hidden="true">
@@ -874,7 +870,7 @@ export function ImpalaArcadeCabinet() {
         </span>
         <span className="impala-egg-label">
           <MagneticLetters
-            text={isRu ? "✦ 1988 · АВТОМАТ" : "✦ 1988 · ARCADE"}
+            text={arcade.badge}
             glowColor="rgba(251, 191, 36, 0.92)"
             intensity={0.92}
           />
@@ -902,7 +898,7 @@ export function ImpalaArcadeCabinet() {
               type="button"
               onClick={handleCloseCabinet}
               className="impala-cabinet-close-btn"
-              aria-label={isRu ? "Закрыть автомат" : "Close cabinet"}
+              aria-label={arcade.close}
             >
               ✕
             </button>
@@ -913,9 +909,7 @@ export function ImpalaArcadeCabinet() {
                 <span className="lunoris-title-minor impala-marquee-sub">
                   <MagneticLetters
                     text={
-                      isRu
-                        ? "СЕКРЕТНЫЙ АВТОМАТ ДЖОНА ФОРДА · ЭД-ДИРЪИЯ 1988"
-                        : "JOHN FORD SECRET CABINET · 1988 DIRIYAH"
+                      arcade.cabinetTitle
                     }
                     glowColor="rgba(251, 191, 36, 0.9)"
                     intensity={0.92}
@@ -946,12 +940,8 @@ export function ImpalaArcadeCabinet() {
                   <MagneticLetters
                     text={
                       gameState === "attract"
-                        ? isRu
-                          ? "ЗАСТАВКА · НАЖМИТЕ START"
-                          : "ATTRACT MODE · PRESS START"
-                        : isRu
-                          ? "УПРАВЛЕНИЕ · A / D ИЛИ ◀ / ▶"
-                          : "CONTROLS · A / D OR ◀ / ▶"
+                        ? arcade.attractMode
+                        : arcade.controls
                     }
                     glowColor="rgba(251, 191, 36, 0.88)"
                     intensity={0.72}
@@ -982,9 +972,7 @@ export function ImpalaArcadeCabinet() {
                       <span className="impala-attract-badge">
                         <MagneticLetters
                           text={
-                            isRu
-                              ? "ЭХО-ВОСПОМИНАНИЕ 01 · 1988 ДИРЪИЯ"
-                              : "ECHO MEMORY 01 · 1988 DIRIYAH"
+                            arcade.echoMemory
                           }
                           glowColor="rgba(251, 191, 36, 0.9)"
                           intensity={0.88}
@@ -1000,9 +988,7 @@ export function ImpalaArcadeCabinet() {
                       <p className="impala-attract-hint">
                         <MagneticLetters
                           text={
-                            isRu
-                              ? "Ведите 1967 Chevrolet Impala по ночному шоссе к дому бабушки"
-                              : "Drive the 1967 Chevrolet Impala down the midnight highway"
+                            arcade.driveHint
                           }
                           glowColor="rgba(251, 191, 36, 0.82)"
                           intensity={0.68}
@@ -1017,9 +1003,7 @@ export function ImpalaArcadeCabinet() {
                         <span>
                           <MagneticLetters
                             text={
-                              isRu
-                                ? "✦ INSERT COIN · НАЧАТЬ ЗАЕЗД ✦"
-                                : "✦ INSERT COIN · START RACE ✦"
+                              arcade.startRace
                             }
                             glowColor="rgba(251, 191, 36, 0.98)"
                             intensity={0.95}
@@ -1044,9 +1028,7 @@ export function ImpalaArcadeCabinet() {
                     <span className="impala-result-badge">
                       <MagneticLetters
                         text={
-                          isRu
-                            ? "ВОСПОМИНАНИЕ ЗАВЕРШЕНО · 1988 ДИРЪИЯ"
-                            : "MEMORY COMPLETED · 1988 DIRIYAH"
+                          arcade.memoryCompleted
                         }
                         glowColor="rgba(251, 191, 36, 0.9)"
                         intensity={0.88}
@@ -1055,9 +1037,7 @@ export function ImpalaArcadeCabinet() {
                     <h4 className="impala-result-title">
                       <MagneticLetters
                         text={
-                          isRu
-                            ? "ВЫ УСПЕЛИ ВОВРЕМЯ!"
-                            : "ARRIVED AT GRANDMOTHER'S!"
+                          arcade.arrived
                         }
                         glowColor="rgba(251, 191, 36, 0.96)"
                         intensity={1.08}
@@ -1065,7 +1045,7 @@ export function ImpalaArcadeCabinet() {
                     </h4>
                     <p className="impala-result-quote">
                       <MagneticLetters
-                        text="“Stubborn and impatient. Just like her mother.”"
+                        text={arcade.quote}
                         glowColor="rgba(251, 191, 36, 0.85)"
                         intensity={0.68}
                       />
@@ -1086,7 +1066,7 @@ export function ImpalaArcadeCabinet() {
                         <BrushstrokeButtonBg />
                         <span>
                           <MagneticLetters
-                            text={isRu ? "СЫГРАТЬ ЕЩЁ РАЗ" : "PLAY AGAIN"}
+                            text={arcade.playAgain}
                             glowColor="rgba(251, 191, 36, 0.96)"
                             intensity={0.95}
                           />
@@ -1098,7 +1078,7 @@ export function ImpalaArcadeCabinet() {
                         className="impala-secondary-btn"
                       >
                         <MagneticLetters
-                          text={isRu ? "К ВИДЕО ИЗ ИГРЫ" : "BUILD VIDEO"}
+                          text={arcade.buildVideo}
                           glowColor="rgba(232, 121, 249, 0.9)"
                           intensity={0.88}
                         />
@@ -1113,7 +1093,7 @@ export function ImpalaArcadeCabinet() {
                     <span className="impala-result-badge">
                       <MagneticLetters
                         text={
-                          isRu ? "СИГНАЛ ПРЕРВАН" : "MEMORY INTERRUPTED"
+                          arcade.interrupted
                         }
                         glowColor="rgba(251, 191, 36, 0.9)"
                         intensity={0.88}
@@ -1143,9 +1123,7 @@ export function ImpalaArcadeCabinet() {
                         <span>
                           <MagneticLetters
                             text={
-                              isRu
-                                ? "ВСТАВИТЬ МОНЕТУ · ПОВТОР"
-                                : "INSERT COIN · RETRY"
+                              arcade.retry
                             }
                             glowColor="rgba(251, 191, 36, 0.96)"
                             intensity={0.95}
@@ -1158,7 +1136,7 @@ export function ImpalaArcadeCabinet() {
                         className="impala-secondary-btn"
                       >
                         <MagneticLetters
-                          text={isRu ? "К ВИДЕО ИЗ ИГРЫ" : "BUILD VIDEO"}
+                          text={arcade.buildVideo}
                           glowColor="rgba(232, 121, 249, 0.9)"
                           intensity={0.88}
                         />
@@ -1246,9 +1224,7 @@ export function ImpalaArcadeCabinet() {
                   <MagneticLetters
                     text={
                       gameState === "playing"
-                        ? isRu
-                          ? "✦ СТОП / ВИДЕО"
-                          : "✦ EXIT TO VIDEO"
+                        ? arcade.exitToVideo
                         : "✦ START 1P · 25¢"
                     }
                     glowColor="rgba(251, 191, 36, 0.96)"

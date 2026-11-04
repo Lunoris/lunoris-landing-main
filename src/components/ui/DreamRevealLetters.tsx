@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useMemo, useRef } from "react";
+import { observeInView } from "@/components/ui/inViewObserver";
 
 export interface VoidDistortionLettersProps {
   text: string;
@@ -66,6 +67,13 @@ export function VoidDistortionLetters({
     });
   }, [text, isArabicCursive]);
 
+  // Infinite wave animations (CSS) only run while the text is near the viewport
+  useEffect(() => {
+    const root = rootRef.current;
+    if (!root) return;
+    return observeInView(root);
+  }, []);
+
   // Smooth interactive cursor-proximity void distortion when moving pointer over the portal/text
   useEffect(() => {
     const root = rootRef.current;
@@ -85,17 +93,63 @@ export function VoidDistortionLetters({
     const maxShiftY = variant === "heading" ? 2.4 : 1.2;
     const maxSkew = variant === "heading" ? 8.5 : 4.2;
 
-    const currentX = new Float32Array(charRefs.current.length);
-    const currentY = new Float32Array(charRefs.current.length);
-    const currentSkew = new Float32Array(charRefs.current.length);
+    const count = charRefs.current.length;
+    const currentX = new Float32Array(count);
+    const currentY = new Float32Array(count);
+    const currentSkew = new Float32Array(count);
+
+    // Letter centres relative to the root, measured once (and again on resize)
+    // instead of a getBoundingClientRect per letter per frame interleaved with
+    // style writes, which forced a synchronous layout for every letter.
+    const localCX = new Float32Array(count);
+    const localCY = new Float32Array(count);
+    let measured = false;
+    let measuredW = -1;
+    let measuredH = -1;
+
+    const readZoom = () =>
+      parseFloat(getComputedStyle(document.documentElement).zoom) || 1;
+    let z = readZoom();
+
+    const measure = (rootRect: DOMRect) => {
+      for (let i = 0; i < count; i++) {
+        const el = charRefs.current[i];
+        if (!el) continue;
+        const r = el.getBoundingClientRect();
+        localCX[i] = r.left + r.width * 0.5 - rootRect.left;
+        localCY[i] = r.top + r.height * 0.5 - rootRect.top;
+      }
+      measured = true;
+      measuredW = rootRect.width;
+      measuredH = rootRect.height;
+    };
+
+    const onResize = () => {
+      measured = false;
+      z = readZoom();
+    };
 
     const tick = () => {
       rafId = null;
       let stillMoving = false;
-      const z =
-        parseFloat(getComputedStyle(document.documentElement).zoom) || 1;
 
-      for (let i = 0; i < charRefs.current.length; i++) {
+      let rootLeft = 0;
+      let rootTop = 0;
+      if (pointerActive) {
+        const rootRect = root.getBoundingClientRect();
+        if (
+          !measured ||
+          Math.abs(rootRect.width - measuredW) > 0.5 ||
+          Math.abs(rootRect.height - measuredH) > 0.5
+        ) {
+          measure(rootRect);
+        }
+        rootLeft = rootRect.left;
+        rootTop = rootRect.top;
+      }
+
+      // Reads are done above; the loop below only writes styles.
+      for (let i = 0; i < count; i++) {
         const el = charRefs.current[i];
         if (!el) continue;
 
@@ -104,9 +158,8 @@ export function VoidDistortionLetters({
         let targetSkew = 0;
 
         if (pointerActive) {
-          const rect = el.getBoundingClientRect();
-          const cx = (rect.left + rect.width * 0.5) * z;
-          const cy = (rect.top + rect.height * 0.5) * z;
+          const cx = (rootLeft + localCX[i]) * z;
+          const cy = (rootTop + localCY[i]) * z;
           const dx = mouseX - cx;
           const dy = mouseY - cy;
           const dist = Math.hypot(dx, dy);
@@ -173,10 +226,12 @@ export function VoidDistortionLetters({
 
     hostCard.addEventListener("mousemove", onMove, { passive: true });
     hostCard.addEventListener("mouseleave", onLeave, { passive: true });
+    window.addEventListener("resize", onResize, { passive: true });
 
     return () => {
       hostCard.removeEventListener("mousemove", onMove);
       hostCard.removeEventListener("mouseleave", onLeave);
+      window.removeEventListener("resize", onResize);
       if (rafId !== null) window.cancelAnimationFrame(rafId);
     };
   }, [variant, wordTokens]);

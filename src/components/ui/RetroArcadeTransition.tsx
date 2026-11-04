@@ -11,6 +11,11 @@ export interface RetroTransitionOptions {
   phaseDurationMs?: number;
   /** Callback fired at midpoint when the screen is 100% covered */
   onMidTransition?: () => void;
+  /**
+   * Called right after `onMidTransition`. The screen stays fully covered until the
+   * returned promise settles (e.g. the new route has painted), then it opens.
+   */
+  waitUntil?: () => Promise<unknown>;
   /** Callback fired when the transition finishes opening */
   onComplete?: () => void;
 }
@@ -247,6 +252,7 @@ export function RetroArcadeTransition() {
       const mode: RetroTransitionMode = detail.mode || "pixel";
       const phaseDurationMs = detail.phaseDurationMs ?? 780;
       const onMidTransition = detail.onMidTransition;
+      const waitUntil = detail.waitUntil;
       const onComplete = detail.onComplete;
 
       if (rafId !== null) {
@@ -294,9 +300,28 @@ export function RetroArcadeTransition() {
       const startTime = performance.now();
       let midpointFired = false;
       let outSfxPlayed = false;
+      // Time spent holding at full coverage while the new route renders
+      let pausedMs = 0;
+      let routeReady = !waitUntil;
+      const holdEnd = phaseDurationMs + HOLD_MS;
+
+      const fireMidpoint = () => {
+        midpointFired = true;
+        onMidTransition?.();
+        if (waitUntil) {
+          const markReady = () => {
+            routeReady = true;
+          };
+          waitUntil().then(markReady, markReady);
+        }
+      };
 
       const renderFrame = (now: number) => {
-        const elapsed = now - startTime;
+        let elapsed = now - startTime - pausedMs;
+        if (midpointFired && !routeReady && elapsed >= holdEnd - 1) {
+          pausedMs += elapsed - (holdEnd - 1);
+          elapsed = holdEnd - 1;
+        }
         let progress = 0; // 0 = uncovered, 1 = fully covered
         let isOpening = false;
 
@@ -307,13 +332,11 @@ export function RetroArcadeTransition() {
           progress = 1;
           isOpening = true;
           if (!midpointFired) {
-            midpointFired = true;
-            onMidTransition?.();
+            fireMidpoint();
           }
         } else {
           if (!midpointFired) {
-            midpointFired = true;
-            onMidTransition?.();
+            fireMidpoint();
           }
           if (!outSfxPlayed) {
             outSfxPlayed = true;

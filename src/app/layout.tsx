@@ -7,6 +7,7 @@ import { NightmareRiftTransition } from "@/components/ui/NightmareRiftTransition
 import { RetroArcadeTransition } from "@/components/ui/RetroArcadeTransition";
 import { DreamParticles } from "@/components/ui/DreamParticles";
 import { LivingPaintingBackground } from "@/components/ui/LivingPaintingBackground";
+import { RouteReadySignal } from "@/components/ui/routeReady";
 import {
   LOCALE_COOKIE_NAME,
   getLocaleOption,
@@ -80,6 +81,7 @@ export default async function RootLayout({
           <DreamDissolveTransition />
           <NightmareRiftTransition />
           <RetroArcadeTransition />
+          <RouteReadySignal />
           {children}
         </LanguageProvider>
       </body>

@@ -30,6 +30,9 @@ interface HeaderBarProps {
   logoHref?: string;
   enableFlyingCta?: boolean;
   floatingLetters?: boolean;
+  floatingGlowColor?: string;
+  floatingIntensity?: number;
+  floatingLanguageLetters?: boolean;
   retroCrt?: boolean;
   voidDistortion?: boolean;
 }
@@ -41,6 +44,9 @@ export function HeaderBar({
   logoHref = "#top",
   enableFlyingCta = true,
   floatingLetters = false,
+  floatingGlowColor,
+  floatingIntensity,
+  floatingLanguageLetters = false,
   retroCrt = false,
   voidDistortion = false,
 }: HeaderBarProps) {
@@ -94,8 +100,8 @@ export function HeaderBar({
       <span className="lunoris-dream-brand-wordmark">
         <FloatingLetters
           text="LUNORIS"
-          glowColor="rgba(34, 211, 238, 0.92)"
-          intensity={0.95}
+          glowColor={floatingGlowColor ?? "rgba(34, 211, 238, 0.92)"}
+          intensity={floatingIntensity ?? 0.95}
         />
       </span>
     </span>
@@ -152,8 +158,8 @@ export function HeaderBar({
                   ) : floatingLetters ? (
                     <FloatingLetters
                       text={link.label}
-                      glowColor="rgba(34, 211, 238, 0.85)"
-                      intensity={0.62}
+                      glowColor={floatingGlowColor ?? "rgba(34, 211, 238, 0.85)"}
+                      intensity={floatingIntensity ?? 0.62}
                     />
                   ) : (
                     link.label
@@ -176,8 +182,8 @@ export function HeaderBar({
                   ) : floatingLetters ? (
                     <FloatingLetters
                       text={link.label}
-                      glowColor="rgba(34, 211, 38, 0.85)"
-                      intensity={0.62}
+                      glowColor={floatingGlowColor ?? "rgba(34, 211, 38, 0.85)"}
+                      intensity={floatingIntensity ?? 0.62}
                     />
                   ) : (
                     link.label
@@ -189,7 +195,11 @@ export function HeaderBar({
         </div>
 
         <div className="lunoris-header-right">
-          <LanguageSwitcher />
+          <LanguageSwitcher
+            floatingLetters={floatingLanguageLetters}
+            glowColor={floatingGlowColor}
+            intensity={floatingIntensity}
+          />
 
           {enableFlyingCta ? (
             <div ref={navBtnSlotRef} className="lunoris-steam-nav-slot">

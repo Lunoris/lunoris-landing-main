@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useMemo, useRef } from "react";
+import { observeInView } from "@/components/ui/inViewObserver";
 
 export interface FloatingLettersProps {
   text: string;
@@ -35,8 +36,6 @@ interface RegisteredInstance {
 }
 
 const activeInstances = new Set<RegisteredInstance>();
-let sharedObserver: IntersectionObserver | null = null;
-const elementToInstance = new WeakMap<Element, RegisteredInstance>();
 
 let globalMouseX = -9999;
 let globalMouseY = -9999;
@@ -71,25 +70,6 @@ function runGlobalTick() {
 
 function ensureGlobalInfrastructure() {
   if (typeof window === "undefined") return;
-
-  if (!sharedObserver && "IntersectionObserver" in window) {
-    sharedObserver = new IntersectionObserver(
-      (entries) => {
-        for (const entry of entries) {
-          const inst = elementToInstance.get(entry.target);
-          if (!inst) continue;
-          const visible = entry.isIntersecting;
-          inst.inView = visible;
-          if (visible) {
-            inst.container.classList.add("is-in-view");
-          } else {
-            inst.container.classList.remove("is-in-view");
-          }
-        }
-      },
-      { rootMargin: "80px 0px" }
-    );
-  }
 
   if (!listenersAttached) {
     listenersAttached = true;
@@ -317,13 +297,13 @@ export function FloatingLetters({
     };
 
     activeInstances.add(instance);
-    elementToInstance.set(container, instance);
-    sharedObserver?.observe(container);
+    const stopObserving = observeInView(container, (visible) => {
+      instance.inView = visible;
+    });
 
     return () => {
       activeInstances.delete(instance);
-      elementToInstance.delete(container);
-      sharedObserver?.unobserve(container);
+      stopObserving();
     };
   }, [wordTokens, intensity]);
 

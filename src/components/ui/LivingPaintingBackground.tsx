@@ -127,9 +127,13 @@ function sampleFlowAngle(x: number, y: number, t: number, seed: number): number 
   return (wave1 + wave2 + wave3) * Math.PI * 1.15;
 }
 
+// These pages paint their own opaque fixed backdrop over this layer, so the canvas
+// loop and the blurred, animated scene stack would run without ever being seen.
+const HIDDEN_ON_PATHS = ["/dream-levels", "/nightmare", "/retro-levels"];
+
 export function LivingPaintingBackground() {
   const pathname = usePathname();
-  if (pathname?.startsWith("/dream-levels")) {
+  if (pathname && HIDDEN_ON_PATHS.some((path) => pathname.startsWith(path))) {
     return null;
   }
   return <LivingPaintingCanvas />;

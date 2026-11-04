@@ -2,6 +2,7 @@
 
 import React, { useEffect, useRef, useState } from "react";
 import { CanvasStar } from "@/components/ui/CanvasFrames";
+import { FloatingLetters } from "@/components/ui/FloatingLetters";
 import { useLanguage } from "@/i18n/LanguageContext";
 import {
   SUPPORTED_LOCALES,
@@ -9,7 +10,15 @@ import {
   type Locale,
 } from "@/i18n/types";
 
-export function LanguageSwitcher() {
+export function LanguageSwitcher({
+  floatingLetters = false,
+  glowColor,
+  intensity,
+}: {
+  floatingLetters?: boolean;
+  glowColor?: string;
+  intensity?: number;
+} = {}) {
   const { locale, setLocale, t } = useLanguage();
   const [open, setOpen] = useState(false);
   const rootRef = useRef<HTMLDivElement | null>(null);
@@ -74,7 +83,16 @@ export function LanguageSwitcher() {
           <path d="M2.85 12h18.3" />
           <path d="M12 2.75c2.55 2.52 4 5.82 4 9.25s-1.45 6.73-4 9.25c-2.55-2.52-4-5.82-4-9.25s1.45-6.73 4-9.25Z" />
         </svg>
-        <span className="lunoris-lang-code">{currentOption.shortLabel}</span>
+        {floatingLetters ? (
+          <FloatingLetters
+            text={currentOption.shortLabel}
+            className="lunoris-lang-code"
+            glowColor={glowColor ?? "rgba(34, 211, 238, 0.88)"}
+            intensity={intensity ?? 1.08}
+          />
+        ) : (
+          <span className="lunoris-lang-code">{currentOption.shortLabel}</span>
+        )}
         <svg
           className="lunoris-lang-chevron"
           viewBox="0 0 16 16"
@@ -112,12 +130,31 @@ export function LanguageSwitcher() {
                 }`}
               >
                 <span className="lunoris-lang-option-left">
-                  <span className="lunoris-lang-option-badge">
-                    {option.shortLabel}
-                  </span>
-                  <span className="lunoris-lang-option-name">
-                    {option.nativeName}
-                  </span>
+                  {floatingLetters ? (
+                    <>
+                      <FloatingLetters
+                        text={option.shortLabel}
+                        className="lunoris-lang-option-badge"
+                        glowColor={glowColor ?? "rgba(34, 211, 238, 0.88)"}
+                        intensity={intensity ?? 1.08}
+                      />
+                      <FloatingLetters
+                        text={option.nativeName}
+                        className="lunoris-lang-option-name"
+                        glowColor={glowColor ?? "rgba(34, 211, 238, 0.88)"}
+                        intensity={intensity ?? 1.08}
+                      />
+                    </>
+                  ) : (
+                    <>
+                      <span className="lunoris-lang-option-badge">
+                        {option.shortLabel}
+                      </span>
+                      <span className="lunoris-lang-option-name">
+                        {option.nativeName}
+                      </span>
+                    </>
+                  )}
                 </span>
                 {isSelected && (
                   <CanvasStar className="lunoris-lang-active-star" />

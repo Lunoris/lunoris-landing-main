@@ -234,13 +234,149 @@ export const en: SiteTranslations = {
         desc: "Step through Lunora's School doors into all three Dream Levels—soaring across floating islands in The World That Answers, entering the living Van Gogh canvas of The Man in the Memory, and ascending toward Breakthrough's golden portal of hope.",
       },
       "retro-games": {
-        title: "Retro Games",
+        title: "Retro Levels",
         desc: "Cruise a 1967 Chevrolet Impala down an endless midnight highway between dreams, where family keepsakes and dashboard radio frequencies transform 3D memories into playable 2D retro arcade chapters.",
       },
       nightmare: {
         title: "Nightmare",
         desc: "Plunge through the fogged mirror or the basement's violet-indigo vortex into shifting Nightmare corridors—crossing magenta dissolve rifts to confront FearClaw or catch your breath at the Matchi Matchi sanctuary.",
       },
+    },
+  },
+  portalPages: {
+    dreamRiddle: {
+      eyebrow: "THREE DOORS · ONE WAY OUT",
+      title: "Which door would you never open?",
+      body: "Behind one: the pain you remember. Behind another: the guilt you hide. Behind the third: what you fear most — the truth. Lunora has already chosen. Have you?",
+      cue: "Scroll down — if you dare",
+    },
+    retroComingSoon: {
+      kicker: "THE ARCADE CONTINUES",
+      title: "MORE LEVELS COMING SOON",
+    },
+    navWorld: "World Portals",
+    dream: {
+      heroMinor: "PRIMARY CAMPAIGN MODE · DREAM REALM",
+      heroSubtitle: "3D Platforming Through Seven Stages of Grief",
+      heroOverview: "Every jump, glide, and climb expresses Lunora's inner state across seven surreal dream worlds.",
+      mapLabel: "Dream Levels progression map",
+      levels: [
+        {
+          description: "A surreal forest merges with Diriyah's ruins and shifts with the way you see it.",
+          hook: "Are you sure you can trust the path ahead?",
+        },
+        {
+          description: "Glide over fractured islands with Kurtam and find the first rift into Nightmare.",
+          hook: "What if the rift has already found you?",
+        },
+        {
+          description: "After facing FearClaw, scattered stones become a stairway above the abyss.",
+          hook: "At the top: an answer—and a shadow you can't outrun.",
+        },
+      ],
+      comingSoon: "MORE LEVELS COMING SOON",
+    },
+    retro: {
+      introMinor: "JOHN FORD'S BASEMENT · ECHO MEMORIES",
+      introSubtitle: "Arcade cabinets in John Ford's basement. Each one holds a playable memory. Some of them haven't been switched on yet…",
+      ui: {
+        rowLabel: "Arcade cabinets",
+        cabinetLabel: "CABINET",
+        nowPlaying: "NOW PLAYING",
+        mysteryHint: "Not switched on yet",
+        selectHint: "Pick a cabinet to play its memory",
+        challengeLabel: "YOUR CHALLENGE",
+      },
+      levels: {
+        "car-level": {
+          roleSuffix: "1988 Diriyah · 1967 Chevrolet Impala",
+          overview: "Drive John Ford's 1967 Chevrolet Impala down a linear 1988 Diriyah highway while Lulwah Al Rashed races to her mother's doorway to give birth to Lunora.",
+          challenge: "Weave through the 1988 highway and reach the doorway before the race timer runs out.",
+          chapters: [
+            {
+              title: "Toy Chevrolet & Garage Key",
+              bullets: [
+                "Follow the hidden Lucid Orb trail with Freddy in Dream Level 2 to recover the Toy Car.",
+                "Scan the real 1967 Impala in Dream Hub with Retro Vision (R3) to start the race.",
+              ],
+            },
+            {
+              title: "Side-Scrolling 1988 Diriyah Racer",
+              bullets: [
+                "Locked 2D side-scrolling Dreamcast-era camera with win/loss timer and obstacle weaving.",
+                "Ends at the Maternal Grandmother's doorway with Dialogues Log Entry 9 ('Mothers and Daughters').",
+              ],
+            },
+          ],
+        },
+        "falcon-hunting": {
+          roleSuffix: "Last Memory with Lulwah Al Rashed (Age 6)",
+          overview: "Take direct flight control of Lulwah's Eagle Falcon across the warm 1988 Saudi desert before returning to her gloved arm as six-year-old Lunora watches.",
+          challenge: "Guide the falcon across the desert and bring it back to Lulwah's arm before the memory fades.",
+          chapters: [
+            {
+              title: "Al-Ghashwa (Eagle's Hood)",
+              bullets: [
+                "Gently remove the leather falconer's hood from the perched bird in Section 7 of Dream Level 1.",
+                "Complete Nightmare Zone 1's right Puzzle Shrine to unlock Retro Vision and scan the hood in Dream Hub.",
+              ],
+            },
+            {
+              title: "Top-Down Desert Flight Loop",
+              bullets: [
+                "Hard-locked top-down orthographic camera with retro PS1/Dreamcast desert visuals.",
+                "Embodies the level's core thesis: the falcon that leaves and returns in Lunora's final memory with her mother.",
+              ],
+            },
+          ],
+        },
+      },
+    },
+    arcade: {
+      triggerLabel: "Secret Arcade Cabinet · 1967 Impala",
+      triggerTitle: "Easter Egg: Launch 1967 Impala Arcade Cabinet",
+      badge: "✦ 1988 · ARCADE",
+      close: "Close cabinet",
+      cabinetTitle: "JOHN FORD SECRET CABINET · 1988 DIRIYAH",
+      attractMode: "ATTRACT MODE · PRESS START",
+      controls: "CONTROLS · A / D OR ◀ / ▶",
+      echoMemory: "ECHO MEMORY 01 · 1988 DIRIYAH",
+      driveHint: "Drive the 1967 Chevrolet Impala down the midnight highway",
+      startRace: "✦ INSERT COIN · START RACE ✦",
+      memoryCompleted: "MEMORY COMPLETED · 1988 DIRIYAH",
+      arrived: "ARRIVED AT GRANDMOTHER'S!",
+      quote: "“Stubborn and impatient. Just like her mother.”",
+      interrupted: "MEMORY INTERRUPTED",
+      retry: "INSERT COIN · RETRY",
+      playAgain: "PLAY AGAIN",
+      buildVideo: "BUILD VIDEO",
+      exitToVideo: "✦ EXIT TO VIDEO",
+    },
+    nightmare: {
+      navWasteland: "Wasteland",
+      kicker: "FIELD NOTES FROM THE FROZEN WASTELAND",
+      settingIndex: "THE SETTING",
+      settingTitle: "The Frozen Wasteland",
+      panoramaAlt: "The seven-zone Nightmare wasteland",
+      panoramaCaption: "Seven zones · Five above ground · Two below",
+      notes: "This is a connected expanse, not a corridor of objective markers. Read the terrain through purple campfires, tunnels, and shrine beacons.",
+      countsLabel: "Realm contents",
+      safeSpots: "safe spots",
+      matchiAlt: "The Matchi Matchi mountain sanctuary",
+      matchiCaption: "A QUIET POCKET IN THE WASTELAND",
+      matchiIndex: "OPTIONAL DETOUR · ZONE 1",
+      matchiBody: "Beyond Zone 1's endless left tunnel lies Matchi Mountain—a rare place to catch your breath and visit the Matcha stand.",
+      matchiCondition: "To break the loop: reach maximum Hope and carry Father's Framed Painting.",
+      matchiReward: "A pause · A vendor · Emotional fragments",
+      fearclawAlt: "FearClaw emerging through the arena's crimson fog",
+      fearclawIndex: "THE CLIMAX · ZONE 2 ARENA",
+      fearclawBody: "At the end of Party School Path, the three-phase hunt begins. Time your Breaker parries, fill the stun meter, and purify FearClaw into FrayClaw.",
+      phases: [
+        "Read the attack rhythm",
+        "Parry with the Breaker",
+        "Stun and purify",
+      ],
+      fearclawReward: "Reward: Stillness Pistol · Opens Dream Island 1 Door 3",
     },
   },
   companions: {
