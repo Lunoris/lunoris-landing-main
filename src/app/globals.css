@@ -112,7 +112,12 @@ html {
 body {
   background-color: var(--lunoris-black);
   color: #ffffff;
+  /* `clip`, not `hidden`: with html also clipping, a hidden body becomes its own
+     (never-scrolling) scroll container and every `position: sticky` inside it,
+     like the Dream Levels journey camera, silently stops sticking. `hidden`
+     stays as the fallback for browsers without `clip`. */
   overflow-x: hidden;
+  overflow-x: clip;
   width: 100%;
   max-width: calc(100vw * var(--vu));
 }
@@ -121,8 +126,9 @@ body {
   width: 100%;
   max-width: calc(100vw * var(--vu));
   overflow-x: hidden;
-  background-color: var(--lunoris-black);
+  background-color: transparent;
   position: relative;
+  z-index: 1;
 }
 
 .lunoris-wide-wrap {
@@ -135,8 +141,213 @@ body {
 }
 
 /* =========================================================
+   LIVING PAINTING BACKGROUND ("ДВИЖУЩАЯСЯ ЖИВОПИСЬ")
+   & AMBIENT DREAM PARTICLES LAYER
+   ========================================================= */
+.lunoris-living-painting {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 0;
+  pointer-events: none;
+  user-select: none;
+  overflow: hidden;
+}
+
+/* Cross-fading gallery of 5 painted Lunoris dreamscapes */
+.lp-dreamscapes-stage {
+  position: absolute;
+  inset: -6%;
+  pointer-events: none;
+  will-change: transform;
+  transform: translate3d(
+    calc(var(--mx, 0) * -12px),
+    calc(var(--my, 0) * -9px),
+    0
+  );
+}
+
+.lp-dreamscape-slide {
+  position: absolute;
+  inset: 0;
+  background-size: cover;
+  background-position: center center;
+  opacity: 0;
+  filter: blur(22px) saturate(1.3);
+  transform: scale(1.06);
+  transition:
+    opacity 5.5s cubic-bezier(0.22, 1, 0.36, 1),
+    transform 18s ease-out;
+}
+
+.lp-dreamscape-slide.is-active {
+  opacity: 0.22;
+  transform: scale(1.14) rotate(0.8deg);
+}
+
+.lp-color-alchemy {
+  position: absolute;
+  inset: -15%;
+  pointer-events: none;
+  will-change: transform, opacity;
+  transition: background 4s ease;
+}
+
+/* Slow iridescence of amethyst-violet, cobalt-blue, and moonlight gold */
+.lp-color-alchemy--violet-blue {
+  filter: blur(36px);
+  animation: lpColorDriftA 68s ease-in-out infinite alternate;
+}
+
+/* Barely perceptible chiaroscuro lighting wave across the canvas */
+.lp-chiaroscuro-light {
+  position: absolute;
+  inset: -25%;
+  background: linear-gradient(
+    125deg,
+    transparent 20%,
+    rgba(251, 207, 116, 0.045) 42%,
+    rgba(192, 132, 252, 0.055) 52%,
+    rgba(56, 189, 248, 0.04) 62%,
+    transparent 82%
+  );
+  filter: blur(30px);
+  animation: lpChiaroscuroSweep 56s ease-in-out infinite alternate;
+}
+
+/* Generative Flow-Field Brushstrokes & Ephemeral Swirling Vortices Canvas */
+.lp-flow-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  transform: translate3d(
+    calc(var(--mx, 0) * -10px),
+    calc(var(--my, 0) * -7px),
+    0
+  );
+}
+
+/* Subtle fine painter's canvas weave */
+.lp-canvas-linen-weave {
+  position: absolute;
+  inset: 0;
+  opacity: 0.04;
+  background-image:
+    repeating-linear-gradient(
+      0deg,
+      rgba(255, 248, 231, 0.35) 0px,
+      rgba(255, 248, 231, 0.35) 1px,
+      transparent 1px,
+      transparent 5px
+    ),
+    repeating-linear-gradient(
+      90deg,
+      rgba(255, 248, 231, 0.3) 0px,
+      rgba(255, 248, 231, 0.3) 1px,
+      transparent 1px,
+      transparent 5px
+    );
+}
+
+@keyframes lpColorDriftA {
+  0% {
+    transform: translate3d(-3%, -2%, 0) scale(1) rotate(0deg);
+    opacity: 0.72;
+  }
+  50% {
+    transform: translate3d(2%, 3%, 0) scale(1.06) rotate(4deg);
+    opacity: 0.95;
+  }
+  100% {
+    transform: translate3d(4%, -3%, 0) scale(1.02) rotate(-3deg);
+    opacity: 0.78;
+  }
+}
+
+@keyframes lpChiaroscuroSweep {
+  0% {
+    transform: translate3d(-8%, -5%, 0) rotate(-3deg);
+    opacity: 0.55;
+  }
+  50% {
+    transform: translate3d(2%, 2%, 0) rotate(1deg);
+    opacity: 0.92;
+  }
+  100% {
+    transform: translate3d(8%, 5%, 0) rotate(4deg);
+    opacity: 0.6;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lp-color-alchemy--violet-blue,
+  .lp-chiaroscuro-light {
+    animation: none !important;
+  }
+  .lp-dreamscape-slide {
+    transition: none !important;
+  }
+}
+
+.lunoris-dream-particles {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 40;
+  pointer-events: none;
+  user-select: none;
+}
+
+/* =========================================================
    SCROLL-REVEAL ANIMATIONS
    ========================================================= */
+.lunoris-scroll-text-reveal {
+  position: relative;
+  display: block;
+  width: 100%;
+  align-self: stretch;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.str-measure-layer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  width: 100%;
+  visibility: hidden;
+  pointer-events: none;
+  user-select: none;
+  white-space: normal;
+}
+
+.str-line-mask {
+  display: block;
+  overflow: hidden;
+  padding-top: 0.08em;
+  padding-bottom: 0.14em;
+  margin-top: -0.08em;
+  margin-bottom: -0.14em;
+}
+
+.lunoris-scroll-text-reveal.has-floating-letters .str-line-mask {
+  padding-top: 0.24em;
+  padding-bottom: 0.28em;
+  margin-top: -0.24em;
+  margin-bottom: -0.28em;
+}
+
+.str-line-inner {
+  display: block;
+  will-change: transform, opacity;
+  transform: translate3d(0, 22px, 0);
+  opacity: 0;
+}
+
 [data-reveal] {
   opacity: 0;
   will-change: opacity, transform;
@@ -718,13 +929,14 @@ body {
    ========================================================= */
 .lunoris-hero {
   position: relative;
+  z-index: 2;
   width: 100%;
   min-height: calc(76vh * var(--vu));
   padding: 9rem 0 5.5rem;
   display: flex;
   align-items: flex-end;
   overflow: hidden;
-  background-color: var(--lunoris-black);
+  background-color: rgba(5, 4, 12, 0.54);
 }
 
 .lunoris-hero-video-bg {
@@ -743,8 +955,215 @@ body {
   object-fit: cover;
   object-position: center center;
   opacity: 0.85;
-  transform: translate3d(0, calc(var(--hero-scroll, 0) * 0.2px), 0) scale(1.04);
-  transition: transform 0.08s linear;
+  will-change: transform;
+  transform: translate3d(
+      calc(var(--mx, 0) * -9px),
+      calc(var(--hero-scroll, 0) * 0.2px + var(--my, 0) * -7px),
+      0
+    )
+    scale(1.06);
+}
+
+/* =========================================================
+   HERO MOUSE PARALLAX: LAYER 2 (COUNTER-MOVING DREAM CLOUDS)
+   & LAYER 3 (CURSOR-REACTIVE ETHEREAL LIGHT ELEMENTS)
+   ========================================================= */
+.lunoris-hero-clouds-layer,
+.lunoris-hero-lights-layer {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+  -webkit-mask-image: radial-gradient(
+    ellipse 70% 64% at 54% 44%,
+    transparent 52%,
+    rgba(0, 0, 0, 0.75) 95%
+  );
+  mask-image: radial-gradient(
+    ellipse 70% 64% at 54% 44%,
+    transparent 52%,
+    rgba(0, 0, 0, 0.75) 95%
+  );
+}
+
+.lunoris-hero-clouds-layer {
+  z-index: 1;
+}
+
+.lunoris-hero-lights-layer {
+  z-index: 2;
+  mix-blend-mode: screen;
+}
+
+.lunoris-dream-cloud {
+  position: absolute;
+  inset: -8%;
+  pointer-events: none;
+  will-change: transform;
+}
+
+/* Far Dream Cloud Bank: moves opposite to background (+X, +Y) */
+.lunoris-dream-cloud--far {
+  background:
+    radial-gradient(
+      ellipse 34% 18% at 22% 28%,
+      rgba(192, 148, 255, 0.16) 0%,
+      rgba(139, 92, 246, 0.06) 52%,
+      transparent 100%
+    ),
+    radial-gradient(
+      ellipse 42% 20% at 76% 24%,
+      rgba(115, 199, 255, 0.14) 0%,
+      rgba(99, 102, 241, 0.05) 55%,
+      transparent 100%
+    ),
+    radial-gradient(
+      ellipse 48% 22% at 52% 46%,
+      rgba(247, 232, 255, 0.1) 0%,
+      rgba(168, 85, 247, 0.04) 58%,
+      transparent 100%
+    );
+  filter: blur(18px);
+  transform: translate3d(
+    calc(var(--mx, 0) * 18px),
+    calc(var(--my, 0) * 11px),
+    0
+  );
+}
+
+/* Near Volumetric Mist & Cloud Wisps: stronger opposite movement */
+.lunoris-dream-cloud--near {
+  background:
+    radial-gradient(
+      ellipse 38% 15% at 16% 68%,
+      rgba(233, 213, 255, 0.17) 0%,
+      rgba(168, 85, 247, 0.06) 52%,
+      transparent 100%
+    ),
+    radial-gradient(
+      ellipse 45% 17% at 64% 62%,
+      rgba(251, 207, 116, 0.13) 0%,
+      rgba(192, 132, 252, 0.05) 55%,
+      transparent 100%
+    ),
+    radial-gradient(
+      ellipse 36% 16% at 88% 74%,
+      rgba(115, 199, 255, 0.14) 0%,
+      rgba(56, 189, 248, 0.04) 56%,
+      transparent 100%
+    );
+  filter: blur(22px);
+  transform: translate3d(
+    calc(var(--mx, 0) * 32px),
+    calc(var(--my, 0) * 19px),
+    0
+  );
+}
+
+/* Volumetric Moonlight & Lucid Gold Rays that tilt with cursor */
+.lunoris-hero-godrays {
+  position: absolute;
+  top: -28%;
+  right: 4%;
+  width: 78%;
+  height: 140%;
+  background: conic-gradient(
+    from 195deg at 68% 0%,
+    transparent 0deg,
+    rgba(251, 207, 116, 0.09) 12deg,
+    transparent 24deg,
+    rgba(204, 163, 255, 0.1) 38deg,
+    transparent 52deg,
+    rgba(115, 199, 255, 0.08) 64deg,
+    transparent 82deg
+  );
+  filter: blur(26px);
+  transform-origin: 68% 0%;
+  will-change: transform;
+  transform: translate3d(
+      calc(var(--mx, 0) * -14px),
+      calc(var(--my, 0) * -10px),
+      0
+    )
+    rotate(calc(var(--mx, 0) * -2.8deg));
+}
+
+/* Soft Interactive Dream Aura following the cursor position */
+.lunoris-hero-cursor-aura {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    560px circle at var(--mouse-px, 50%) var(--mouse-py, 45%),
+    rgba(251, 207, 116, 0.11) 0%,
+    rgba(192, 132, 252, 0.07) 38%,
+    rgba(115, 199, 255, 0.03) 65%,
+    transparent 100%
+  );
+}
+
+/* Floating Lucid Light Blooms reacting to cursor at distinct depths */
+.lunoris-hero-light-orb {
+  position: absolute;
+  border-radius: 50%;
+  pointer-events: none;
+  will-change: transform;
+}
+
+.lunoris-hero-light-orb--gold {
+  width: 320px;
+  height: 320px;
+  top: 14%;
+  left: 54%;
+  background: radial-gradient(
+    circle,
+    rgba(251, 207, 116, 0.22) 0%,
+    rgba(251, 191, 36, 0.07) 45%,
+    transparent 74%
+  );
+  filter: blur(16px);
+  transform: translate3d(
+    calc(var(--mx, 0) * -22px),
+    calc(var(--my, 0) * -16px),
+    0
+  );
+}
+
+.lunoris-hero-light-orb--cyan {
+  width: 280px;
+  height: 280px;
+  top: 32%;
+  right: 12%;
+  background: radial-gradient(
+    circle,
+    rgba(115, 199, 255, 0.18) 0%,
+    rgba(56, 189, 248, 0.06) 48%,
+    transparent 75%
+  );
+  filter: blur(18px);
+  transform: translate3d(
+    calc(var(--mx, 0) * 24px),
+    calc(var(--my, 0) * -14px),
+    0
+  );
+}
+
+.lunoris-hero-light-orb--violet {
+  width: 360px;
+  height: 360px;
+  bottom: 16%;
+  left: 18%;
+  background: radial-gradient(
+    circle,
+    rgba(204, 163, 255, 0.18) 0%,
+    rgba(168, 85, 247, 0.06) 48%,
+    transparent 75%
+  );
+  filter: blur(20px);
+  transform: translate3d(
+    calc(var(--mx, 0) * -17px),
+    calc(var(--my, 0) * 15px),
+    0
+  );
 }
 
 .lunoris-hero-vignette {
@@ -763,22 +1182,30 @@ body {
       transparent 25%,
       rgba(0, 0, 0, 0.72) 100%
     );
-  z-index: 1;
+  z-index: 3;
 }
 
 .lunoris-hero-bottom-fade {
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  height: 280px;
-  background: linear-gradient(
+  background: none;
+}
+
+.lunoris-hero-video-bg {
+  -webkit-mask-image: linear-gradient(
     180deg,
-    transparent 0%,
-    rgba(0, 0, 0, 0.84) 65%,
-    #000000 100%
+    #000000 0%,
+    #000000 55%,
+    rgba(0, 0, 0, 0.68) 72%,
+    rgba(0, 0, 0, 0.24) 88%,
+    transparent 100%
   );
-  z-index: 2;
+  mask-image: linear-gradient(
+    180deg,
+    #000000 0%,
+    #000000 55%,
+    rgba(0, 0, 0, 0.68) 72%,
+    rgba(0, 0, 0, 0.24) 88%,
+    transparent 100%
+  );
 }
 
 .lunoris-hero-clean-layout {
@@ -793,6 +1220,12 @@ body {
 .lunoris-hero-quote-block {
   flex: 1 1 520px;
   max-width: 780px;
+  will-change: transform;
+  transform: translate3d(
+    calc(var(--mx, 0) * -20px),
+    calc(var(--my, 0) * -14px),
+    0
+  );
 }
 
 .lunoris-hero-quote {
@@ -824,8 +1257,16 @@ body {
   height: 3px;
   border-radius: 999px;
   background: linear-gradient(90deg, transparent, var(--lunoris-gold), transparent);
-  box-shadow: 0 0 18px rgba(251, 191, 36, 0.65);
+  box-shadow:
+    calc(var(--mx, 0) * -8px) calc(var(--my, 0) * -4px) 22px rgba(251, 191, 36, 0.78),
+    0 0 18px rgba(251, 191, 36, 0.65);
   margin-bottom: 0;
+  will-change: transform, box-shadow;
+  transform: translate3d(
+    calc(var(--mx, 0) * -6px),
+    calc(var(--my, 0) * -4px),
+    0
+  );
 }
 
 .lunoris-hero-actions-bar {
@@ -866,6 +1307,11 @@ body {
   border: none;
   isolation: isolate;
   opacity: 1 !important;
+  will-change: transform;
+  transform: perspective(1100px)
+    translate3d(calc(var(--mx, 0) * -30px), calc(var(--my, 0) * -20px), 0)
+    rotateY(calc(var(--mx, 0) * 3.2deg))
+    rotateX(calc(var(--my, 0) * -2.4deg));
 }
 
 .lunoris-laurel-icon {
@@ -873,11 +1319,24 @@ body {
   height: 82px;
   flex-shrink: 0;
   color: #fbbf24;
-  filter: drop-shadow(0 0 14px rgba(251, 191, 36, 0.65));
+  filter: drop-shadow(
+    calc(var(--mx, 0) * -5px) calc(var(--my, 0) * -4px) 16px rgba(251, 191, 36, 0.75)
+  );
+  will-change: transform, filter;
+  transform: translate3d(
+    calc(var(--mx, 0) * -5px),
+    calc(var(--my, 0) * -3px),
+    0
+  );
 }
 
 .lunoris-laurel-flip {
-  transform: scaleX(-1);
+  transform: translate3d(
+      calc(var(--mx, 0) * -5px),
+      calc(var(--my, 0) * -3px),
+      0
+    )
+    scaleX(-1);
 }
 
 .lunoris-laurel-copy {
@@ -930,7 +1389,7 @@ body {
   align-items: center;
   justify-content: center;
   overflow: hidden;
-  background-color: var(--lunoris-black);
+  background-color: rgba(5, 4, 12, 0.54);
 }
 
 .lunoris-mural-bg {
@@ -938,8 +1397,39 @@ body {
   inset: 0;
   background-size: cover;
   background-position: center center;
-  opacity: 0.48;
+  opacity: 0.42;
   z-index: 0;
+  will-change: transform;
+  transform: translate3d(
+      calc(var(--mx, 0) * -8px),
+      calc(var(--my, 0) * -6px),
+      0
+    )
+    scale(1.05);
+  -webkit-mask-image: linear-gradient(
+    180deg,
+    transparent 0%,
+    rgba(0, 0, 0, 0.35) 12%,
+    #000000 28%,
+    #000000 72%,
+    rgba(0, 0, 0, 0.35) 88%,
+    transparent 100%
+  );
+  mask-image: linear-gradient(
+    180deg,
+    transparent 0%,
+    rgba(0, 0, 0, 0.35) 12%,
+    #000000 28%,
+    #000000 72%,
+    rgba(0, 0, 0, 0.35) 88%,
+    transparent 100%
+  );
+}
+
+.lunoris-mural-section > .lunoris-mural-fade-top,
+.lunoris-mural-section > .lunoris-mural-fade-bottom,
+.lunoris-final-cta > .lunoris-mural-fade-top {
+  background: none;
 }
 
 .lunoris-mural-dim {
@@ -1068,19 +1558,17 @@ body {
 
 @keyframes portalHaloBreath {
   0% {
-    opacity: 0.48;
-    filter: blur(4px) drop-shadow(0 0 10px var(--portal-accent, #fbbf24));
+    opacity: 0.45;
   }
   100% {
-    opacity: 0.92;
-    filter: blur(6px) drop-shadow(0 0 22px var(--portal-accent, #fbbf24));
+    opacity: 0.94;
   }
 }
 
 .lunoris-media-tile {
   position: relative;
   isolation: isolate;
-  min-height: 550px;
+  min-height: 610px;
   height: 100%;
   /* Proportional, so the arched frame SVG (ArchedCanvasFrame) traces this exact outline at every size */
   border-radius: 50% 50% 6% 6% / 38% 38% 5.5% 5.5%;
@@ -1090,7 +1578,11 @@ body {
   flex-direction: column;
   justify-content: flex-end;
   text-align: center;
-  animation: portalCardGlowPulse 2.8s ease-in-out infinite alternate;
+  box-shadow:
+    0 28px 64px rgba(0, 0, 0, 0.94),
+    0 0 34px var(--portal-glow, rgba(251, 191, 36, 0.52)),
+    0 0 68px var(--portal-glow, rgba(251, 191, 36, 0.34)),
+    inset 0 0 44px var(--portal-glow, rgba(251, 191, 36, 0.36));
   transition:
     transform 0.45s cubic-bezier(0.16, 1, 0.3, 1),
     box-shadow 0.45s ease;
@@ -1131,6 +1623,7 @@ body {
 }
 
 .portal-arch-neon-halo {
+  filter: blur(4px) drop-shadow(0 0 12px var(--portal-accent, #fbbf24));
   animation: portalHaloBreath 2.4s ease-in-out infinite alternate;
 }
 
@@ -1227,7 +1720,7 @@ body {
   position: relative;
   width: 100%;
   padding: 6.5rem 0 7rem;
-  background-color: var(--lunoris-black);
+  background-color: rgba(5, 4, 12, 0.54);
 }
 
 .lunoris-pillars-stage {
@@ -1432,7 +1925,7 @@ body {
   width: 100%;
   padding: 6.5rem 0 5.5rem;
   overflow: hidden;
-  background-color: var(--lunoris-black);
+  background-color: rgba(5, 4, 12, 0.54);
 }
 
 .lunoris-hero-wall {
@@ -1595,7 +2088,7 @@ body {
   position: relative;
   width: 100%;
   padding: 6.5rem 0 6rem;
-  background-color: var(--lunoris-black);
+  background-color: rgba(5, 4, 12, 0.54);
   overflow: hidden;
 }
 
@@ -1945,7 +2438,13 @@ body {
   align-items: center;
   justify-content: center;
   overflow: hidden;
-  background-color: var(--lunoris-black);
+  background: linear-gradient(
+    180deg,
+    rgba(5, 4, 12, 0.54) 0%,
+    rgba(5, 4, 12, 0.64) 52%,
+    #020106 90%,
+    #000000 100%
+  );
 }
 
 .lunoris-final-cta-inner {
@@ -2005,11 +2504,12 @@ body {
 .lunoris-news-section {
   position: relative;
   padding: 5.5rem 0 6.5rem;
-  /* starts and ends in the neighbours' pure black and has no gold rule on top, so sections join without a seam */
-  background:
-    linear-gradient(180deg, #000000 0%, rgba(0, 0, 0, 0) 22%, rgba(0, 0, 0, 0) 82%, #000000 100%), /* black edges over the glow */
-    radial-gradient(ellipse 80% 55% at 50% 14%, rgba(169, 139, 255, 0.1) 0%, rgba(0, 0, 0, 0) 70%),
-    linear-gradient(180deg, #000000 0%, #0b0814 32%, #0b0814 68%, #000000 100%);
+  background-color: rgba(5, 4, 12, 0.54);
+  background-image: radial-gradient(
+    ellipse 68% 42% at 50% 50%,
+    rgba(169, 139, 255, 0.05) 0%,
+    rgba(0, 0, 0, 0) 68%
+  );
   overflow: hidden;
 }
 
@@ -3153,11 +3653,12 @@ body {
   .lunoris-news-section {
   position: relative;
   padding: 5.5rem 0 6.5rem;
-  /* starts and ends in the neighbours' pure black and has no gold rule on top, so sections join without a seam */
-  background:
-    linear-gradient(180deg, #000000 0%, rgba(0, 0, 0, 0) 22%, rgba(0, 0, 0, 0) 82%, #000000 100%), /* black edges over the glow */
-    radial-gradient(ellipse 80% 55% at 50% 14%, rgba(169, 139, 255, 0.1) 0%, rgba(0, 0, 0, 0) 70%),
-    linear-gradient(180deg, #000000 0%, #0b0814 32%, #0b0814 68%, #000000 100%);
+  background-color: rgba(5, 4, 12, 0.54);
+  background-image: radial-gradient(
+    ellipse 68% 42% at 50% 50%,
+    rgba(169, 139, 255, 0.05) 0%,
+    rgba(0, 0, 0, 0) 68%
+  );
   overflow: hidden;
 }
   .lunoris-heading-stack {
@@ -3352,8 +3853,6 @@ body {
   }
 }
 
-
-
 /* ============================================================================
    LUNORIS TEAM SECTION & FULL STUDIO ROSTER PAGE (/team)
    ============================================================================ */
@@ -3361,15 +3860,13 @@ body {
 .lunoris-team-section {
   position: relative;
   padding: clamp(5.5rem, calc(8vw * var(--vu)), 8rem) 0;
-  background:
-    linear-gradient(180deg, #000000 0%, rgba(0, 0, 0, 0) 22%, rgba(0, 0, 0, 0) 82%, #000000 100%), /* black edges over the glow */
-    radial-gradient(
-      ellipse 78% 52% at 50% 14%,
-      rgba(229, 193, 128, 0.07) 0%,
-      rgba(168, 85, 247, 0.05) 42%,
-      rgba(0, 0, 0, 0) 72%
-    ),
-    linear-gradient(180deg, #000000 0%, #0b0815 32%, #0b0815 68%, #000000 100%); /* pure black at both edges: no seam */
+  background-color: rgba(5, 4, 12, 0.54);
+  background-image: radial-gradient(
+    ellipse 68% 42% at 50% 50%,
+    rgba(229, 193, 128, 0.045) 0%,
+    rgba(168, 85, 247, 0.03) 42%,
+    rgba(0, 0, 0, 0) 68%
+  );
   overflow: hidden;
 }
 
@@ -3519,7 +4016,6 @@ body {
   text-transform: uppercase;
   color: rgba(189, 181, 209, 0.62);
 }
-
 
 .lunoris-leader-role-badge {
   /* a ribbon across the bottom of the medallion ring */
@@ -3858,7 +4354,6 @@ body {
   transform: translate(1px, -1px);
 }
 
-
 /* ============================================================================
    HEADER LANGUAGE SWITCHER & MULTI-SCRIPT / RTL TYPOGRAPHY
    ============================================================================ */
@@ -4105,7 +4600,6 @@ html[dir="rtl"] .news-painterly-quote {
   border-right: 4px solid #e5c180;
 }
 
-
 @media (min-width: 1025px) {
   .lunoris-leaders-grid[data-count="1"] {
     grid-template-columns: minmax(280px, 440px);
@@ -4114,5 +4608,6171 @@ html[dir="rtl"] .news-painterly-quote {
   .lunoris-leaders-grid[data-count="2"] {
     grid-template-columns: repeat(2, minmax(280px, 440px));
     justify-content: center;
+  }
+}
+
+/* ==========================================================================
+   FLOATING LETTERS ("ПАРЯЩИЕ БУКВЫ") — ZERO-GRAVITY TYPOGRAPHY
+   Each letter moves independently:
+   - Very slow vertical float (--fl-dur-y, --fl-amp-y)
+   - Subtle horizontal/angular drift (--fl-dur-x, --fl-amp-x, --fl-rot)
+   - Gentle opacity breathing (--fl-dur-op, --fl-op-min)
+   - Smooth reaction to cursor proximity (--fl-cx, --fl-cy, --fl-crot, --fl-cglow)
+   ========================================================================== */
+
+.floating-letters-root {
+  display: inline;
+  position: relative;
+}
+
+.floating-letters-word {
+  display: inline-block;
+  white-space: nowrap;
+  vertical-align: baseline;
+}
+
+.floating-letters-space {
+  display: inline;
+}
+
+.floating-letter {
+  display: inline-block;
+}
+
+/* Pure constant numeric @keyframes (no CSS var() inside keyframes!)
+   so Chromium runs 100% of letter animations on the GPU compositor thread */
+@keyframes flZeroGravityHeroA {
+  0% {
+    transform: translate3d(-1.2px, 3.2px, 0) rotate(-1.1deg);
+    opacity: 0.8;
+  }
+  50% {
+    transform: translate3d(1.2px, -1.4px, 0) rotate(0.6deg);
+    opacity: 0.96;
+  }
+  100% {
+    transform: translate3d(0.4px, -3.2px, 0) rotate(1.1deg);
+    opacity: 1;
+  }
+}
+
+@keyframes flZeroGravityHeroB {
+  0% {
+    transform: translate3d(1.1px, -3px, 0) rotate(1deg);
+    opacity: 0.82;
+  }
+  50% {
+    transform: translate3d(-1.1px, 1.5px, 0) rotate(-0.5deg);
+    opacity: 0.95;
+  }
+  100% {
+    transform: translate3d(-0.4px, 3.1px, 0) rotate(-1deg);
+    opacity: 1;
+  }
+}
+
+@keyframes flZeroGravityBodyA {
+  0% {
+    transform: translate3d(-0.75px, 2px, 0) rotate(-0.65deg);
+    opacity: 0.84;
+  }
+  50% {
+    transform: translate3d(0.75px, -0.9px, 0) rotate(0.4deg);
+    opacity: 0.96;
+  }
+  100% {
+    transform: translate3d(0.3px, -2px, 0) rotate(0.65deg);
+    opacity: 1;
+  }
+}
+
+@keyframes flZeroGravityBodyB {
+  0% {
+    transform: translate3d(0.7px, -1.9px, 0) rotate(0.6deg);
+    opacity: 0.85;
+  }
+  50% {
+    transform: translate3d(-0.7px, 0.95px, 0) rotate(-0.35deg);
+    opacity: 0.96;
+  }
+  100% {
+    transform: translate3d(-0.25px, 1.95px, 0) rotate(-0.6deg);
+    opacity: 1;
+  }
+}
+
+.floating-letters-root.is-in-view .fl-h0 {
+  animation: flZeroGravityHeroA 5.4s ease-in-out -0.6s infinite alternate;
+}
+.floating-letters-root.is-in-view .fl-h1 {
+  animation: flZeroGravityHeroB 6.1s ease-in-out -2.1s infinite alternate;
+}
+.floating-letters-root.is-in-view .fl-h2 {
+  animation: flZeroGravityHeroA 6.8s ease-in-out -3.7s infinite alternate;
+}
+.floating-letters-root.is-in-view .fl-h3 {
+  animation: flZeroGravityHeroB 5.7s ease-in-out -1.4s infinite alternate;
+}
+.floating-letters-root.is-in-view .fl-h4 {
+  animation: flZeroGravityHeroA 7.3s ease-in-out -4.9s infinite alternate;
+}
+.floating-letters-root.is-in-view .fl-h5 {
+  animation: flZeroGravityHeroB 6.5s ease-in-out -2.9s infinite alternate;
+}
+.floating-letters-root.is-in-view .fl-h6 {
+  animation: flZeroGravityHeroA 5.9s ease-in-out -5.3s infinite alternate;
+}
+.floating-letters-root.is-in-view .fl-h7 {
+  animation: flZeroGravityHeroB 7.1s ease-in-out -4.1s infinite alternate;
+}
+
+.floating-letters-root.is-in-view .fl-b0 {
+  animation: flZeroGravityBodyA 5.6s ease-in-out -0.8s infinite alternate;
+}
+.floating-letters-root.is-in-view .fl-b1 {
+  animation: flZeroGravityBodyB 6.3s ease-in-out -2.4s infinite alternate;
+}
+.floating-letters-root.is-in-view .fl-b2 {
+  animation: flZeroGravityBodyA 7.0s ease-in-out -3.9s infinite alternate;
+}
+.floating-letters-root.is-in-view .fl-b3 {
+  animation: flZeroGravityBodyB 5.9s ease-in-out -1.6s infinite alternate;
+}
+.floating-letters-root.is-in-view .fl-b4 {
+  animation: flZeroGravityBodyA 7.4s ease-in-out -5.1s infinite alternate;
+}
+.floating-letters-root.is-in-view .fl-b5 {
+  animation: flZeroGravityBodyB 6.7s ease-in-out -3.2s infinite alternate;
+}
+.floating-letters-root.is-in-view .fl-b6 {
+  animation: flZeroGravityBodyA 6.1s ease-in-out -5.5s infinite alternate;
+}
+.floating-letters-root.is-in-view .fl-b7 {
+  animation: flZeroGravityBodyB 7.2s ease-in-out -4.3s infinite alternate;
+}
+
+.floating-letter.is-glowing {
+  text-shadow:
+    0 0 18px var(--fl-glow-color, rgba(34, 211, 238, 0.85)),
+    0 0 6px rgba(255, 255, 255, 0.9);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .floating-letters-root.is-in-view .floating-letter {
+    animation: none !important;
+    opacity: 1 !important;
+    translate: none !important;
+  }
+}
+
+/* ==========================================================================
+   CRT EFFECT + NEON FLICKER — RETRO LEVELS PORTAL TYPOGRAPHY
+   ========================================================================== */
+
+.lunoris-retro-crt-screen {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 2;
+  background:
+    repeating-linear-gradient(
+      180deg,
+      rgba(0, 0, 0, 0) 0px,
+      rgba(0, 0, 0, 0) 2px,
+      rgba(6, 4, 14, 0.22) 2px,
+      rgba(6, 4, 14, 0.22) 4px
+    );
+  opacity: 0.6;
+  transition: opacity 0.35s ease;
+}
+
+.lunoris-media-tile.is-retro-portal:hover .lunoris-retro-crt-screen {
+  opacity: 0.85;
+}
+
+.retro-crt-neon-root {
+  display: inline;
+  position: relative;
+}
+
+.retro-crt-neon-root.is-body {
+  display: inline;
+  letter-spacing: inherit;
+}
+
+.retro-crt-content {
+  display: inline;
+  position: relative;
+}
+
+.retro-crt-word {
+  display: inline-block;
+  white-space: nowrap;
+  vertical-align: baseline;
+}
+
+.retro-crt-space {
+  display: inline;
+}
+
+/* Heading: Arcade Neon Flicker + CRT scanlines clipped strictly to letter glyphs */
+.retro-crt-neon-root.is-heading {
+  display: inline-block;
+  letter-spacing: 0.14em;
+}
+
+/* Infinite CRT animations only run while the text is near the viewport
+   (`is-in-view` comes from the shared IntersectionObserver). */
+.retro-crt-neon-root.is-heading.is-in-view {
+  animation: crtSubtleDistort 8.5s steps(1, end) infinite;
+}
+
+.retro-crt-neon-root.is-heading .retro-crt-char {
+  display: inline-block;
+  position: relative;
+  color: #fffdf5;
+  /* Dim end of the neon breath; the bright end lives on ::before (see below). */
+  text-shadow:
+    0 0 3px rgba(255, 253, 240, 0.88),
+    0 0 8px rgba(254, 240, 138, 0.72),
+    0 0 16px var(--retro-neon-color, rgba(251, 191, 36, 0.82)),
+    0 0 28px rgba(245, 158, 11, 0.45),
+    -1.1px 0 1px rgba(255, 70, 90, 0.24),
+    1.1px 0 1px rgba(56, 189, 248, 0.22);
+  transition:
+    color 0.28s ease,
+    text-shadow 0.28s ease;
+}
+
+/* Neon breath without per-frame repaints: a copy of the glyph carries the bright
+   glow and only its opacity animates (animating text-shadow itself repainted
+   every letter on every frame). */
+.retro-crt-neon-root.is-heading .retro-crt-char::before {
+  content: attr(data-text);
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  color: inherit;
+  text-shadow:
+    0 0 5px rgba(255, 253, 240, 1),
+    0 0 13px rgba(254, 240, 138, 0.94),
+    0 0 24px var(--retro-neon-color, rgba(251, 191, 36, 1)),
+    0 0 44px rgba(245, 158, 11, 0.72),
+    -1.3px 0 1px rgba(255, 70, 90, 0.34),
+    1.3px 0 1px rgba(56, 189, 248, 0.3);
+  opacity: 0;
+}
+
+.retro-crt-neon-root.is-heading.is-in-view .retro-crt-char::before {
+  animation: retroNeonBreath 3.6s ease-in-out infinite alternate;
+}
+
+/* Glyph-clipped horizontal CRT scanlines + rolling beam inside letters only (zero rectangle box) */
+.retro-crt-neon-root.is-heading .retro-crt-char::after,
+.retro-crt-line-glyphs::after {
+  content: attr(data-text);
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image:
+    repeating-linear-gradient(
+      180deg,
+      rgba(255, 255, 255, 0) 0px,
+      rgba(255, 255, 255, 0) 1.5px,
+      rgba(10, 5, 20, 0.62) 1.5px,
+      rgba(10, 5, 20, 0.62) 3px
+    ),
+    linear-gradient(
+      180deg,
+      rgba(255, 255, 255, 0) 0%,
+      rgba(255, 252, 220, 0.85) 47%,
+      rgba(251, 191, 36, 0.95) 50%,
+      rgba(255, 255, 255, 0) 54%
+    );
+  background-size: 100% 100%, 100% 240%;
+  background-position: 0 0, 0 -130%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+  text-shadow: none;
+  /* The rolling beam (background-position sweep) repaints the glyphs every frame,
+     so it only runs on hover; at rest the static scanlines stay. */
+}
+
+/* Seeded per-letter arcade neon gas-tube flicker (opacity only; the breathing glow
+   is on ::before above) */
+.retro-crt-neon-root.is-heading.is-in-view .retro-crt-char.is-flicker-a {
+  animation: retroNeonFlickerA 4.8s infinite;
+}
+
+.retro-crt-neon-root.is-heading.is-in-view .retro-crt-char.is-flicker-b {
+  animation: retroNeonFlickerB 6.3s infinite 1.1s;
+}
+
+.retro-crt-neon-root.is-heading.is-in-view .retro-crt-char.is-flicker-c {
+  animation: retroNeonFlickerC 5.4s infinite 2.4s;
+}
+
+.retro-crt-neon-root.is-heading.is-in-view .retro-crt-char.is-pulse-steady {
+  animation: crtPhosphorFlicker 3.2s ease-in-out infinite alternate;
+}
+
+/* Body lines: Old CRT monitor phosphor glow + glyph-clipped scanlines + subtle flicker + occasional H-sync wave */
+.retro-crt-line-glyphs {
+  display: inline-block;
+  position: relative;
+  color: rgba(254, 249, 235, 0.94);
+  text-shadow:
+    0 0 6px rgba(251, 191, 36, 0.34),
+    0 0 14px rgba(245, 158, 11, 0.18),
+    -0.85px 0 0.5px rgba(255, 82, 82, 0.22),
+    0.85px 0 0.5px rgba(56, 189, 248, 0.2);
+  transition:
+    color 0.28s ease,
+    text-shadow 0.28s ease;
+}
+
+.retro-crt-neon-root.is-in-view .retro-crt-line-glyphs {
+  animation:
+    crtPhosphorFlicker 2.9s ease-in-out infinite,
+    crtSubtleDistortBody 9.6s steps(1, end) infinite;
+}
+
+/* Hover intensification: Neon & CRT phosphor glow amplify when hovering text or Retro portal */
+.retro-crt-neon-root.is-heading:hover .retro-crt-char,
+.lunoris-media-tile.is-retro-portal:hover .retro-crt-neon-root.is-heading .retro-crt-char {
+  color: #ffffff;
+  text-shadow:
+    0 0 6px #ffffff,
+    0 0 14px rgba(254, 243, 199, 0.98),
+    0 0 26px var(--retro-neon-color, rgba(251, 191, 36, 1)),
+    0 0 46px rgba(245, 158, 11, 0.88),
+    0 0 72px rgba(217, 70, 239, 0.45),
+    -1.6px 0 1.5px rgba(255, 64, 96, 0.42),
+    1.6px 0 1.5px rgba(56, 189, 248, 0.38);
+}
+
+.retro-crt-neon-root.is-body:hover .retro-crt-line-glyphs,
+.lunoris-media-tile.is-retro-portal:hover .retro-crt-neon-root.is-body .retro-crt-line-glyphs {
+  color: #fffef7;
+  text-shadow:
+    0 0 4px rgba(255, 253, 240, 0.78),
+    0 0 11px rgba(251, 191, 36, 0.64),
+    0 0 22px rgba(245, 158, 11, 0.36),
+    -1.1px 0 0.8px rgba(255, 75, 95, 0.32),
+    1.1px 0 0.8px rgba(56, 189, 248, 0.28);
+}
+
+.retro-crt-neon-root:hover .retro-crt-char::after,
+.retro-crt-neon-root:hover .retro-crt-line-glyphs::after,
+.lunoris-media-tile.is-retro-portal:hover .retro-crt-char::after,
+.lunoris-media-tile.is-retro-portal:hover .retro-crt-line-glyphs::after {
+  animation: crtScanlineSweep 3.2s linear infinite;
+}
+
+@keyframes crtScanlineSweep {
+  0% {
+    background-position: 0 0, 0 -130%;
+  }
+  100% {
+    background-position: 0 0, 0 230%;
+  }
+}
+
+@keyframes retroNeonBreath {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+@keyframes retroNeonFlickerA {
+  0%, 18%, 22%, 52%, 56%, 100% {
+    opacity: 1;
+  }
+  19.5% {
+    opacity: 0.58;
+  }
+  20.5% {
+    opacity: 0.94;
+  }
+  54% {
+    opacity: 0.72;
+  }
+}
+
+@keyframes retroNeonFlickerB {
+  0%, 34%, 37%, 78%, 81%, 100% {
+    opacity: 1;
+  }
+  35.2% {
+    opacity: 0.52;
+  }
+  79.4% {
+    opacity: 0.76;
+  }
+}
+
+@keyframes retroNeonFlickerC {
+  0%, 62%, 66%, 100% {
+    opacity: 1;
+  }
+  63.5% {
+    opacity: 0.62;
+  }
+  64.8% {
+    opacity: 0.96;
+  }
+}
+
+@keyframes crtPhosphorFlicker {
+  0%, 100% {
+    opacity: 0.99;
+  }
+  24% {
+    opacity: 0.93;
+  }
+  26% {
+    opacity: 1;
+  }
+  68% {
+    opacity: 0.91;
+  }
+  70% {
+    opacity: 0.99;
+  }
+}
+
+@keyframes crtSubtleDistort {
+  0%, 86%, 90%, 100% {
+    transform: translate3d(0, 0, 0) skewX(0deg);
+  }
+  87% {
+    transform: translate3d(1.35px, 0, 0) skewX(-1.1deg);
+  }
+  88% {
+    transform: translate3d(-1.1px, 0.25px, 0) skewX(0.85deg);
+  }
+  89% {
+    transform: translate3d(0.45px, 0, 0) skewX(-0.3deg);
+  }
+}
+
+@keyframes crtSubtleDistortBody {
+  0%, 91%, 95%, 100% {
+    transform: translate3d(0, 0, 0) skewX(0deg);
+  }
+  92% {
+    transform: translate3d(-0.9px, 0, 0) skewX(0.65deg);
+  }
+  93.5% {
+    transform: translate3d(0.85px, 0, 0) skewX(-0.55deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .retro-crt-neon-root.is-heading,
+  .retro-crt-neon-root.is-heading .retro-crt-char,
+  .retro-crt-neon-root.is-heading .retro-crt-char::before,
+  .retro-crt-neon-root.is-heading .retro-crt-char::after,
+  .retro-crt-line-glyphs,
+  .retro-crt-line-glyphs::after {
+    animation: none !important;
+    transform: none !important;
+  }
+}
+
+/* ==========================================================================
+   DREAM LEVELS PORTAL INTERACTION & ZOOM-TO-CENTER TRANSITION
+   ========================================================================== */
+
+.lunoris-media-tile.is-interactive-portal {
+  cursor: pointer;
+  user-select: none;
+}
+
+.lunoris-portal-vortex-glow {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+  background: radial-gradient(
+    ellipse 68% 60% at 50% 44%,
+    rgba(34, 211, 238, 0.16) 0%,
+    rgba(167, 139, 250, 0.1) 45%,
+    transparent 76%
+  );
+  opacity: 0.65;
+  mix-blend-mode: screen;
+  transition: opacity 0.55s ease, transform 0.7s ease;
+}
+
+.lunoris-media-tile.is-interactive-portal:hover .lunoris-portal-vortex-glow {
+  opacity: 1;
+  transform: scale(1.08);
+}
+
+.lunoris-portal-enter-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.48rem;
+  margin-top: 0.9rem;
+  padding: 0.38rem 0.95rem;
+  border-radius: 999px;
+  background: rgba(8, 22, 34, 0.74);
+  border: 1px solid rgba(34, 211, 238, 0.48);
+  box-shadow:
+    0 4px 18px rgba(0, 0, 0, 0.65),
+    0 0 18px rgba(34, 211, 238, 0.22),
+    inset 0 0 10px rgba(34, 211, 238, 0.14);
+  font-family: var(--font-display), serif;
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: #cffafe;
+  transition:
+    transform 0.38s cubic-bezier(0.22, 1, 0.36, 1),
+    background 0.35s ease,
+    border-color 0.35s ease,
+    box-shadow 0.35s ease;
+}
+
+.lunoris-portal-enter-star {
+  color: #22d3ee;
+  font-size: 0.82rem;
+  animation: portalStarPulse 2.6s ease-in-out infinite alternate;
+}
+
+.lunoris-portal-enter-arrow {
+  display: inline-block;
+  color: #67e8f9;
+  transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.lunoris-media-tile.is-interactive-portal:hover .lunoris-portal-enter-cta {
+  background: rgba(12, 36, 52, 0.9);
+  border-color: rgba(103, 232, 249, 0.92);
+  box-shadow:
+    0 6px 24px rgba(0, 0, 0, 0.78),
+    0 0 28px rgba(34, 211, 238, 0.52),
+    inset 0 0 14px rgba(34, 211, 238, 0.28);
+  transform: translateY(-2px) scale(1.03);
+}
+
+.lunoris-media-tile.is-interactive-portal:hover .lunoris-portal-enter-arrow {
+  transform: translateX(4px);
+}
+
+@keyframes portalStarPulse {
+  0% {
+    opacity: 0.65;
+    transform: scale(0.9);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1.18);
+  }
+}
+
+/* Active Two-Stage Portal Transition when Dream Levels Portal is clicked:
+   Stage 1 (.is-portal-centering): Other portals & heading disappear completely while Dream Levels glides to the exact center.
+   Stage 2 (.is-portal-expanding): Once centered, the entire portal cell expands across the viewport and opens /dream-levels. */
+.has-active-portal-zoom {
+  z-index: 9500 !important;
+  overflow: visible !important;
+}
+
+.lunoris-heading-stack.is-portal-heading-hidden {
+  opacity: 0 !important;
+  transform: translateY(-28px) scale(0.95) !important;
+  filter: blur(8px) !important;
+  pointer-events: none;
+  transition-delay: 0s !important;
+  transition:
+    opacity 0.38s cubic-bezier(0.22, 1, 0.36, 1),
+    transform 0.42s cubic-bezier(0.22, 1, 0.36, 1),
+    filter 0.38s ease !important;
+}
+
+.lunoris-media-tile.is-portal-sibling-hidden {
+  opacity: 0 !important;
+  filter: blur(12px) brightness(0.2) !important;
+  transform: translateY(42px) scale(0.78) !important;
+  transition-delay: 0s !important;
+  transition:
+    opacity 0.42s cubic-bezier(0.22, 1, 0.36, 1),
+    filter 0.42s ease,
+    transform 0.46s cubic-bezier(0.22, 1, 0.36, 1) !important;
+  pointer-events: none;
+}
+
+/* Stage 1: Glide smoothly to the center of the screen */
+.lunoris-media-tile.is-portal-centering {
+  z-index: 9999 !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+  pointer-events: none;
+  animation: none !important;
+  transition-delay: 0s !important;
+  transition:
+    transform 0.58s cubic-bezier(0.22, 1, 0.36, 1),
+    filter 0.58s ease !important;
+  transform: translate3d(
+      var(--portal-zoom-dx, 0px),
+      var(--portal-zoom-dy, 0px),
+      0
+    )
+    scale(1.06) rotate(0deg) !important;
+  filter: drop-shadow(0 0 48px rgba(34, 211, 238, 0.72))
+    drop-shadow(0 0 95px rgba(167, 139, 250, 0.48)) !important;
+}
+
+.lunoris-media-tile.is-nightmare-portal.is-portal-centering {
+  filter: drop-shadow(0 0 48px rgba(217, 70, 239, 0.78))
+    drop-shadow(0 0 95px rgba(147, 51, 234, 0.54)) !important;
+}
+
+/* Stage 2: Once in the center, the whole portal cell expands dramatically */
+.lunoris-media-tile.is-portal-expanding {
+  z-index: 9999 !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+  pointer-events: none;
+  animation: none !important;
+  transition-delay: 0s !important;
+  transition:
+    transform 0.56s cubic-bezier(0.45, 0, 0.15, 1),
+    filter 0.56s ease !important;
+  transform: translate3d(
+      var(--portal-zoom-dx, 0px),
+      var(--portal-zoom-dy, 0px),
+      0
+    )
+    scale(3.15) rotate(0deg) !important;
+  filter: drop-shadow(0 0 70px rgba(34, 211, 238, 0.85)) !important;
+}
+
+.lunoris-media-tile.is-nightmare-portal.is-portal-expanding {
+  filter: drop-shadow(0 0 70px rgba(217, 70, 239, 0.9)) !important;
+}
+
+.lunoris-media-tile.is-portal-centering .lunoris-tile-bg {
+  transform: scale(1.08) !important;
+  transition: transform 0.58s cubic-bezier(0.22, 1, 0.36, 1) !important;
+}
+
+.lunoris-media-tile.is-portal-expanding .lunoris-tile-bg {
+  transform: scale(1.18) !important;
+  filter: brightness(1.08) saturate(1.1) !important;
+  transition:
+    transform 0.56s cubic-bezier(0.45, 0, 0.15, 1),
+    filter 0.56s ease !important;
+}
+
+.lunoris-media-tile.is-portal-expanding .lunoris-tile-caption,
+.lunoris-media-tile.is-portal-expanding > svg {
+  opacity: 0;
+  transition: opacity 0.32s ease;
+}
+
+.lunoris-media-tile.is-portal-centering .lunoris-portal-vortex-glow,
+.lunoris-media-tile.is-portal-expanding .lunoris-portal-vortex-glow {
+  opacity: 0.65;
+  transform: scale(1.2);
+  background: radial-gradient(
+    circle at 50% 45%,
+    rgba(56, 189, 248, 0.28) 0%,
+    rgba(167, 139, 250, 0.18) 52%,
+    transparent 85%
+  );
+}
+
+/* Subtle Van Gogh impasto fracture shimmer on the portal surface before full Dream Dissolve */
+.lunoris-portal-impasto-fracture {
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+  pointer-events: none;
+  opacity: 0;
+  background: radial-gradient(
+    circle at 50% 48%,
+    rgba(56, 189, 248, 0.18) 0%,
+    rgba(167, 139, 250, 0.12) 55%,
+    transparent 82%
+  );
+  transition: opacity 0.38s ease;
+}
+
+.lunoris-media-tile.is-portal-centering .lunoris-portal-impasto-fracture {
+  opacity: 0.35;
+}
+
+.lunoris-media-tile.is-portal-expanding .lunoris-portal-impasto-fracture {
+  opacity: 0.65;
+}
+
+/* Initial luminous cracks igniting on the portal card immediately on click */
+.lunoris-portal-shatter-cracks {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 6;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.22s ease;
+}
+
+.lunoris-portal-shatter-cracks path {
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: bevel;
+  stroke-dasharray: 420;
+  stroke-dashoffset: 420;
+  transition: stroke-dashoffset 0.72s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.lunoris-portal-shatter-cracks .portal-crack-aura path {
+  stroke: rgba(34, 211, 238, 0.62);
+  stroke-width: 5.5px;
+}
+
+.lunoris-portal-shatter-cracks .portal-crack-core path {
+  stroke: rgba(248, 250, 252, 0.96);
+  stroke-width: 1.6px;
+}
+
+.lunoris-media-tile.is-portal-centering .lunoris-portal-shatter-cracks,
+.lunoris-media-tile.is-portal-expanding .lunoris-portal-shatter-cracks {
+  opacity: 1;
+}
+
+.lunoris-media-tile.is-portal-centering .lunoris-portal-shatter-cracks path,
+.lunoris-media-tile.is-portal-expanding .lunoris-portal-shatter-cracks path {
+  stroke-dashoffset: 0;
+}
+
+/* Backdrop veil sits BEHIND the centering/expanding portal card (z-index: 9980 < 9999)
+   so it darkens the surrounding forest while keeping the portal card 100% visible */
+.lunoris-portal-zoom-veil {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 9980;
+  pointer-events: none;
+  opacity: 0;
+  background: radial-gradient(
+    circle at 50% 50%,
+    rgba(12, 16, 36, 0.72) 0%,
+    rgba(7, 6, 18, 0.94) 65%,
+    rgba(4, 3, 10, 0.98) 100%
+  );
+  transition: opacity 0.42s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.lunoris-portal-zoom-veil.is-mounted {
+  opacity: 0.52;
+}
+
+.lunoris-portal-zoom-veil.is-blooming {
+  opacity: 0.96;
+}
+
+/* Global Van Gogh "Dream Dissolve" Canvas Overlay (persists across route navigation,
+   uses width: 100%; height: 100% so it covers 100% of the screen under html { zoom: 0.8 }) */
+.dream-dissolve-overlay {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 10050;
+  pointer-events: none;
+  overflow: hidden;
+  opacity: 0;
+  visibility: hidden;
+}
+
+.dream-dissolve-overlay.is-active {
+  opacity: 1;
+  visibility: visible;
+}
+
+.dream-dissolve-canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+/* ==========================================================================
+   DEDICATED DREAM LEVELS PAGE (/dream-levels) — LARGE LEGIBLE TYPOGRAPHY
+   ========================================================================== */
+
+.dream-levels-page {
+  position: relative;
+}
+
+@keyframes dreamPortalPageEmerge {
+  0% {
+    opacity: 0.92;
+    transform: scale(1.018);
+    filter: brightness(1.22) saturate(1.15);
+  }
+  100% {
+    opacity: 1;
+    transform: none;
+    filter: none;
+  }
+}
+
+.dream-levels-page-backdrop {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 0;
+  pointer-events: none;
+  background-image:
+    radial-gradient(
+      ellipse 88% 75% at 50% 32%,
+      rgba(14, 18, 38, 0.38) 0%,
+      rgba(6, 5, 15, 0.78) 100%
+    ),
+    url("/assets/dream-level-1.png");
+  background-size: cover;
+  background-position: center center;
+  opacity: 0.52;
+}
+
+.dream-levels-main {
+  position: relative;
+  z-index: 2;
+  padding-bottom: 6rem;
+  animation: dreamPortalPageEmerge 0.75s cubic-bezier(0.22, 1, 0.36, 1) backwards;
+}
+
+.dream-levels-page .lunoris-wide-wrap {
+  width: 100%;
+  max-width: 1980px;
+  padding-left: clamp(1.5rem, 2.6vw, 3rem);
+  padding-right: clamp(1.5rem, 2.6vw, 3rem);
+}
+
+.lunoris-logo-link {
+  flex-shrink: 0;
+  text-decoration: none;
+}
+
+.lunoris-dream-brand-wrap {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.65rem;
+}
+
+.lunoris-dream-brand-star {
+  color: #22d3ee;
+  font-size: 1.35rem;
+  line-height: 1;
+  filter: drop-shadow(0 0 12px rgba(34, 211, 238, 0.85));
+}
+
+.lunoris-dream-brand-wordmark {
+  font-family: var(--font-display), serif;
+  font-size: clamp(1.65rem, 2.2vw, 2.15rem);
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  color: #f8fafc;
+  text-shadow:
+    0 0 18px rgba(34, 211, 238, 0.62),
+    0 0 36px rgba(167, 139, 250, 0.42),
+    0 4px 14px rgba(0, 0, 0, 0.9);
+}
+
+.dream-levels-page .lunoris-nav a:hover {
+  border-bottom-color: #22d3ee;
+  text-shadow: 0 0 18px rgba(34, 211, 238, 0.65);
+}
+
+.dream-levels-page .lunoris-heading-stack {
+  width: 100% !important;
+  max-width: 1840px !important;
+}
+
+.dream-levels-page .lunoris-mural-body {
+  width: 100% !important;
+  max-width: 1800px !important;
+}
+
+.dream-levels-hero {
+  position: relative;
+  padding: 9rem 0 2.5rem;
+  overflow: visible;
+  border-bottom: none;
+}
+
+.dream-levels-hero-inner {
+  position: relative;
+  z-index: 3;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.dream-levels-back-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin-bottom: 1.75rem;
+  padding: 0.62rem 1.45rem;
+  border-radius: 999px;
+  background: rgba(10, 18, 32, 0.78);
+  border: 1px solid rgba(34, 211, 238, 0.44);
+  color: #cffafe;
+  font-family: var(--font-display), serif;
+  font-size: 1.04rem;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  text-decoration: none;
+  transition:
+    background 0.3s ease,
+    border-color 0.3s ease,
+    transform 0.3s ease,
+    box-shadow 0.3s ease;
+}
+
+.dream-levels-back-pill:hover {
+  background: rgba(14, 32, 52, 0.92);
+  border-color: rgba(103, 232, 249, 0.9);
+  box-shadow: 0 0 24px rgba(34, 211, 238, 0.4);
+  transform: translateY(-2px);
+}
+
+.dream-levels-hero-title {
+  font-size: clamp(3.6rem, calc(6.2vw * var(--vu)), 6.2rem);
+  letter-spacing: 0.1em;
+  margin: 0.35rem 0 0.75rem;
+  color: #f8fafc;
+}
+
+.dream-levels-hero-subtitle {
+  width: 100% !important;
+  max-width: 1800px !important;
+  margin: 0 auto 1.35rem;
+  font-family: var(--font-display), serif;
+  font-size: clamp(1.42rem, calc(2vw * var(--vu)), 1.9rem);
+  color: #a5f3fc;
+  letter-spacing: 0.05em;
+  line-height: 1.48;
+  text-shadow: 0 4px 18px rgba(0, 0, 0, 0.9);
+}
+
+.dream-levels-hero-body {
+  width: 100% !important;
+  max-width: 1800px !important;
+  margin-top: 1.25rem !important;
+  font-size: clamp(1.32rem, calc(1.65vw * var(--vu)), 1.56rem) !important;
+  line-height: 1.72 !important;
+  color: #f1f5f9 !important;
+}
+
+/* Four-Beat Emotional Arc Strip (no outer dark slab/border so it doesn't cut across the page) */
+.dream-levels-arc-panel {
+  width: 100%;
+  max-width: 100%;
+  margin-top: 3.4rem;
+  padding: 0;
+  background: transparent;
+  border: none;
+  box-shadow: none;
+}
+
+.dream-levels-arc-heading {
+  display: block;
+  margin-bottom: 1.65rem;
+  font-family: var(--font-display), serif;
+  font-size: 1.12rem;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: #67e8f9;
+}
+
+.dream-levels-arc-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 1.5rem;
+}
+
+.dream-levels-arc-card {
+  position: relative;
+  padding: 0;
+  border-radius: 18px;
+  background: linear-gradient(
+    165deg,
+    rgba(13, 18, 38, 0.92) 0%,
+    rgba(8, 11, 24, 0.96) 100%
+  );
+  border: 1px solid rgba(56, 189, 248, 0.26);
+  box-shadow: 0 16px 38px rgba(0, 0, 0, 0.56);
+  text-align: left;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  transition:
+    border-color 0.35s ease,
+    transform 0.35s ease,
+    box-shadow 0.35s ease;
+}
+
+.dream-levels-arc-card:hover {
+  border-color: rgba(34, 211, 238, 0.62);
+  transform: translateY(-5px);
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.65);
+}
+
+.dream-levels-arc-img-wrap {
+  position: relative;
+  width: 100%;
+  height: 195px;
+  overflow: hidden;
+  background: #060814;
+}
+
+.dream-levels-arc-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  transition: transform 0.55s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.dream-levels-arc-card:hover .dream-levels-arc-img {
+  transform: scale(1.07);
+}
+
+.dream-levels-arc-img-shade {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    180deg,
+    rgba(6, 9, 20, 0.12) 0%,
+    rgba(8, 11, 24, 0.88) 100%
+  );
+  pointer-events: none;
+}
+
+.dream-levels-arc-step {
+  position: absolute;
+  top: 0.85rem;
+  left: 0.95rem;
+  z-index: 2;
+  padding: 0.28rem 0.72rem;
+  border-radius: 999px;
+  background: rgba(6, 10, 24, 0.86);
+  border: 1px solid rgba(56, 189, 248, 0.45);
+  font-family: var(--font-display), serif;
+  font-size: 0.92rem;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  color: #38bdf8;
+}
+
+.dream-levels-arc-body {
+  padding: 1.15rem 1.35rem 1.4rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.dream-levels-arc-name {
+  font-family: var(--font-display), serif;
+  font-size: 1.42rem;
+  letter-spacing: 0.06em;
+  color: #ffffff;
+  margin: 0;
+}
+
+.dream-levels-arc-desc {
+  margin: 0;
+  font-size: 1.12rem;
+  line-height: 1.48;
+  color: rgba(226, 232, 240, 0.92);
+}
+
+/* Sections & Spatial Topology Grid */
+.dream-levels-section {
+  position: relative;
+  padding: 5.5rem 0 2.5rem;
+}
+
+.dream-architecture-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 2.2rem;
+  margin-top: 2.8rem;
+}
+
+.dream-architecture-card {
+  position: relative;
+  padding: 1.85rem 2.1rem 2.3rem;
+  border-radius: 30px 14px 32px 14px;
+  background: linear-gradient(
+    165deg,
+    rgba(12, 16, 34, 0.92) 0%,
+    rgba(7, 9, 21, 0.96) 100%
+  );
+  box-shadow: 0 20px 48px rgba(0, 0, 0, 0.64);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  gap: 1.35rem;
+  transition: transform 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.dream-architecture-card:hover {
+  transform: translateY(-5px);
+}
+
+.dream-architecture-img-wrap {
+  position: relative;
+  z-index: 2;
+  width: 100%;
+  height: 270px;
+  border-radius: 22px 10px 18px 10px;
+  overflow: hidden;
+  background: #050712;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.dream-architecture-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  transition: transform 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.dream-architecture-card:hover .dream-architecture-img {
+  transform: scale(1.06);
+}
+
+.dream-architecture-img-shade {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    180deg,
+    rgba(7, 9, 21, 0.08) 0%,
+    rgba(7, 9, 21, 0.82) 100%
+  );
+  pointer-events: none;
+}
+
+.dream-architecture-badge {
+  position: absolute;
+  top: 1rem;
+  left: 1.1rem;
+  z-index: 3;
+  display: inline-block;
+  padding: 0.34rem 0.9rem;
+  border-radius: 999px;
+  background: rgba(6, 9, 22, 0.88);
+  border: 1px solid var(--arch-accent, #22d3ee);
+  color: var(--arch-accent, #22d3ee);
+  font-family: var(--font-display), serif;
+  font-size: 0.88rem;
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+}
+
+.dream-architecture-body {
+  position: relative;
+  z-index: 2;
+  padding: 0 0.35rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+
+.dream-architecture-title {
+  font-family: var(--font-display), serif;
+  font-size: 1.95rem;
+  letter-spacing: 0.05em;
+  color: #ffffff;
+  margin: 0;
+}
+
+.dream-architecture-desc {
+  font-size: 1.18rem;
+  line-height: 1.54;
+  color: rgba(241, 245, 249, 0.92);
+  margin: 0;
+}
+
+.dream-architecture-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+  margin-top: 0.25rem;
+}
+
+.dream-architecture-chip {
+  padding: 0.36rem 0.88rem;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  color: #e2e8f0;
+  font-size: 0.98rem;
+  font-weight: 500;
+}
+
+/* Playable Dream Levels Showcase Stack */
+.dream-levels-showcase-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 3.4rem;
+  margin-top: 2.8rem;
+}
+
+.dream-level-showcase-card {
+  position: relative;
+  padding: 3.5rem 4rem;
+  border-radius: 34px 16px 36px 16px;
+  background: linear-gradient(
+    165deg,
+    rgba(11, 14, 30, 0.92) 0%,
+    rgba(6, 8, 19, 0.96) 100%
+  );
+  box-shadow:
+    0 28px 68px rgba(0, 0, 0, 0.72),
+    0 0 46px var(--dl-glow, rgba(34, 211, 238, 0.18));
+  overflow: hidden;
+}
+
+.dream-level-showcase-header {
+  position: relative;
+  z-index: 3;
+  margin-bottom: 1.85rem;
+  padding-bottom: 1.25rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.dream-level-showcase-badges {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 0.8rem;
+}
+
+.dream-level-num-pill {
+  padding: 0.36rem 0.95rem;
+  border-radius: 999px;
+  background: var(--dl-accent, #22d3ee);
+  color: #040711;
+  font-family: var(--font-display), serif;
+  font-size: 0.94rem;
+  font-weight: 700;
+  letter-spacing: 0.15em;
+}
+
+.dream-level-realm-pill {
+  padding: 0.34rem 0.95rem;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  color: #f1f5f9;
+  font-size: 0.92rem;
+  font-weight: 600;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+}
+
+.dream-level-emotion-tag {
+  font-size: 1.04rem;
+  font-weight: 600;
+  color: var(--dl-accent, #22d3ee);
+  letter-spacing: 0.08em;
+}
+
+.dream-level-title-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 1.15rem;
+}
+
+.dream-level-showcase-title {
+  font-family: var(--font-display), serif;
+  font-size: clamp(2.25rem, calc(3.4vw * var(--vu)), 3.1rem);
+  letter-spacing: 0.08em;
+  color: #ffffff;
+  margin: 0;
+}
+
+.dream-level-showcase-subtitle {
+  font-family: var(--font-display), serif;
+  font-size: 1.38rem;
+  color: var(--dl-accent, #22d3ee);
+  letter-spacing: 0.05em;
+  margin: 0;
+}
+
+.dream-level-showcase-body-grid {
+  position: relative;
+  z-index: 3;
+  display: grid;
+  grid-template-columns: 480px minmax(0, 1fr);
+  gap: 2.6rem;
+  align-items: start;
+}
+
+.dream-level-media-col {
+  display: flex;
+  flex-direction: column;
+  gap: 1.2rem;
+}
+
+.dream-level-arched-preview {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  border-radius: 14px;
+  overflow: hidden;
+  background: #050711;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  box-shadow: 0 18px 42px rgba(0, 0, 0, 0.65);
+  clip-path: none;
+  -webkit-clip-path: none;
+}
+
+.dream-level-arched-preview .lunoris-tile-media-clip {
+  border-radius: 14px;
+  clip-path: none;
+  -webkit-clip-path: none;
+}
+
+.dream-level-main-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  transition: transform 0.65s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.dream-level-arched-preview:hover .dream-level-main-img {
+  transform: scale(1.06);
+}
+
+.dream-level-preview-caption {
+  position: absolute;
+  left: 1.35rem;
+  right: 1.35rem;
+  bottom: 1.35rem;
+  z-index: 5;
+  padding: 0.62rem 0.95rem;
+  border-radius: 12px;
+  background: rgba(5, 8, 18, 0.92);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  font-size: 1rem;
+  line-height: 1.4;
+  color: #f1f5f9;
+  text-align: center;
+}
+
+.dream-level-thumbs-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.dream-level-thumbs-label {
+  font-size: 0.94rem;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(203, 213, 225, 0.95);
+}
+
+.dream-level-thumbs-row {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.7rem;
+}
+
+.dream-level-thumb-btn {
+  position: relative;
+  height: 102px;
+  padding: 0;
+  border-radius: 12px;
+  overflow: hidden;
+  border: 2px solid rgba(255, 255, 255, 0.18);
+  background: #050711;
+  cursor: pointer;
+  opacity: 0.78;
+  transition:
+    opacity 0.25s ease,
+    border-color 0.25s ease,
+    transform 0.25s ease;
+}
+
+.dream-level-thumb-btn img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.dream-level-thumb-btn:hover,
+.dream-level-thumb-btn.is-active {
+  opacity: 1;
+  border-color: var(--dl-accent, #22d3ee);
+  transform: translateY(-2px);
+}
+
+.dream-level-info-col {
+  display: flex;
+  flex-direction: column;
+  gap: 1.45rem;
+}
+
+.dream-level-overview-text {
+  font-size: 1.32rem !important;
+  line-height: 1.56 !important;
+  color: #f8fafc !important;
+  margin: 0;
+}
+
+.dream-level-chapters-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1.45rem;
+}
+
+.dream-level-chapter-box {
+  padding: 0;
+  border-radius: 18px;
+  background: rgba(15, 23, 42, 0.72);
+  border: 1px solid rgba(34, 211, 238, 0.3);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  cursor: pointer;
+  transition:
+    border-color 0.3s ease,
+    transform 0.3s ease,
+    box-shadow 0.3s ease;
+}
+
+.dream-level-chapter-box:hover {
+  border-color: rgba(34, 211, 238, 0.68);
+  transform: translateY(-4px);
+  box-shadow: 0 14px 34px rgba(0, 0, 0, 0.55);
+}
+
+.dream-level-chapter-box.is-chapter-2 {
+  border-color: rgba(167, 139, 250, 0.34);
+  background: rgba(22, 16, 42, 0.68);
+}
+
+.dream-level-chapter-box.is-chapter-2:hover {
+  border-color: rgba(167, 139, 250, 0.72);
+}
+
+.dream-level-chapter-img-wrap {
+  position: relative;
+  width: 100%;
+  height: 225px;
+  overflow: hidden;
+  background: #050712;
+}
+
+.dream-level-chapter-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  transition: transform 0.55s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.dream-level-chapter-box:hover .dream-level-chapter-img {
+  transform: scale(1.06);
+}
+
+.dream-level-chapter-img-shade {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    180deg,
+    rgba(6, 9, 20, 0.14) 0%,
+    rgba(6, 9, 20, 0.35) 55%,
+    rgba(10, 14, 28, 0.92) 100%
+  );
+  pointer-events: none;
+}
+
+.dream-level-chapter-badge {
+  position: absolute;
+  top: 0.85rem;
+  left: 0.9rem;
+  z-index: 2;
+  padding: 0.28rem 0.75rem;
+  border-radius: 999px;
+  background: rgba(6, 10, 24, 0.88);
+  border: 1px solid rgba(56, 189, 248, 0.45);
+  font-family: var(--font-display), serif;
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+  color: #67e8f9;
+}
+
+.dream-level-chapter-box.is-chapter-2 .dream-level-chapter-badge {
+  border-color: rgba(167, 139, 250, 0.5);
+  color: #c4b5fd;
+}
+
+.dream-level-door-tag {
+  position: absolute;
+  bottom: 0.75rem;
+  left: 0.95rem;
+  z-index: 2;
+  display: inline-block;
+  padding: 0.24rem 0.72rem;
+  border-radius: 8px;
+  background: rgba(6, 9, 20, 0.86);
+  border: 1px solid rgba(253, 230, 138, 0.35);
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #fde68a;
+}
+
+.dream-level-chapter-copy {
+  padding: 1.2rem 1.4rem 1.4rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.dream-level-chapter-title {
+  font-family: var(--font-display), serif;
+  font-size: 1.44rem;
+  color: #ffffff;
+  margin: 0;
+}
+
+.dream-level-bullet-list {
+  margin: 0;
+  padding-left: 1.2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  font-size: 1.1rem;
+  line-height: 1.5;
+  color: rgba(241, 245, 249, 0.92);
+}
+
+.dream-level-mechanics-strip {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+  padding-top: 1rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.dream-level-mechanics-label {
+  font-family: var(--font-display), serif;
+  font-size: 1rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #cbd5e1;
+}
+
+.dream-level-mechanics-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+}
+
+.dream-level-mechanic-chip {
+  padding: 0.4rem 0.98rem;
+  border-radius: 999px;
+  background: rgba(34, 211, 238, 0.13);
+  border: 1px solid rgba(34, 211, 238, 0.38);
+  color: #f0f9ff;
+  font-size: 1.02rem;
+  font-weight: 500;
+  letter-spacing: 0.03em;
+}
+
+/* Core Dream Systems Grid */
+.dream-systems-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 2rem;
+  margin-top: 2.8rem;
+}
+
+.dream-system-card {
+  position: relative;
+  padding: 1.55rem 1.65rem 0;
+  border-radius: 30px 14px 32px 14px;
+  background: linear-gradient(
+    165deg,
+    rgba(11, 15, 32, 0.92) 0%,
+    rgba(7, 10, 22, 0.96) 100%
+  );
+  box-shadow: 0 20px 46px rgba(0, 0, 0, 0.6);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.dream-system-card:hover {
+  transform: translateY(-4px);
+}
+
+.dream-system-img-wrap {
+  position: relative;
+  z-index: 2;
+  width: 100%;
+  height: 235px;
+  border-radius: 20px 8px 16px 8px;
+  overflow: hidden;
+  background: #050712;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.dream-system-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  transition: transform 0.55s ease;
+}
+
+.dream-system-card:hover .dream-system-img {
+  transform: scale(1.06);
+}
+
+.dream-system-img-shade {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    180deg,
+    rgba(9, 12, 26, 0.08) 0%,
+    rgba(9, 12, 26, 0.85) 100%
+  );
+}
+
+.dream-system-category {
+  position: absolute;
+  top: 0.9rem;
+  left: 0.95rem;
+  z-index: 3;
+  padding: 0.28rem 0.78rem;
+  border-radius: 999px;
+  background: rgba(6, 9, 22, 0.88);
+  border: 1px solid var(--sys-accent, #22d3ee);
+  font-family: var(--font-display), serif;
+  font-size: 0.84rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--sys-accent, #22d3ee);
+}
+
+.dream-system-content {
+  position: relative;
+  z-index: 2;
+  padding: 1.35rem 0.5rem 2.15rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  flex: 1;
+}
+
+.dream-system-title {
+  font-family: var(--font-display), serif;
+  font-size: 1.65rem;
+  color: #ffffff;
+  margin: 0;
+}
+
+.dream-system-summary {
+  font-size: 1.15rem;
+  line-height: 1.5;
+  font-weight: 500;
+  color: rgba(226, 232, 240, 0.94);
+  margin: 0;
+}
+
+.dream-levels-return-cta {
+  margin-top: 5rem;
+  padding: 3.6rem 2.5rem;
+  border-radius: 22px;
+  background: radial-gradient(
+    ellipse 75% 80% at 50% 50%,
+    rgba(14, 30, 52, 0.72) 0%,
+    rgba(7, 10, 22, 0.88) 100%
+  );
+  border: 1px solid rgba(34, 211, 238, 0.3);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 1.1rem;
+}
+
+.dream-levels-return-title {
+  font-family: var(--font-display), serif;
+  font-size: clamp(2.1rem, calc(3.2vw * var(--vu)), 3rem);
+  letter-spacing: 0.1em;
+  color: #ffffff;
+  margin: 0.35rem 0 0;
+}
+
+.dream-levels-return-body {
+  width: 100%;
+  max-width: 1440px;
+  font-size: 1.3rem;
+  line-height: 1.65;
+  color: rgba(241, 245, 249, 0.9);
+  margin: 0 0 0.9rem;
+}
+
+@media (max-width: 1080px) {
+  .dream-levels-arc-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .dream-level-showcase-body-grid {
+    grid-template-columns: 1fr;
+  }
+  .dream-level-arched-preview {
+    max-width: 440px;
+    margin: 0 auto;
+  }
+  .dream-systems-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 768px) {
+  .dream-levels-arc-grid,
+  .dream-architecture-grid,
+  .dream-level-chapters-grid,
+  .dream-systems-grid {
+    grid-template-columns: 1fr;
+  }
+  .dream-level-showcase-card {
+    padding: 1.8rem 1.4rem;
+  }
+}
+
+/* ==========================================================================
+   RETRO LEVELS PAGE & PIXEL / SHUTTER / IRIS / BLINDS TRANSITION PACK
+   ========================================================================== */
+
+.retro-games-page-backdrop {
+  background:
+    radial-gradient(ellipse 68% 48% at 50% 8%, rgba(211, 144, 57, 0.15), transparent 72%),
+    radial-gradient(ellipse 52% 46% at 12% 58%, rgba(57, 133, 126, 0.12), transparent 72%),
+    linear-gradient(180deg, #101817 0%, #111411 52%, #090d0d 100%);
+}
+
+.retro-games-page .lunoris-nav a::after {
+  background: linear-gradient(90deg, #e6ae52, #6ab9a8);
+  box-shadow: 0 0 10px rgba(106, 185, 168, 0.55);
+}
+
+.lunoris-dream-brand-star.is-retro-star {
+  color: #fbbf24;
+  text-shadow:
+    0 0 14px rgba(251, 191, 36, 0.92),
+    0 0 28px rgba(245, 158, 11, 0.65);
+}
+
+.retro-games-page .lunoris-nav a::after {
+  background: linear-gradient(90deg, #fbbf24, #e879f9);
+  box-shadow: 0 0 10px rgba(251, 191, 36, 0.85);
+}
+
+.retro-games-back-pill {
+  border-color: rgba(251, 191, 36, 0.48);
+  color: #fef3c7;
+  box-shadow: 0 0 22px rgba(251, 191, 36, 0.16);
+}
+
+.retro-games-back-pill:hover {
+  border-color: rgba(251, 191, 36, 0.92);
+  box-shadow: 0 0 30px rgba(251, 191, 36, 0.36);
+  background: rgba(32, 20, 8, 0.82);
+}
+
+/* Retro Levels: quieter arcade cabinet cards with optional deep dives. */
+.retro-games-page .retro-unlock-route {
+  max-width: 1040px;
+  margin: 2rem auto 0;
+}
+
+.retro-games-page .retro-unlock-arrow {
+  position: absolute;
+  right: -0.8rem;
+  top: 50%;
+  z-index: 2;
+  color: #fbbf24;
+}
+
+.retro-games-page .retro-gallery-details > summary {
+  cursor: pointer;
+  list-style-position: inside;
+}
+
+.retro-games-page .retro-gallery-details[open] > summary {
+  margin-bottom: 0.75rem;
+}
+
+.retro-games-page .retro-architecture-details {
+  margin-top: 1.5rem;
+}
+
+.retro-games-page .retro-architecture-details > summary {
+  max-width: 560px;
+  margin-inline: auto;
+  list-style: none;
+}
+
+.retro-games-page .retro-architecture-details > summary::-webkit-details-marker {
+  display: none;
+}
+
+.retro-games-page .retro-architecture-details[open] > summary {
+  margin-bottom: 1.5rem;
+}
+
+.retro-games-page .retro-systems-section .lunoris-heading-stack {
+  margin-bottom: 0;
+}
+
+.retro-games-page .impala-easter-egg-trigger {
+  border-color: rgba(251, 191, 36, 0.66);
+  background: linear-gradient(145deg, rgba(64, 35, 18, 0.96), rgba(15, 10, 18, 0.96));
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.5), 0 0 22px rgba(251, 191, 36, 0.18);
+}
+
+.retro-games-page .impala-easter-egg-trigger:hover {
+  transform: translateY(-3px) scale(1.03);
+}
+
+/* Unified vintage arcade palette: phosphor teal, warm ivory, amber and walnut. */
+
+@media (max-width: 768px) {
+  
+
+  .retro-games-page .retro-unlock-arrow {
+    display: none;
+  }
+
+  
+}
+
+.retro-games-page .dream-levels-return-cta {
+  border-color: rgba(251, 191, 36, 0.35);
+  background: radial-gradient(
+    ellipse 75% 80% at 50% 50%,
+    rgba(42, 24, 14, 0.68) 0%,
+    rgba(9, 6, 18, 0.9) 100%
+  );
+}
+
+/* ==========================================================================
+   1967 CHEVROLET IMPALA EASTER EGG & PAGE-STYLED ARCADE CABINET MODAL
+   ========================================================================== */
+
+.impala-easter-egg-trigger {
+  position: fixed;
+  right: 1.65rem;
+  bottom: 1.55rem;
+  z-index: 65;
+  appearance: none;
+  cursor: pointer;
+  padding: 0.55rem 0.95rem 0.55rem 0.7rem;
+  border-radius: 999px;
+  background: radial-gradient(
+    ellipse 85% 90% at 50% 50%,
+    rgba(24, 14, 38, 0.88) 0%,
+    rgba(9, 6, 18, 0.94) 100%
+  );
+  border: 1px solid rgba(251, 191, 36, 0.42);
+  box-shadow:
+    0 12px 32px rgba(0, 0, 0, 0.68),
+    0 0 22px rgba(251, 191, 36, 0.18);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  opacity: 0.72;
+  transition:
+    opacity 0.28s ease,
+    transform 0.28s cubic-bezier(0.22, 1, 0.36, 1),
+    border-color 0.28s ease,
+    box-shadow 0.28s ease;
+}
+
+.impala-easter-egg-trigger:hover {
+  opacity: 1;
+  transform: translateY(-3px) scale(1.03);
+  border-color: rgba(251, 191, 36, 0.92);
+  box-shadow:
+    0 16px 38px rgba(0, 0, 0, 0.82),
+    0 0 30px rgba(251, 191, 36, 0.42),
+    0 0 48px rgba(217, 70, 239, 0.22);
+}
+
+.impala-easter-egg-trigger.is-hidden {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.impala-egg-icon-box {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.38rem;
+}
+
+.impala-egg-car-svg {
+  width: 34px;
+  height: 22px;
+  filter: drop-shadow(0 0 6px rgba(255, 42, 109, 0.65));
+}
+
+.impala-egg-coin-tag {
+  padding: 0.1rem 0.38rem;
+  border-radius: 6px;
+  background: rgba(251, 191, 36, 0.14);
+  border: 1px solid rgba(251, 191, 36, 0.48);
+  font-family: var(--font-display), serif;
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+  color: #fde68a;
+}
+
+.impala-egg-label {
+  font-family: var(--font-display), serif;
+  font-size: 0.84rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: #fffbeb;
+}
+
+.impala-arcade-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 120;
+  background: rgba(5, 3, 12, 0.84);
+  backdrop-filter: blur(10px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+  animation: impalaModalFadeIn 0.28s ease-out;
+}
+
+@keyframes impalaModalFadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.impala-arcade-cabinet {
+  width: 100%;
+  max-width: 860px;
+  border-radius: 24px;
+  background: radial-gradient(
+    ellipse 85% 85% at 50% 25%,
+    rgba(28, 16, 46, 0.96) 0%,
+    rgba(11, 7, 22, 0.98) 65%,
+    rgba(6, 4, 14, 0.99) 100%
+  );
+  border: 1px solid rgba(251, 191, 36, 0.48);
+  box-shadow:
+    0 32px 84px rgba(0, 0, 0, 0.88),
+    0 0 48px rgba(251, 191, 36, 0.22),
+    0 0 90px rgba(168, 85, 247, 0.16);
+  padding: 1.65rem 1.85rem 1.7rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.05rem;
+  position: relative;
+  overflow: hidden;
+}
+
+.impala-cabinet-close-btn {
+  position: absolute;
+  top: 1.15rem;
+  right: 1.25rem;
+  z-index: 10;
+  width: 36px;
+  height: 36px;
+  border-radius: 999px;
+  appearance: none;
+  cursor: pointer;
+  background: rgba(12, 8, 24, 0.88);
+  border: 1px solid rgba(251, 191, 36, 0.48);
+  color: #fef3c7;
+  font-family: var(--font-display), serif;
+  font-size: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition:
+    border-color 0.22s ease,
+    box-shadow 0.22s ease,
+    transform 0.22s ease;
+}
+
+.impala-cabinet-close-btn:hover {
+  border-color: #fbbf24;
+  box-shadow: 0 0 18px rgba(251, 191, 36, 0.55);
+  transform: scale(1.06);
+}
+
+.impala-cabinet-marquee {
+  position: relative;
+  z-index: 3;
+  padding: 0.35rem 1rem 0.1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.impala-marquee-titles {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 0.25rem;
+}
+
+.impala-marquee-sub {
+  font-size: 0.78rem;
+  letter-spacing: 0.24em;
+}
+
+.impala-marquee-main {
+  margin: 0;
+  font-family: var(--font-display), serif;
+  font-size: clamp(1.55rem, 2.5vw, 2.15rem);
+  letter-spacing: 0.14em;
+  color: #fffef5;
+}
+
+.impala-cabinet-bezel {
+  position: relative;
+  z-index: 3;
+  border-radius: 18px;
+  padding: 0.8rem 1rem 1rem;
+  background: rgba(7, 4, 15, 0.84);
+  border: 1px solid rgba(251, 191, 36, 0.32);
+  box-shadow: inset 0 8px 28px rgba(0, 0, 0, 0.88);
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+
+.impala-crt-score-strip {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.2rem 0.5rem;
+  font-family: var(--font-display), serif;
+  font-size: 0.94rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #fef3c7;
+}
+
+.impala-crt-mode-pill {
+  padding: 0.22rem 0.85rem;
+  border-radius: 999px;
+  background: rgba(16, 10, 28, 0.88);
+  border: 1px solid rgba(251, 191, 36, 0.45);
+  font-family: var(--font-display), serif;
+  font-size: 0.78rem;
+  letter-spacing: 0.15em;
+}
+
+.impala-crt-screen {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 12 / 7;
+  border-radius: 16px;
+  overflow: hidden;
+  background: #06030c;
+  border: 1px solid rgba(251, 191, 36, 0.42);
+  box-shadow:
+    0 0 32px rgba(251, 191, 36, 0.16),
+    inset 0 0 36px rgba(0, 0, 0, 0.82);
+}
+
+.impala-crt-attract {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+}
+
+.impala-crt-video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  filter: contrast(1.06) saturate(1.12);
+}
+
+.impala-crt-attract-overlay,
+.impala-crt-result-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  background: radial-gradient(
+    ellipse 80% 85% at 50% 50%,
+    rgba(10, 5, 22, 0.48) 0%,
+    rgba(6, 3, 14, 0.85) 100%
+  );
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 1.4rem;
+  gap: 0.65rem;
+}
+
+.impala-attract-badge,
+.impala-result-badge {
+  padding: 0.26rem 0.9rem;
+  border-radius: 999px;
+  background: rgba(12, 6, 24, 0.88);
+  border: 1px solid rgba(251, 191, 36, 0.52);
+  font-family: var(--font-display), serif;
+  font-size: 0.8rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: #fde68a;
+}
+
+.impala-attract-title,
+.impala-result-title {
+  margin: 0.15rem 0 0;
+  font-family: var(--font-display), serif;
+  font-size: clamp(1.85rem, 3.1vw, 2.6rem);
+  letter-spacing: 0.14em;
+  color: #ffffff;
+}
+
+.impala-attract-hint {
+  margin: 0;
+  max-width: 500px;
+  font-family: var(--font-display), serif;
+  font-size: 1.08rem;
+  color: rgba(248, 250, 252, 0.92);
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.9);
+}
+
+.impala-result-quote {
+  margin: 0;
+  font-family: var(--font-display), serif;
+  font-style: italic;
+  font-size: 1.12rem;
+  color: #fde68a;
+}
+
+.impala-result-score {
+  margin: 0.15rem 0;
+  font-family: var(--font-display), serif;
+  font-size: 1.22rem;
+  letter-spacing: 0.14em;
+  color: #f8fafc;
+}
+
+.impala-result-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 0.85rem;
+  margin-top: 0.35rem;
+}
+
+.impala-brush-cta-btn {
+  margin-top: 0.25rem;
+  cursor: pointer;
+}
+
+.impala-secondary-btn {
+  appearance: none;
+  cursor: pointer;
+  margin-top: 0.25rem;
+  padding: 0.72rem 1.35rem;
+  border-radius: 999px;
+  background: rgba(15, 10, 28, 0.88);
+  border: 1px solid rgba(251, 191, 36, 0.48);
+  color: #fef3c7;
+  font-family: var(--font-display), serif;
+  font-size: 0.9rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  transition:
+    border-color 0.22s ease,
+    box-shadow 0.22s ease;
+}
+
+.impala-secondary-btn:hover {
+  border-color: #fbbf24;
+  box-shadow: 0 0 18px rgba(251, 191, 36, 0.38);
+}
+
+.impala-crt-canvas {
+  width: 100%;
+  height: 100%;
+  display: block;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.impala-crt-canvas.is-active {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* Control Deck Styled in Lunoris Golden-Violet Page Aesthetic */
+.impala-cabinet-control-deck {
+  position: relative;
+  z-index: 3;
+  border-radius: 16px;
+  padding: 0.8rem 1.15rem;
+  background: rgba(10, 6, 20, 0.82);
+  border: 1px solid rgba(251, 191, 36, 0.32);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.impala-deck-left,
+.impala-deck-right,
+.impala-deck-center {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.impala-joystick-base {
+  width: 42px;
+  height: 42px;
+  border-radius: 999px;
+  background: radial-gradient(circle, #1e1233 0%, #080511 75%);
+  border: 1.5px solid rgba(251, 191, 36, 0.48);
+  box-shadow: 0 0 14px rgba(251, 191, 36, 0.18);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+.impala-joystick-shaft {
+  width: 4px;
+  height: 22px;
+  background: linear-gradient(180deg, #fde68a, #b45309);
+  border-radius: 4px;
+  transform-origin: bottom center;
+  transform: translateY(-6px) rotate(0deg);
+  transition: transform 0.12s ease;
+  position: relative;
+}
+
+.impala-joystick-base.is-tilted-left .impala-joystick-shaft {
+  transform: translateY(-6px) rotate(-24deg);
+}
+
+.impala-joystick-base.is-tilted-right .impala-joystick-shaft {
+  transform: translateY(-6px) rotate(24deg);
+}
+
+.impala-joystick-ball {
+  width: 18px;
+  height: 18px;
+  border-radius: 999px;
+  background: radial-gradient(
+    circle at 35% 30%,
+    #fef3c7 0%,
+    #fbbf24 55%,
+    #b45309 100%
+  );
+  box-shadow:
+    0 0 14px rgba(251, 191, 36, 0.88),
+    0 0 24px rgba(217, 70, 239, 0.45);
+  position: absolute;
+  top: -11px;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.impala-steer-pad {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.impala-arcade-btn {
+  appearance: none;
+  cursor: pointer;
+  user-select: none;
+  padding: 0.48rem 0.95rem;
+  border-radius: 999px;
+  font-family: var(--font-display), serif;
+  font-size: 0.86rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #fef3c7;
+  background: rgba(16, 10, 30, 0.88);
+  border: 1px solid rgba(251, 191, 36, 0.45);
+  box-shadow: 0 0 16px rgba(251, 191, 36, 0.12);
+  transition:
+    transform 0.12s ease,
+    box-shadow 0.2s ease,
+    border-color 0.2s ease,
+    background 0.2s ease;
+}
+
+.impala-arcade-btn:hover {
+  border-color: rgba(251, 191, 36, 0.88);
+  box-shadow: 0 0 22px rgba(251, 191, 36, 0.28);
+}
+
+.impala-arcade-btn:active,
+.impala-arcade-btn.is-pressed {
+  transform: translateY(2px);
+  border-color: #fbbf24;
+  background: rgba(42, 24, 12, 0.9);
+  box-shadow: 0 0 24px rgba(251, 191, 36, 0.45);
+}
+
+.impala-arcade-btn.is-start-pill {
+  padding: 0.54rem 1.25rem;
+  border-color: rgba(251, 191, 36, 0.78);
+  background: linear-gradient(
+    180deg,
+    rgba(44, 24, 12, 0.88) 0%,
+    rgba(20, 10, 30, 0.94) 100%
+  );
+  box-shadow: 0 0 22px rgba(251, 191, 36, 0.26);
+}
+
+.impala-arcade-btn.is-nitro {
+  border-color: rgba(232, 121, 249, 0.55);
+}
+
+@media (max-width: 720px) {
+  .impala-cabinet-control-deck {
+    justify-content: center;
+  }
+  .impala-crt-score-strip {
+    font-size: 0.78rem;
+  }
+}
+
+/* ==========================================================================
+   VOID DISTORTION TYPOGRAPHY (NIGHTMARE PORTAL — SUBTLE HOVER WARP & ECHO)
+   ========================================================================== */
+
+.void-distortion-root {
+  display: inline;
+  position: relative;
+  letter-spacing: inherit;
+}
+
+.void-distortion-content {
+  display: inline;
+  letter-spacing: inherit;
+}
+
+.void-distortion-word {
+  display: inline-block;
+  white-space: nowrap;
+  letter-spacing: inherit;
+}
+
+.void-distortion-space {
+  display: inline;
+}
+
+.void-distortion-char {
+  position: relative;
+  display: inline-block;
+  transform: translate3d(var(--void-dx, 0px), var(--void-dy, 0px), 0)
+    skewX(var(--void-skew, 0deg));
+  transition:
+    text-shadow 0.32s ease,
+    color 0.32s ease;
+  will-change: transform;
+}
+
+.void-distortion-glyph {
+  position: relative;
+  z-index: 2;
+  display: inline-block;
+  text-shadow:
+    0 0 10px var(--void-glow-color, rgba(192, 132, 252, 0.34)),
+    0 4px 16px rgba(0, 0, 0, 0.9);
+  transition:
+    transform 0.35s cubic-bezier(0.22, 1, 0.36, 1),
+    text-shadow 0.35s ease;
+}
+
+.void-distortion-root.is-body .void-distortion-glyph {
+  text-shadow: 0 0 7px var(--void-glow-color, rgba(192, 132, 252, 0.24));
+}
+
+/* Twin void-rift ghost echoes (violet-magenta & deep indigo) that split on hover */
+.void-distortion-char::before,
+.void-distortion-char::after {
+  content: attr(data-char);
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  opacity: 0;
+  transition:
+    opacity 0.28s ease,
+    transform 0.32s cubic-bezier(0.22, 1, 0.36, 1),
+    filter 0.28s ease;
+}
+
+.void-distortion-char::before {
+  color: rgba(232, 121, 249, 0.82);
+  transform: translate3d(0, 0, 0);
+}
+
+.void-distortion-char::after {
+  color: rgba(129, 140, 248, 0.82);
+  transform: translate3d(0, 0, 0);
+}
+
+/* Continuous background state: organic wave distortion + chromatic void split */
+.void-distortion-root.is-in-view.is-heading .void-distortion-char.is-void-wave-a .void-distortion-glyph {
+  animation: voidDistortWaveA 2.4s ease-in-out infinite;
+  animation-delay: var(--void-delay, 0ms);
+}
+
+.void-distortion-root.is-in-view.is-heading .void-distortion-char.is-void-wave-b .void-distortion-glyph {
+  animation: voidDistortWaveB 2.65s ease-in-out infinite;
+  animation-delay: var(--void-delay, 0ms);
+}
+
+.void-distortion-root.is-in-view.is-heading .void-distortion-char.is-void-wave-c .void-distortion-glyph {
+  animation: voidDistortWaveC 2.2s ease-in-out infinite;
+  animation-delay: var(--void-delay, 0ms);
+}
+
+.void-distortion-root.is-in-view.is-heading .void-distortion-char.is-void-wave-d .void-distortion-glyph {
+  animation: voidDistortWaveD 2.8s ease-in-out infinite;
+  animation-delay: var(--void-delay, 0ms);
+}
+
+.void-distortion-root.is-in-view.is-body .void-distortion-char .void-distortion-glyph {
+  animation: voidDistortBodyWave 2.7s ease-in-out infinite;
+  animation-delay: var(--void-delay, 0ms);
+}
+
+.void-distortion-root.is-heading .void-distortion-glyph {
+  text-shadow:
+    0 0 11px rgba(216, 180, 254, 0.58),
+    0 0 24px var(--void-glow-color, rgba(192, 132, 252, 0.44)),
+    0 4px 16px rgba(0, 0, 0, 0.9);
+}
+
+.void-distortion-root.is-heading .void-distortion-char::before {
+  opacity: 0.62;
+  filter: blur(0.5px);
+}
+
+.void-distortion-root.is-heading .void-distortion-char::after {
+  opacity: 0.58;
+  filter: blur(0.5px);
+}
+
+.void-distortion-root.is-body .void-distortion-char::before {
+  opacity: 0.36;
+}
+
+.void-distortion-root.is-body .void-distortion-char::after {
+  opacity: 0.32;
+}
+
+/* Infinite void waves / echoes only run near the viewport (`is-in-view`). */
+.void-distortion-root.is-in-view.is-heading .void-distortion-char::before {
+  animation: voidEchoSplitLeft 2.4s ease-in-out infinite alternate;
+  animation-delay: var(--void-delay, 0ms);
+}
+
+.void-distortion-root.is-in-view.is-heading .void-distortion-char::after {
+  animation: voidEchoSplitRight 2.4s ease-in-out infinite alternate;
+  animation-delay: var(--void-delay, 0ms);
+}
+
+.void-distortion-root.is-in-view.is-body .void-distortion-char::before {
+  animation: voidBodyEchoLeft 2.7s ease-in-out infinite alternate;
+  animation-delay: var(--void-delay, 0ms);
+}
+
+.void-distortion-root.is-in-view.is-body .void-distortion-char::after {
+  animation: voidBodyEchoRight 2.7s ease-in-out infinite alternate;
+  animation-delay: var(--void-delay, 0ms);
+}
+
+@keyframes voidBodyEchoLeft {
+  0% {
+    transform: translate3d(-0.8px, 0.25px, 0) skewX(-2deg);
+  }
+  100% {
+    transform: translate3d(-1.4px, -0.35px, 0) skewX(-4deg);
+  }
+}
+
+@keyframes voidBodyEchoRight {
+  0% {
+    transform: translate3d(0.8px, -0.25px, 0) skewX(2deg);
+  }
+  100% {
+    transform: translate3d(1.4px, 0.35px, 0) skewX(4deg);
+  }
+}
+
+@keyframes voidDistortWaveA {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) skewX(0deg) scaleY(1);
+  }
+  28% {
+    transform: translate3d(-1.2px, -1.1px, 0) skewX(-5.5deg) scaleY(1.04);
+  }
+  64% {
+    transform: translate3d(1.4px, 0.9px, 0) skewX(4.8deg) scaleY(0.97);
+  }
+}
+
+@keyframes voidDistortWaveB {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) skewX(0deg) scaleY(1);
+  }
+  34% {
+    transform: translate3d(1.3px, -0.9px, 0) skewX(5.2deg) scaleY(0.97);
+  }
+  70% {
+    transform: translate3d(-1.1px, 1.1px, 0) skewX(-4.6deg) scaleY(1.035);
+  }
+}
+
+@keyframes voidDistortWaveC {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) skewX(0deg) scaleY(1);
+  }
+  24% {
+    transform: translate3d(-0.9px, 1.2px, 0) skewX(4.4deg) scaleY(1.03);
+  }
+  58% {
+    transform: translate3d(1.1px, -1px, 0) skewX(-5.8deg) scaleY(0.975);
+  }
+}
+
+@keyframes voidDistortWaveD {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) skewX(0deg) scaleY(1);
+  }
+  40% {
+    transform: translate3d(1px, 1px, 0) skewX(-4.8deg) scaleY(1.035);
+  }
+  76% {
+    transform: translate3d(-1.2px, -0.8px, 0) skewX(5deg) scaleY(0.97);
+  }
+}
+
+@keyframes voidDistortBodyWave {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) skewX(0deg);
+  }
+  35% {
+    transform: translate3d(-0.6px, -0.45px, 0) skewX(-2.8deg);
+  }
+  70% {
+    transform: translate3d(0.6px, 0.45px, 0) skewX(2.8deg);
+  }
+}
+
+@keyframes voidEchoSplitLeft {
+  0% {
+    transform: translate3d(-1.4px, 0.4px, 0) skewX(-4deg);
+  }
+  50% {
+    transform: translate3d(-2.5px, -0.7px, 0) skewX(-7deg);
+  }
+  100% {
+    transform: translate3d(-1.1px, 0.8px, 0) skewX(3deg);
+  }
+}
+
+@keyframes voidEchoSplitRight {
+  0% {
+    transform: translate3d(1.4px, -0.4px, 0) skewX(4deg);
+  }
+  50% {
+    transform: translate3d(2.5px, 0.7px, 0) skewX(7deg);
+  }
+  100% {
+    transform: translate3d(1.1px, -0.8px, 0) skewX(-3deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .void-distortion-char,
+  .void-distortion-glyph,
+  .void-distortion-char::before,
+  .void-distortion-char::after {
+    animation: none !important;
+    transform: none !important;
+  }
+}
+
+/* ==========================================================================
+   NIGHTMARE REALM PAGE & MAGENTA RIFT SLASH (BREAKER TEAR)
+   ========================================================================== */
+
+.nightmare-realm-page-backdrop {
+  background:
+    radial-gradient(
+      ellipse 70% 50% at 50% 10%,
+      rgba(217, 70, 239, 0.16) 0%,
+      rgba(126, 34, 206, 0.1) 42%,
+      transparent 74%
+    ),
+    radial-gradient(
+      ellipse 60% 50% at 85% 58%,
+      rgba(244, 63, 94, 0.09) 0%,
+      transparent 68%
+    ),
+    linear-gradient(180deg, #06020d 0%, #090315 50%, #040109 100%);
+}
+
+.lunoris-dream-brand-star.is-nightmare-star {
+  color: #e879f9;
+  text-shadow:
+    0 0 14px rgba(232, 121, 249, 0.92),
+    0 0 28px rgba(168, 85, 247, 0.65);
+}
+
+.nightmare-realm-page .lunoris-nav a::after {
+  background: linear-gradient(90deg, #e879f9, #818cf8);
+  box-shadow: 0 0 10px rgba(217, 70, 239, 0.85);
+}
+
+.nightmare-realm-page .dream-levels-arc-panel {
+  border-color: rgba(217, 70, 239, 0.34);
+  background: linear-gradient(
+    180deg,
+    rgba(22, 10, 36, 0.84) 0%,
+    rgba(10, 5, 20, 0.92) 100%
+  );
+}
+
+.nightmare-realm-page .dream-levels-arc-step {
+  border-color: rgba(232, 121, 249, 0.62);
+  color: #f5d0fe;
+}
+
+.nightmare-realm-page .dream-levels-return-cta {
+  border-color: rgba(217, 70, 239, 0.36);
+  background: radial-gradient(
+    ellipse 75% 80% at 50% 50%,
+    rgba(38, 12, 52, 0.72) 0%,
+    rgba(8, 4, 16, 0.92) 100%
+  );
+}
+
+/* Lightweight nightmare body-text glow — no per-letter DOM */
+.nightmare-glow-text {
+  text-shadow:
+    0 0 8px var(--nm-glow, rgba(192, 132, 252, 0.34)),
+    0 3px 12px rgba(0, 0, 0, 0.85);
+}
+
+/* Full-viewport Breaker Sword Pull overlay (`VFX-42 Breaker Rift Pull` + `DeliverBreakerSword`)
+   Uses `inset: 0; width: 100%; height: 100%` (not 100vw/100vh) so it covers 100% of the screen
+   and stays dead-center under `html { zoom: 0.8 }`. */
+.nightmare-rift-overlay {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 10060;
+  pointer-events: none;
+  opacity: 0;
+  visibility: hidden;
+  overflow: hidden;
+}
+
+.nightmare-rift-overlay.is-active {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: all;
+}
+
+.nightmare-rift-canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+/* Synthwave / outrun palette inspired by the supplied reference. */
+.retro-games-page-backdrop {
+  background:
+    radial-gradient(ellipse 48% 30% at 50% 16%, rgba(255, 111, 44, 0.32), transparent 72%),
+    radial-gradient(ellipse 75% 45% at 50% 24%, rgba(232, 36, 151, 0.23), transparent 76%),
+    radial-gradient(ellipse 55% 50% at 14% 52%, rgba(87, 35, 190, 0.22), transparent 72%),
+    linear-gradient(180deg, #100a24 0%, #1b0c35 40%, #120822 73%, #080712 100%);
+}
+
+.retro-games-page-backdrop::after {
+  content: "";
+  position: fixed;
+  left: -18%;
+  right: -18%;
+  bottom: -9vh;
+  height: 43vh;
+  transform: perspective(360px) rotateX(57deg);
+  transform-origin: center bottom;
+  background-image:
+    linear-gradient(rgba(239, 48, 220, 0.38) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(55, 125, 255, 0.55) 1px, transparent 1px);
+  background-size: 100% 34px, 56px 100%;
+  mask-image: linear-gradient(to bottom, transparent, #000 24%, #000 82%, transparent);
+  opacity: 0.64;
+  pointer-events: none;
+}
+
+.retro-games-page .lunoris-nav a::after {
+  background: linear-gradient(90deg, #fb3ca6, #36d9ff);
+  box-shadow: 0 0 12px rgba(251, 60, 166, 0.72);
+}
+
+.retro-games-page .retro-crt-neon-root.is-heading .retro-crt-char {
+  text-shadow:
+    0 0 4px rgba(255, 247, 255, 0.95),
+    0 0 12px rgba(255, 72, 176, 0.86),
+    0 0 24px rgba(219, 39, 184, 0.72),
+    0 0 40px rgba(87, 72, 255, 0.48),
+    -1.2px 0 1px rgba(255, 70, 150, 0.34),
+    1.2px 0 1px rgba(54, 217, 255, 0.34);
+}
+
+.retro-games-page .retro-crt-neon-root.is-heading .retro-crt-char::after {
+  background-image:
+    repeating-linear-gradient(180deg, rgba(255, 255, 255, 0) 0 1.5px, rgba(10, 5, 20, 0.58) 1.5px 3px),
+    linear-gradient(180deg, transparent 0%, rgba(255, 221, 247, 0.8) 47%, rgba(255, 73, 179, 0.92) 50%, transparent 54%);
+}
+
+.retro-games-page .retro-crt-line-glyphs {
+  text-shadow:
+    0 0 6px rgba(255, 72, 176, 0.38),
+    0 0 15px rgba(90, 86, 255, 0.24),
+    -0.85px 0 0.5px rgba(255, 82, 160, 0.28),
+    0.85px 0 0.5px rgba(54, 217, 255, 0.3);
+}
+
+.retro-games-page .lunoris-footer {
+  position: relative;
+  z-index: 2;
+  background: transparent;
+  border-top: 0;
+}
+
+.retro-energy-circuit-path,
+.retro-energy-discharge-path {
+  display: none;
+}
+
+/* Frame pulse runs on the compositor: animating the 7-layer box-shadow itself
+   repainted the whole card every frame. The bright peak glow is drawn once on two
+   layers and only their opacity breathes: the inner part on the card's ::after,
+   the outer part on the wrapper (the card clips its own overflow). */
+
+/* Dream Levels: three focused world cards. */
+.dream-levels-page {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+@supports (zoom: 0.8) {
+  @media (min-width: 1101px) {
+    .dream-levels-page {
+      min-height: 125vh;
+    }
+  }
+}
+
+.dream-levels-page-backdrop {
+  background-image:
+    radial-gradient(ellipse 78% 66% at 50% 28%, rgba(44, 27, 76, 0.58), transparent 74%),
+    linear-gradient(145deg, #080711 0%, #100b1e 52%, #070711 100%);
+  opacity: 1;
+}
+
+.dream-levels-page .dream-levels-footer-wordmark {
+  display: inline-block;
+  color: #f8fafc;
+  font-size: 1.7rem;
+  letter-spacing: 0.18em;
+  line-height: 1;
+}
+
+.dream-levels-page .lunoris-footer {
+  position: relative;
+  z-index: 2;
+  margin-top: auto;
+  padding: 2.5rem 0 2.25rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  background: transparent;
+}
+
+.dream-levels-cards-main {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: stretch;
+  gap: clamp(1.6rem, 3vw, 2.7rem);
+  padding: 7.5rem clamp(0.25rem, 0.35vw, 0.5rem) 3.5rem;
+}
+
+.dream-levels-cards-heading {
+  width: min(100%, 1050px);
+  margin: 0 auto;
+  text-align: center;
+}
+
+.dream-levels-cards-eyebrow {
+  display: block;
+  margin-bottom: 0.65rem;
+  color: rgba(221, 214, 254, 0.82);
+  font-size: 0.76rem;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+}
+
+.dream-levels-cards-title {
+  margin: 0;
+  color: #f8fafc;
+  font-family: var(--font-display), serif;
+  font-size: clamp(3rem, 7.5vw, 6.5rem);
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  line-height: 1;
+  text-shadow: 0 0 24px rgba(34, 211, 238, 0.34);
+}
+
+.dream-levels-cards-subtitle {
+  margin: 0.8rem 0 0;
+  color: rgba(224, 242, 254, 0.9);
+  font-family: var(--font-display), serif;
+  font-size: clamp(1rem, 1.7vw, 1.35rem);
+  letter-spacing: 0.035em;
+}
+
+.dream-levels-cards-description {
+  max-width: 760px;
+  margin: 0.75rem auto 0;
+  color: rgba(226, 232, 240, 0.76);
+  font-size: 0.98rem;
+  line-height: 1.6;
+}
+
+.dream-levels-entry {
+  display: grid;
+  grid-template-columns: minmax(0, 1.45fr) minmax(250px, 1fr);
+  align-items: center;
+  gap: clamp(1.5rem, 4vw, 3.5rem);
+  width: min(100%, 1050px);
+  margin: 0 auto;
+  padding: clamp(1.4rem, 3vw, 2.25rem);
+  overflow: hidden;
+  border: 1px solid rgba(167, 139, 250, 0.32);
+  border-radius: 24px;
+  background:
+    radial-gradient(ellipse at 16% 55%, rgba(34, 211, 238, 0.12), transparent 48%),
+    linear-gradient(125deg, rgba(20, 18, 43, 0.94), rgba(10, 9, 25, 0.92));
+  box-shadow: 0 18px 56px rgba(0, 0, 0, 0.24), inset 0 0 38px rgba(167, 139, 250, 0.06);
+}
+
+.dream-levels-entry-media {
+  position: relative;
+  width: 100%;
+  min-width: 0;
+  aspect-ratio: 2 / 1;
+  overflow: hidden;
+  border: 1px solid rgba(34, 211, 238, 0.34);
+  border-radius: 18px;
+  background: #100d20;
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.32), 0 0 24px rgba(34, 211, 238, 0.12);
+}
+
+.dream-levels-entry-image {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+}
+.dream-levels-entry-copy {
+  max-width: 680px;
+}
+
+.dream-levels-entry-eyebrow {
+  margin: 0;
+  color: rgba(221, 214, 254, 0.78);
+  font-size: 0.76rem;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+}
+
+.dream-levels-entry-title {
+  margin: 0.55rem 0 0;
+  color: #f8fafc;
+  font-family: var(--font-display), serif;
+  font-size: clamp(2rem, 4vw, 3.4rem);
+  letter-spacing: 0.08em;
+  line-height: 1.08;
+  text-shadow: 0 0 24px rgba(34, 211, 238, 0.34);
+}
+
+.dream-levels-entry-description {
+  max-width: 620px;
+  margin: 0.9rem 0 0;
+  color: rgba(226, 232, 240, 0.86);
+  font-size: clamp(0.96rem, 1.3vw, 1.08rem);
+  line-height: 1.7;
+}
+/* Route map: big level cards stacked in one column; a winding zigzag route runs
+   through the gaps and ends under each card's emblem node on its top edge. */
+.dream-level-progression-map {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  --map-node: clamp(76px, 7vw, 104px);
+  width: min(100%, 1120px);
+  margin: 0 auto;
+  padding: 0;
+}
+
+.dream-level-route {
+  position: relative;
+  z-index: 0;
+  width: min(62%, 460px);
+  height: clamp(130px, 13vw, 190px);
+  pointer-events: none;
+}
+
+.dream-level-route.is-mirrored {
+  transform: scaleX(-1);
+}
+
+.dream-level-route svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+.dream-level-route-glow,
+.dream-level-route-dashes {
+  fill: none;
+  stroke-linecap: round;
+  vector-effect: non-scaling-stroke;
+}
+
+.dream-level-route-glow {
+  stroke-width: 12;
+  opacity: 0.22;
+  filter: blur(5px);
+}
+
+.dream-level-route-dashes {
+  stroke-width: 3.5;
+  stroke-dasharray: 3 13;
+}
+
+.dream-level-map-stop {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+}
+
+.dream-level-map-node {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  z-index: 3;
+  display: grid;
+  width: var(--map-node);
+  height: var(--map-node);
+  place-items: center;
+  transform: translate(-50%, -50%);
+  border: 2px solid var(--dl-accent);
+  border-radius: 50%;
+  background:
+    radial-gradient(circle at 50% 38%, color-mix(in srgb, var(--dl-accent) 26%, transparent), transparent 70%),
+    #100d20;
+  color: var(--dl-accent);
+  box-shadow: 0 0 0 8px rgba(10, 8, 22, 0.72), 0 0 28px var(--dl-glow);
+}
+
+.dream-level-map-emblem {
+  width: 62%;
+  height: 62%;
+  overflow: visible;
+  filter: drop-shadow(0 0 6px color-mix(in srgb, var(--dl-accent) 70%, transparent));
+}
+
+.dream-level-map-finale {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.dream-level-map-finale-node {
+  display: grid;
+  width: 76px;
+  height: 76px;
+  place-items: center;
+  border: 2px solid #f5c451;
+  border-radius: 50%;
+  background: #100d20;
+  color: #fff;
+  font-family: var(--font-display), serif;
+  font-size: 2rem;
+  box-shadow: 0 0 0 8px rgba(10, 8, 22, 0.78), 0 0 30px rgba(245, 196, 81, 0.62);
+}
+
+.dream-level-teaser-card {
+  position: relative;
+  isolation: isolate;
+  display: flex;
+  align-items: flex-end;
+  grid-row: 1;
+  width: 100%;
+  margin: 0;
+  min-width: 0;
+  min-height: clamp(440px, 50vw, 620px);
+  overflow: hidden;
+  border: 1px solid color-mix(in srgb, var(--dl-accent) 58%, transparent);
+  border-radius: 22px;
+  background: #100d20;
+  box-shadow: 0 18px 48px rgba(0, 0, 0, 0.32), 0 0 28px color-mix(in srgb, var(--dl-glow) 72%, transparent);
+  transition: transform 240ms ease, border-color 240ms ease, box-shadow 240ms ease;
+}
+
+.dream-level-teaser-card::before,
+.dream-level-teaser-card::after {
+  position: absolute;
+  inset: 0;
+  content: "";
+  pointer-events: none;
+}
+
+.dream-level-teaser-card::before {
+  z-index: -1;
+  background: linear-gradient(180deg, rgba(7, 5, 17, 0.02) 10%, rgba(7, 5, 17, 0.2) 38%, rgba(7, 5, 17, 0.94) 100%);
+}
+
+.dream-level-teaser-card::after {
+  z-index: -1;
+  background: radial-gradient(ellipse at 50% 0%, color-mix(in srgb, var(--dl-glow) 75%, transparent), transparent 68%);
+  opacity: 0.65;
+}
+
+.dream-level-teaser-image {
+  position: absolute;
+  inset: 0;
+  z-index: -2;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 520ms cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+
+.dream-level-teaser-content {
+  width: 100%;
+  padding: clamp(1.2rem, 2.6vw, 2.4rem);
+}
+
+.dream-level-teaser-title {
+  margin: 0.55rem 0 0.35rem;
+  color: #fff;
+  font-family: var(--font-display), serif;
+  font-size: clamp(1.8rem, 3vw, 3.2rem);
+  letter-spacing: 0.04em;
+  line-height: 1.15;
+  text-shadow: 0 2px 24px rgba(0, 0, 0, 0.8);
+}
+
+.dream-level-teaser-title em {
+  font-style: italic !important;
+}
+
+.dream-level-teaser-description {
+  max-width: 44rem;
+  margin: 1rem 0 0;
+  color: rgba(248, 250, 252, 0.88);
+  font-size: clamp(0.96rem, 1.2vw, 1.15rem);
+  line-height: 1.55;
+}
+
+.dream-level-teaser-hook {
+  max-width: 44rem;
+  margin: 0.95rem 0 0;
+  padding-left: 0.85rem;
+  border-left: 2px solid var(--dl-accent);
+  color: #fff;
+  font-family: var(--font-display), serif;
+  font-size: clamp(1.02rem, 1.3vw, 1.25rem);
+  font-weight: 700;
+  line-height: 1.45;
+  text-shadow: 0 0 18px var(--dl-glow);
+}
+
+.dream-level-teaser-card:hover {
+  transform: translateY(-5px);
+  border-color: var(--dl-accent);
+  box-shadow: 0 24px 58px rgba(0, 0, 0, 0.42), 0 0 34px var(--dl-glow);
+}
+
+.dream-level-teaser-card:hover .dream-level-teaser-image {
+  transform: scale(1.045);
+}
+
+.dream-levels-coming-soon {
+  max-width: 1500px;
+  margin: 1.4rem 0 0;
+  color: #f5eaff;
+  font-family: var(--font-display), serif;
+  font-size: clamp(1.75rem, 3.4vw, 3.25rem);
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  line-height: 1.2;
+  text-align: center;
+  text-shadow: 0 0 24px rgba(192, 132, 252, 0.65), 0 0 46px rgba(34, 211, 238, 0.22);
+  text-wrap: balance;
+}
+
+@media (max-width: 900px) and (min-width: 701px) {
+  .dream-levels-cards-main {
+    padding-top: 6.5rem;
+    gap: 1.5rem;
+  }
+
+  .dream-level-teaser-card {
+    min-height: clamp(420px, 60vw, 520px);
+  }
+}
+
+@media (max-width: 700px) {
+  .dream-levels-entry {
+    grid-template-columns: 1fr;
+    gap: 0.8rem;
+    text-align: center;
+  }
+
+  .dream-levels-entry-media {
+    width: 100%;
+  }
+
+  .dream-levels-entry-copy {
+    margin: 0 auto;
+  }
+
+  .dream-levels-cards-main {
+    padding: 6rem 1rem 2rem;
+  }
+
+  .dream-levels-cards-title {
+    font-size: clamp(2.5rem, 13vw, 4rem);
+    letter-spacing: 0.06em;
+  }
+
+  .dream-levels-cards-description {
+    font-size: 0.9rem;
+  }
+
+  .dream-level-progression-map {
+    --map-node: 64px;
+  }
+
+  .dream-level-route {
+    width: min(70%, 300px);
+    height: 110px;
+  }
+
+  .dream-level-teaser-card {
+    min-height: 0;
+    aspect-ratio: auto;
+    flex-direction: column;
+    justify-content: flex-end;
+    padding-top: min(56vw, 300px);
+    border-radius: 18px;
+  }
+
+  .dream-level-teaser-content {
+    padding: 1.1rem 1rem 1.25rem;
+  }
+
+  .dream-level-teaser-title {
+    font-size: clamp(1.45rem, 7vw, 1.9rem);
+  }
+
+  .dream-level-teaser-description {
+    margin-top: 0.6rem;
+    font-size: 0.92rem;
+  }
+
+  .dream-level-teaser-hook {
+    font-size: 0.96rem;
+  }
+
+  .dream-level-map-finale-node {
+    width: 62px;
+    height: 62px;
+    font-size: 1.75rem;
+  }
+
+  .dream-levels-coming-soon {
+    font-size: clamp(1.4rem, 6.4vw, 2.2rem);
+    letter-spacing: 0.08em;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dream-level-teaser-card,
+  .dream-level-teaser-image {
+    transition: none;
+  }
+}
+
+/* Nightmare: cinematic wasteland, sanctuary interlude, and boss encounter. */
+.nightmare-editorial-main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: clamp(4rem, 8vw, 8rem);
+  padding: 7.5rem clamp(1rem, 3vw, 3rem) 4rem;
+}
+
+.nightmare-editorial-hero {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: min(100%, 1160px);
+  margin: 0 auto;
+  padding: clamp(2rem, 5vw, 4.5rem) 0 0;
+  text-align: center;
+}
+
+.nightmare-editorial-hero::before {
+  position: absolute;
+  top: -7rem;
+  right: -12%;
+  left: -12%;
+  z-index: -1;
+  height: 32rem;
+  content: "";
+  background:
+    radial-gradient(ellipse at 50% 62%, rgba(80, 24, 86, 0.3), transparent 65%),
+    radial-gradient(ellipse at 14% 55%, rgba(30, 22, 58, 0.25), transparent 48%),
+    linear-gradient(180deg, rgba(9, 7, 18, 0.2), transparent);
+  pointer-events: none;
+}
+
+.nightmare-editorial-kicker {
+  color: rgba(221, 214, 254, 0.76);
+  font-size: 0.74rem;
+  font-weight: 700;
+  letter-spacing: 0.22em;
+}
+
+.nightmare-editorial-title {
+  margin: 0.65rem 0 0;
+  color: #f8fafc;
+  font-family: var(--font-display), serif;
+  font-size: clamp(4rem, 12vw, 10rem);
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  line-height: 0.9;
+  text-shadow: 0 0 30px rgba(217, 70, 239, 0.38), 0 0 70px rgba(88, 28, 135, 0.28);
+}
+
+.nightmare-editorial-lead {
+  max-width: 760px;
+  margin: 1.35rem auto 0;
+  color: rgba(237, 233, 254, 0.88);
+  font-family: var(--font-display), serif;
+  font-size: clamp(1.05rem, 1.8vw, 1.35rem);
+  line-height: 1.65;
+}
+
+.nightmare-entry-line {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.8rem;
+  margin: 1.6rem auto 0;
+  padding: 0.75rem 1.1rem;
+  border-top: 1px solid rgba(217, 70, 239, 0.3);
+  border-bottom: 1px solid rgba(217, 70, 239, 0.16);
+  color: rgba(233, 213, 255, 0.84);
+  font-size: 0.82rem;
+  letter-spacing: 0.08em;
+  line-height: 1.5;
+}
+
+.nightmare-entry-line-mark {
+  color: #e879f9;
+  text-shadow: 0 0 14px rgba(217, 70, 239, 0.82);
+}
+
+.nightmare-wasteland-section,
+.nightmare-matchi-section,
+.nightmare-fearclaw-section {
+  width: min(100%, 1320px);
+  margin: 0 auto;
+}
+
+.nightmare-section-heading {
+  margin: 0 0 1.35rem;
+}
+
+.nightmare-section-index {
+  display: block;
+  color: rgba(221, 214, 254, 0.72);
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+}
+
+.nightmare-section-title {
+  margin: 0.5rem 0 0;
+  color: #f8fafc;
+  font-family: var(--font-display), serif;
+  font-size: clamp(2.1rem, 4.6vw, 4.2rem);
+  letter-spacing: 0.055em;
+  line-height: 1.08;
+}
+
+.nightmare-wasteland-panorama {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 2.25 / 1;
+  margin: 0;
+  overflow: hidden;
+  border: 1px solid rgba(192, 132, 252, 0.34);
+  background: #0c0a16;
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.34), 0 0 28px rgba(168, 85, 247, 0.12);
+}
+
+.nightmare-wasteland-panorama::after {
+  position: absolute;
+  inset: 0;
+  content: "";
+  background: linear-gradient(90deg, rgba(7, 5, 17, 0.48), transparent 55%), linear-gradient(0deg, rgba(7, 5, 17, 0.76), transparent 38%);
+  pointer-events: none;
+}
+
+.nightmare-wasteland-panorama img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.nightmare-wasteland-panorama figcaption {
+  position: absolute;
+  right: clamp(1rem, 3vw, 2.5rem);
+  bottom: clamp(1rem, 3vw, 2.3rem);
+  left: clamp(1rem, 3vw, 2.5rem);
+  z-index: 1;
+  color: #fff;
+  font-family: var(--font-display), serif;
+  font-size: clamp(1.25rem, 3vw, 2.3rem);
+  letter-spacing: 0.08em;
+  text-shadow: 0 2px 24px rgba(0, 0, 0, 0.9);
+}
+
+.nightmare-wasteland-notes {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 1.5rem 3rem;
+  padding: 1.35rem 0 0;
+  border-top: 1px solid rgba(192, 132, 252, 0.2);
+}
+
+.nightmare-wasteland-notes > p {
+  max-width: 690px;
+  margin: 0;
+  color: rgba(226, 232, 240, 0.78);
+  font-size: 0.96rem;
+  line-height: 1.65;
+}
+
+.nightmare-wasteland-counts {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 0.7rem 1.15rem;
+  color: rgba(221, 214, 254, 0.72);
+  font-size: 0.78rem;
+  letter-spacing: 0.04em;
+}
+
+.nightmare-wasteland-counts strong {
+  color: #e9d5ff;
+  font-size: 1.15rem;
+}
+
+.nightmare-matchi-section {
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(300px, 0.9fr);
+  align-items: center;
+  gap: clamp(2rem, 5vw, 5.5rem);
+  padding: clamp(1.5rem, 4vw, 3.5rem) 0;
+  border-top: 1px solid rgba(52, 211, 153, 0.22);
+  border-bottom: 1px solid rgba(52, 211, 153, 0.16);
+}
+
+.nightmare-matchi-image-wrap {
+  position: relative;
+  min-width: 0;
+  aspect-ratio: 1.2 / 1;
+  overflow: hidden;
+  background: #07140f;
+}
+
+.nightmare-matchi-image-wrap::after {
+  position: absolute;
+  inset: 0;
+  content: "";
+  background: linear-gradient(0deg, rgba(2, 12, 9, 0.78), transparent 45%);
+  pointer-events: none;
+}
+
+.nightmare-matchi-image-wrap img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 600ms ease;
+}
+
+.nightmare-matchi-section:hover .nightmare-matchi-image-wrap img {
+  transform: scale(1.025);
+}
+
+.nightmare-matchi-image-caption {
+  position: absolute;
+  bottom: 1.1rem;
+  left: 1.2rem;
+  z-index: 1;
+  color: #d1fae5;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+}
+
+.nightmare-matchi-copy {
+  max-width: 530px;
+  padding: 1rem 0;
+}
+
+.nightmare-matchi-index {
+  color: rgba(110, 231, 183, 0.8);
+}
+
+.nightmare-matchi-copy .nightmare-section-title {
+  margin-top: 0.75rem;
+  text-shadow: 0 0 28px rgba(52, 211, 153, 0.2);
+}
+
+.nightmare-matchi-copy > p:not(.nightmare-matchi-reward) {
+  margin: 1.1rem 0 0;
+  color: rgba(226, 232, 240, 0.82);
+  font-size: 1rem;
+  line-height: 1.7;
+}
+
+.nightmare-matchi-condition {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  margin-top: 1.35rem;
+  padding: 0.9rem 0 0.9rem 1rem;
+  border-left: 2px solid rgba(52, 211, 153, 0.72);
+  color: #d1fae5;
+  background: linear-gradient(90deg, rgba(52, 211, 153, 0.08), transparent);
+  font-size: 0.9rem;
+  line-height: 1.55;
+}
+
+.nightmare-matchi-condition-mark {
+  color: #6ee7b7;
+}
+
+.nightmare-matchi-reward {
+  margin: 1rem 0 0;
+  color: rgba(167, 243, 208, 0.7);
+  font-size: 0.78rem;
+  letter-spacing: 0.06em;
+}
+
+.nightmare-fearclaw-section {
+  display: grid;
+  grid-template-columns: minmax(0, 1.15fr) minmax(340px, 0.85fr);
+  align-items: stretch;
+  background: linear-gradient(115deg, rgba(32, 9, 23, 0.66), rgba(11, 8, 19, 0.94) 64%);
+  border-top: 1px solid rgba(244, 63, 94, 0.3);
+  border-bottom: 1px solid rgba(244, 63, 94, 0.2);
+}
+
+.nightmare-fearclaw-image {
+  position: relative;
+  min-height: 570px;
+  overflow: hidden;
+  background: #10070e;
+}
+
+.nightmare-fearclaw-image::after {
+  position: absolute;
+  inset: 0;
+  content: "";
+  background: linear-gradient(90deg, transparent 52%, rgba(12, 8, 17, 0.56)), linear-gradient(0deg, rgba(8, 5, 13, 0.32), transparent 40%);
+  pointer-events: none;
+}
+
+.nightmare-fearclaw-image img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  min-height: 570px;
+  object-fit: cover;
+  object-position: center;
+}
+
+.nightmare-fearclaw-copy {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: clamp(2rem, 4vw, 4.25rem);
+}
+
+.nightmare-fearclaw-index {
+  color: rgba(251, 113, 133, 0.86);
+}
+
+.nightmare-fearclaw-title {
+  margin: 0.65rem 0 0;
+  color: #fff1f2;
+  font-family: var(--font-display), serif;
+  font-size: clamp(3rem, 5vw, 5.4rem);
+  letter-spacing: 0.07em;
+  line-height: 1;
+  text-shadow: 0 0 30px rgba(244, 63, 94, 0.4);
+}
+
+.nightmare-fearclaw-description {
+  margin: 1rem 0 0;
+  color: rgba(255, 228, 230, 0.82);
+  font-size: 0.97rem;
+  line-height: 1.7;
+}
+
+.nightmare-fearclaw-phases {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.8rem;
+  margin-top: 1.7rem;
+  padding: 1.1rem 0;
+  border-top: 1px solid rgba(251, 113, 133, 0.24);
+  border-bottom: 1px solid rgba(251, 113, 133, 0.24);
+}
+
+.nightmare-fearclaw-phases > div > span {
+  color: rgba(251, 113, 133, 0.76);
+  font-size: 0.68rem;
+  letter-spacing: 0.12em;
+}
+
+.nightmare-fearclaw-phases p {
+  margin: 0.45rem 0 0;
+  color: #fff1f2;
+  font-size: 0.82rem;
+  line-height: 1.45;
+}
+
+.nightmare-fearclaw-reward {
+  margin: 1.2rem 0 0;
+  color: rgba(254, 205, 211, 0.86);
+  font-size: 0.82rem;
+  line-height: 1.55;
+}
+
+@media (max-width: 900px) {
+  .nightmare-editorial-main {
+    padding-top: 6.5rem;
+  }
+
+  .nightmare-wasteland-notes {
+    grid-template-columns: 1fr;
+  }
+
+  .nightmare-wasteland-counts {
+    justify-content: flex-start;
+  }
+
+  .nightmare-fearclaw-section {
+    grid-template-columns: minmax(0, 1fr) minmax(280px, 0.9fr);
+  }
+
+  .nightmare-fearclaw-image,
+  .nightmare-fearclaw-image img {
+    min-height: 520px;
+  }
+
+  .nightmare-fearclaw-copy {
+    padding: 2rem;
+  }
+}
+
+@media (max-width: 700px) {
+  .nightmare-editorial-main {
+    padding: 6rem 1rem 2rem;
+    gap: 4.5rem;
+  }
+
+  .nightmare-editorial-hero {
+    padding-top: 1rem;
+  }
+
+  .nightmare-editorial-title {
+    font-size: clamp(3.2rem, 15vw, 5.4rem);
+    letter-spacing: 0.07em;
+  }
+
+  .nightmare-editorial-lead {
+    font-size: 1rem;
+  }
+
+  .nightmare-entry-line {
+    align-items: flex-start;
+    text-align: left;
+    font-size: 0.72rem;
+    letter-spacing: 0.04em;
+  }
+
+  .nightmare-wasteland-panorama {
+    aspect-ratio: 1.2 / 1;
+  }
+
+  .nightmare-wasteland-panorama figcaption {
+    font-size: 1.25rem;
+    letter-spacing: 0.04em;
+  }
+
+  .nightmare-wasteland-notes {
+    gap: 1rem;
+  }
+
+  .nightmare-wasteland-counts {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.75rem;
+  }
+
+  .nightmare-matchi-section {
+    grid-template-columns: 1fr;
+    gap: 1.6rem;
+    padding: 1.5rem 0;
+  }
+
+  .nightmare-matchi-image-wrap {
+    aspect-ratio: 1.35 / 1;
+  }
+
+  .nightmare-matchi-copy {
+    padding: 0.2rem 0 0.6rem;
+  }
+
+  .nightmare-fearclaw-section {
+    grid-template-columns: 1fr;
+  }
+
+  .nightmare-fearclaw-image,
+  .nightmare-fearclaw-image img {
+    min-height: 380px;
+    max-height: 65vh;
+  }
+
+  .nightmare-fearclaw-image img {
+    object-position: center 28%;
+  }
+
+  .nightmare-fearclaw-image::after {
+    background: linear-gradient(0deg, rgba(8, 5, 13, 0.5), transparent 38%);
+  }
+
+  .nightmare-fearclaw-copy {
+    padding: 1.5rem 1.2rem 1.8rem;
+  }
+
+  .nightmare-fearclaw-title {
+    font-size: clamp(3rem, 12vw, 4.4rem);
+  }
+
+  .nightmare-fearclaw-phases {
+    gap: 0.55rem;
+  }
+
+  .nightmare-fearclaw-phases p {
+    font-size: 0.76rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .nightmare-matchi-image-wrap img {
+    transition: none;
+  }
+}
+/* Nightmare editorial typography: improve reading size across the realm page. */
+.nightmare-editorial-page .nightmare-editorial-kicker,
+.nightmare-editorial-page .nightmare-section-index {
+  font-size: 0.86rem;
+}
+
+.nightmare-editorial-page .nightmare-editorial-lead {
+  font-size: clamp(1.2rem, 2vw, 1.55rem);
+}
+
+.nightmare-editorial-page .nightmare-entry-line {
+  font-size: 1rem;
+}
+
+.nightmare-editorial-page .nightmare-wasteland-panorama figcaption {
+  font-size: clamp(1.5rem, 3.2vw, 2.5rem);
+}
+
+.nightmare-editorial-page .nightmare-wasteland-notes > p,
+.nightmare-editorial-page .nightmare-matchi-copy > p:not(.nightmare-matchi-reward),
+.nightmare-editorial-page .nightmare-fearclaw-description {
+  font-size: 1.12rem;
+}
+
+.nightmare-editorial-page .nightmare-wasteland-counts {
+  font-size: 0.92rem;
+}
+
+.nightmare-editorial-page .nightmare-wasteland-counts strong {
+  font-size: 1.3rem;
+}
+
+.nightmare-editorial-page .nightmare-matchi-image-caption {
+  font-size: 0.8rem;
+}
+
+.nightmare-editorial-page .nightmare-matchi-condition {
+  font-size: 1rem;
+}
+
+.nightmare-editorial-page .nightmare-matchi-reward,
+.nightmare-editorial-page .nightmare-fearclaw-reward {
+  font-size: 0.96rem;
+}
+
+.nightmare-editorial-page .nightmare-fearclaw-phases > div > span {
+  font-size: 0.78rem;
+}
+
+.nightmare-editorial-page .nightmare-fearclaw-phases p {
+  font-size: 0.94rem;
+}
+
+@media (max-width: 700px) {
+  .nightmare-editorial-page .nightmare-editorial-lead {
+    font-size: 1.1rem;
+  }
+
+  .nightmare-editorial-page .nightmare-entry-line {
+    font-size: 0.86rem;
+  }
+
+  .nightmare-editorial-page .nightmare-wasteland-panorama figcaption {
+    font-size: 1.45rem;
+  }
+
+  .nightmare-editorial-page .nightmare-fearclaw-phases p {
+    font-size: 0.84rem;
+  }
+}
+/* Enlarge secondary and annotation text on Nightmare. */
+.nightmare-editorial-page .nightmare-editorial-kicker,
+.nightmare-editorial-page .nightmare-section-index {
+  font-size: 1.05rem;
+}
+
+.nightmare-editorial-page .nightmare-entry-line {
+  font-size: 1.08rem;
+}
+
+.nightmare-editorial-page .nightmare-wasteland-counts {
+  font-size: 1.02rem;
+}
+
+.nightmare-editorial-page .nightmare-wasteland-counts strong {
+  font-size: 1.4rem;
+}
+
+.nightmare-editorial-page .nightmare-matchi-image-caption,
+.nightmare-editorial-page .nightmare-fearclaw-phases > div > span {
+  font-size: 0.96rem;
+}
+
+.nightmare-editorial-page .nightmare-matchi-condition {
+  font-size: 1.12rem;
+}
+
+.nightmare-editorial-page .nightmare-matchi-reward,
+.nightmare-editorial-page .nightmare-fearclaw-reward {
+  font-size: 1.06rem;
+}
+
+.nightmare-editorial-page .nightmare-fearclaw-phases p {
+  font-size: 1.04rem;
+}
+
+@media (max-width: 700px) {
+  .nightmare-editorial-page .nightmare-editorial-kicker,
+  .nightmare-editorial-page .nightmare-section-index {
+    font-size: 0.94rem;
+  }
+
+  .nightmare-editorial-page .nightmare-entry-line {
+    font-size: 0.96rem;
+  }
+
+  .nightmare-editorial-page .nightmare-wasteland-counts {
+    font-size: 0.98rem;
+  }
+
+  .nightmare-editorial-page .nightmare-fearclaw-phases p {
+    font-size: 0.9rem;
+  }
+}
+/* Match the supplied white-core, violet-magenta neon text throughout Nightmare. */
+.nightmare-editorial-page .nightmare-glow-text,
+.nightmare-editorial-page .void-distortion-glyph,
+.nightmare-editorial-page .floating-letter.is-glowing,
+.nightmare-editorial-page .nightmare-wasteland-counts,
+.nightmare-editorial-page .nightmare-wasteland-counts strong,
+.nightmare-editorial-page .nightmare-fearclaw-phases > div > span,
+.nightmare-editorial-page .nightmare-entry-line-mark,
+.nightmare-editorial-page .nightmare-matchi-condition-mark,
+.nightmare-editorial-page .lunoris-lang-code,
+.nightmare-editorial-page .lunoris-lang-option-badge,
+.nightmare-editorial-page .lunoris-lang-option-name,
+.nightmare-editorial-page .lunoris-footer-legal,
+.nightmare-editorial-page .lunoris-nav a {
+  color: #fffaff !important;
+  text-shadow:
+    0 0 2px rgba(255, 255, 255, 1),
+    0 0 7px rgba(255, 245, 255, 0.98),
+    0 0 16px rgba(244, 114, 255, 0.94),
+    0 0 32px rgba(217, 70, 239, 0.88),
+    0 0 48px rgba(168, 85, 247, 0.66) !important;
+}
+
+.nightmare-editorial-page .void-distortion-char::before,
+.nightmare-editorial-page .void-distortion-char::after {
+  display: none !important;
+}
+
+.nightmare-editorial-page .lunoris-logo-img,
+.nightmare-editorial-page .lunoris-footer-logo {
+  filter:
+    drop-shadow(0 0 3px rgba(255, 255, 255, 0.95))
+    drop-shadow(0 0 12px rgba(217, 70, 239, 0.82))
+    drop-shadow(0 0 26px rgba(168, 85, 247, 0.58));
+}
+
+/* ==========================================================================
+   MOBILE & TOUCH — Dream Levels / Retro Levels / Nightmare
+   (all three pages share `.dream-levels-page`)
+   ========================================================================== */
+
+/* Touch screens have no hover: tap leaves :hover stuck, so drop the lift/zoom. */
+@media (hover: none) {
+  .dream-levels-page .dream-level-teaser-card:hover {
+    transform: none;
+  }
+
+  .dream-levels-page .dream-level-teaser-card:hover .dream-level-teaser-image {
+    transform: none;
+  }
+
+  .impala-easter-egg-trigger:hover,
+  .retro-games-page .impala-easter-egg-trigger:hover {
+    transform: none;
+  }
+}
+
+@media (max-width: 700px) {
+  /* A blurred fixed header re-composites everything scrolling beneath it on every
+     frame; on phones a denser gradient gives the same separation for free. */
+  .dream-levels-page .lunoris-header {
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+    background: linear-gradient(
+      180deg,
+      rgba(5, 4, 12, 0.97) 0%,
+      rgba(5, 4, 12, 0.86) 70%,
+      rgba(5, 4, 12, 0) 100%
+    );
+  }
+}
+
+@media (max-width: 700px), (hover: none) {
+  /* Floating letters in running text read as jumbled on a small screen (and keep
+     hundreds of animations alive); headings keep the effect. */
+  .dream-levels-page p .floating-letter,
+  .dream-levels-page .dream-levels-cards-eyebrow .floating-letter,
+  .dream-levels-page .lunoris-header .floating-letter,
+  .dream-levels-page .lunoris-footer .floating-letter {
+    animation: none !important;
+  }
+}
+
+@media (max-width: 700px) {
+  /* Retro: the fixed easter-egg pill covered content; keep only the car icon. */
+  .impala-easter-egg-trigger {
+    right: 0.85rem;
+    bottom: calc(0.85rem + env(safe-area-inset-bottom, 0px));
+    padding: 0.45rem;
+    gap: 0;
+    opacity: 0.85;
+  }
+
+  .impala-egg-coin-tag,
+  .impala-egg-label {
+    display: none;
+  }
+
+  /* Retro: the absolutely-placed caption collided with the joystick and buttons. */
+  
+
+  
+
+  /* Nightmare: the title touched both screen edges; captions covered the art. */
+  .nightmare-editorial-page .nightmare-editorial-title {
+    font-size: clamp(2.5rem, 12.5vw, 5.4rem);
+    letter-spacing: 0.05em;
+  }
+
+  .nightmare-editorial-page .nightmare-wasteland-panorama figcaption {
+    font-size: 1.05rem;
+  }
+
+  .nightmare-editorial-page .nightmare-matchi-image-caption {
+    right: 1rem;
+    font-size: 0.68rem;
+  }
+}
+
+/* Dream Levels: text-only riddle teaser above the route map (no image). */
+.dream-levels-entry.is-riddle {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: min(100%, 860px);
+  gap: 0;
+  padding: clamp(1.8rem, 4vw, 3rem) clamp(1.2rem, 4vw, 3.5rem);
+  text-align: center;
+}
+
+.dream-levels-entry.is-riddle .dream-levels-entry-description {
+  max-width: 640px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.dream-levels-entry-cue {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.35rem;
+  margin: 1.4rem 0 0;
+  color: rgba(165, 243, 252, 0.82);
+  font-size: 0.74rem;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+}
+
+.dream-levels-entry-cue-arrow {
+  font-size: 1.1rem;
+  animation: dreamRiddleCue 1.8s ease-in-out infinite;
+}
+
+@keyframes dreamRiddleCue {
+  0%, 100% { transform: translateY(0); opacity: 0.55; }
+  50% { transform: translateY(5px); opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dream-levels-entry-cue-arrow {
+    animation: none;
+  }
+}
+
+/* Dream Levels: larger small print (eyebrows, body copy, cue). Desktop also runs
+   under `html { zoom: 0.8 }`, so the old sizes rendered at ~0.6–0.8rem. */
+.dream-levels-cards-eyebrow,
+.dream-levels-entry-eyebrow {
+  font-size: 0.95rem;
+}
+
+.dream-levels-cards-subtitle {
+  font-size: clamp(1.15rem, 1.9vw, 1.55rem);
+}
+
+.dream-levels-cards-description {
+  font-size: clamp(1.08rem, 1.3vw, 1.25rem);
+}
+
+.dream-levels-entry-description {
+  font-size: clamp(1.1rem, 1.5vw, 1.3rem);
+}
+
+.dream-levels-entry-cue {
+  font-size: 0.9rem;
+}
+
+.dream-level-teaser-description {
+  font-size: clamp(1.08rem, 1.4vw, 1.3rem);
+}
+
+.dream-level-teaser-hook {
+  font-size: clamp(1.12rem, 1.5vw, 1.4rem);
+}
+
+@media (max-width: 700px) {
+  .dream-levels-cards-eyebrow,
+  .dream-levels-entry-eyebrow {
+    font-size: 0.82rem;
+  }
+
+  .dream-levels-cards-description,
+  .dream-levels-entry-description,
+  .dream-level-teaser-description {
+    font-size: 1.02rem;
+  }
+
+  .dream-level-teaser-hook {
+    font-size: 1.06rem;
+  }
+
+  .dream-levels-entry-cue {
+    font-size: 0.8rem;
+  }
+}
+
+/* Retro Levels & Nightmare: larger small print, same pass as Dream Levels above.
+   Selectors mirror the rules they override so these later declarations win. */
+
+.nightmare-editorial-page .nightmare-editorial-kicker,
+.nightmare-editorial-page .nightmare-section-index {
+  font-size: 1.15rem;
+}
+
+.nightmare-editorial-page .nightmare-wasteland-counts {
+  font-size: 1.1rem;
+}
+
+.nightmare-editorial-page .nightmare-matchi-image-caption {
+  font-size: 1.02rem;
+}
+
+.nightmare-editorial-page .nightmare-matchi-reward,
+.nightmare-editorial-page .nightmare-fearclaw-reward {
+  font-size: 1.14rem;
+}
+
+.nightmare-editorial-page .nightmare-fearclaw-description {
+  font-size: 1.12rem;
+}
+
+.nightmare-editorial-page .nightmare-fearclaw-phases p {
+  font-size: 1.12rem;
+}
+
+@media (max-width: 700px) {
+  
+
+  
+
+  
+
+  
+
+  .nightmare-editorial-page .nightmare-editorial-kicker,
+  .nightmare-editorial-page .nightmare-section-index {
+    font-size: 1rem;
+  }
+
+  .nightmare-editorial-page .nightmare-entry-line {
+    font-size: 1.02rem;
+  }
+
+  .nightmare-editorial-page .nightmare-wasteland-counts {
+    font-size: 1.04rem;
+  }
+
+  .nightmare-editorial-page .nightmare-matchi-image-caption {
+    font-size: 0.76rem;
+  }
+
+  .nightmare-editorial-page .nightmare-fearclaw-description {
+    font-size: 1.04rem;
+  }
+
+  .nightmare-editorial-page .nightmare-fearclaw-phases p {
+    font-size: 0.98rem;
+  }
+}
+
+/* ==========================================================================
+   DREAM LEVELS: STATIONARY-OBSERVER JOURNEY STAGE
+   First shows the "Which door would you never open?" plaque at (50%, 50%),
+   then travels along the winding Dream Route while keeping the observer
+   anchored in one fixed position on screen.
+   ========================================================================== */
+
+.lunoris-page.dream-levels-journey-page {
+  overflow-x: clip;
+}
+
+.dream-levels-journey-main {
+  padding: 0 !important;
+  animation: none !important;
+}
+
+.dream-levels-journey-scroll-track {
+  position: relative;
+  width: 100%;
+  height: calc(560vh * var(--vu, 1));
+}
+
+.dream-levels-journey-sticky-viewport {
+  position: sticky;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: calc(100vh * var(--vu, 1));
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  perspective: 1200px;
+}
+
+/* Radial depth rings that expand past the stationary observer */
+.dream-levels-journey-tunnel {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 0;
+}
+
+.dream-levels-tunnel-ring {
+  position: absolute;
+  width: min(76vw, 880px);
+  height: min(52vh, 540px);
+  border-radius: 50%;
+  border: 1px solid rgba(34, 211, 238, 0.24);
+  box-shadow:
+    0 0 42px rgba(34, 211, 238, 0.12),
+    inset 0 0 42px rgba(167, 139, 250, 0.12);
+  will-change: transform, opacity;
+}
+
+.dream-levels-tunnel-ring.is-ring-1 {
+  border-color: rgba(167, 139, 250, 0.26);
+}
+
+.dream-levels-tunnel-ring.is-ring-2 {
+  border-color: rgba(245, 196, 81, 0.22);
+}
+
+.dream-levels-journey-camera-stage {
+  position: relative;
+  width: min(100%, 1120px);
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4.2rem 1.25rem 1.5rem;
+  z-index: 2;
+}
+
+.dream-levels-journey-stop {
+  position: absolute;
+  width: min(92vw, 1020px);
+  margin: 0 auto;
+  will-change: transform, opacity, filter;
+  transform-origin: 50% 50%;
+}
+
+.dream-levels-journey-stop.dream-levels-entry.is-riddle {
+  width: min(92vw, 860px);
+  box-shadow:
+    0 24px 68px rgba(0, 0, 0, 0.52),
+    0 0 44px rgba(34, 211, 238, 0.14),
+    inset 0 0 38px rgba(167, 139, 250, 0.08);
+}
+
+.dream-levels-entry-cue-btn {
+  appearance: none;
+  background: rgba(34, 211, 238, 0.08);
+  border: 1px solid rgba(34, 211, 238, 0.34);
+  border-radius: 999px;
+  padding: 0.6rem 1.35rem 0.45rem;
+  cursor: pointer;
+  transition:
+    background 200ms ease,
+    border-color 200ms ease,
+    transform 200ms ease,
+    box-shadow 200ms ease;
+}
+
+.dream-levels-entry-cue-btn:hover {
+  background: rgba(34, 211, 238, 0.16);
+  border-color: rgba(34, 211, 238, 0.72);
+  box-shadow: 0 0 24px rgba(34, 211, 238, 0.28);
+  transform: translateY(-2px);
+}
+
+.dream-levels-journey-stop.is-journey-heading-card {
+  width: min(92vw, 960px);
+  padding: clamp(1.8rem, 3.6vw, 2.8rem) clamp(1.4rem, 3.8vw, 3.2rem);
+  border: 1px solid rgba(34, 211, 238, 0.28);
+  border-radius: 24px;
+  background:
+    radial-gradient(ellipse at 50% 20%, rgba(34, 211, 238, 0.14), transparent 62%),
+    linear-gradient(135deg, rgba(16, 14, 36, 0.92), rgba(9, 8, 22, 0.94));
+  box-shadow:
+    0 24px 64px rgba(0, 0, 0, 0.48),
+    inset 0 0 36px rgba(34, 211, 238, 0.06);
+}
+
+.dream-levels-journey-stop .dream-level-teaser-card {
+  min-height: clamp(360px, calc(54vh * var(--vu, 1)), 520px);
+}
+
+.dream-levels-journey-stop.is-journey-finale {
+  width: min(92vw, 860px);
+  padding: clamp(2rem, 4vw, 3rem);
+  border: 1px solid rgba(245, 196, 81, 0.35);
+  border-radius: 24px;
+  background:
+    radial-gradient(ellipse at 50% 30%, rgba(245, 196, 81, 0.14), transparent 65%),
+    linear-gradient(135deg, rgba(18, 14, 34, 0.92), rgba(9, 8, 20, 0.94));
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.5);
+}
+
+.dream-levels-journey-route-slot {
+  position: absolute;
+  z-index: 1;
+  width: min(64vw, 460px);
+  height: clamp(180px, 24vh, 260px);
+  pointer-events: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  will-change: transform, opacity;
+}
+
+.dream-levels-journey-route-slot .dream-level-route {
+  width: 100%;
+  height: 100%;
+}
+
+@keyframes dreamRouteDashFlow {
+  to {
+    stroke-dashoffset: -32;
+  }
+}
+
+.dream-levels-journey-route-slot .dream-level-route-dashes {
+  animation: dreamRouteDashFlow 1.4s linear infinite;
+}
+
+/* Stationary observer compass rail on the right edge */
+.dream-levels-journey-compass {
+  position: absolute;
+  right: clamp(0.85rem, 2.2vw, 2rem);
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 30;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.05rem;
+  padding: 0.85rem 0.5rem;
+  border-radius: 999px;
+  background: rgba(10, 8, 24, 0.68);
+  border: 1px solid rgba(167, 139, 250, 0.28);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+}
+
+.dream-levels-journey-compass-track {
+  position: absolute;
+  top: 1.35rem;
+  bottom: 1.35rem;
+  left: 50%;
+  width: 2px;
+  transform: translateX(-50%);
+  background: rgba(255, 255, 255, 0.14);
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.dream-levels-journey-compass-fill {
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(180deg, #22d3ee, #a78bfa, #f5c451);
+  transform-origin: 50% 0%;
+  transform: scaleY(0);
+}
+
+.dream-levels-journey-compass-dot {
+  position: relative;
+  z-index: 1;
+  width: 18px;
+  height: 18px;
+  padding: 0;
+  border-radius: 50%;
+  border: 1.5px solid rgba(226, 232, 240, 0.42);
+  background: #0d0a1c;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  transition:
+    transform 200ms ease,
+    border-color 200ms ease,
+    box-shadow 200ms ease;
+}
+
+.dream-levels-journey-compass-core {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: rgba(226, 232, 240, 0.48);
+  transition: transform 200ms ease, background 200ms ease;
+}
+
+.dream-levels-journey-compass-dot.is-passed {
+  border-color: rgba(34, 211, 238, 0.75);
+}
+
+.dream-levels-journey-compass-dot.is-passed .dream-levels-journey-compass-core {
+  background: #22d3ee;
+}
+
+.dream-levels-journey-compass-dot.is-active {
+  border-color: #22d3ee;
+  transform: scale(1.28);
+  box-shadow: 0 0 14px rgba(34, 211, 238, 0.78);
+}
+
+.dream-levels-journey-compass-dot.is-active .dream-levels-journey-compass-core {
+  background: #ffffff;
+  transform: scale(1.25);
+}
+
+@media (max-width: 700px) {
+  .dream-levels-journey-compass {
+    right: 0.45rem;
+    gap: 0.75rem;
+    padding: 0.65rem 0.35rem;
+  }
+
+  .dream-levels-journey-camera-stage {
+    padding: 4.4rem 0.75rem 1.25rem;
+  }
+
+  .dream-levels-journey-stop {
+    width: calc(100vw - 2.6rem);
+  }
+}
+
+/* Dream Levels journey: scroll smoothness + light visual polish. */
+.dream-levels-journey-stop {
+  will-change: transform, opacity;
+}
+
+/* `100dvh` follows the mobile browser bars, so the camera never hides under them. */
+.dream-levels-journey-sticky-viewport {
+  height: calc(100vh * var(--vu, 1));
+  height: calc(100dvh * var(--vu, 1));
+}
+
+/* Soft spotlight at the observer's position, behind the travelling stops. */
+.dream-levels-journey-sticky-viewport::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse 46% 38% at 50% 52%, rgba(34, 211, 238, 0.1), transparent 70%),
+    radial-gradient(ellipse 70% 60% at 50% 55%, rgba(167, 139, 250, 0.08), transparent 75%);
+}
+
+/* The stop at the observer gets its accent glow; the others stay calmer. */
+.dream-levels-journey-stop .dream-level-teaser-card {
+  transition: border-color 320ms ease, box-shadow 320ms ease;
+}
+
+.dream-levels-journey-stop.is-current .dream-level-teaser-card {
+  border-color: var(--dl-accent);
+  box-shadow:
+    0 26px 70px rgba(0, 0, 0, 0.5),
+    0 0 54px color-mix(in srgb, var(--dl-glow) 90%, transparent);
+}
+
+.dream-levels-journey-stop.is-current .dream-level-map-node {
+  box-shadow: 0 0 0 8px rgba(10, 8, 22, 0.72), 0 0 38px var(--dl-glow);
+}
+
+/* Compass: name the current stop next to its dot. */
+.dream-levels-journey-compass-dot::after {
+  content: attr(data-label);
+  position: absolute;
+  top: 50%;
+  right: calc(100% + 0.85rem);
+  padding: 0.28rem 0.7rem;
+  border: 1px solid rgba(34, 211, 238, 0.32);
+  border-radius: 999px;
+  background: rgba(10, 8, 24, 0.82);
+  color: #e0f2fe;
+  font-size: 0.74rem;
+  letter-spacing: 0.08em;
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  transform: translate(6px, -50%);
+  transition: opacity 220ms ease, transform 220ms ease;
+}
+
+.dream-levels-journey-compass-dot.is-active::after,
+.dream-levels-journey-compass-dot:hover::after,
+.dream-levels-journey-compass-dot:focus-visible::after {
+  opacity: 1;
+  transform: translate(0, -50%);
+}
+
+@media (max-width: 700px), (hover: none) {
+  .dream-levels-journey-compass-dot::after {
+    display: none;
+  }
+}
+
+/* Large-scale cards for the Dream Levels stationary-observer journey */
+.dream-levels-tunnel-ring {
+  width: min(calc(90vw * var(--vu, 1)), 1560px);
+  height: min(calc(76vh * var(--vu, 1)), 900px);
+}
+
+.dream-levels-journey-camera-stage {
+  width: min(100%, 1780px);
+  padding: 4.4rem 2.5rem 1.5rem;
+}
+
+.dream-levels-journey-stop {
+  --map-node: clamp(96px, 7.8vw, 132px);
+  width: min(calc(88vw * var(--vu, 1)), 1580px);
+}
+
+.dream-levels-journey-stop.dream-levels-entry.is-riddle {
+  width: min(calc(86vw * var(--vu, 1)), 1380px);
+  min-height: clamp(440px, calc(62vh * var(--vu, 1)), 680px);
+  justify-content: center;
+  padding: clamp(2.8rem, 5vw, 4.6rem) clamp(2rem, 5vw, 5.2rem);
+  border-radius: 28px;
+}
+
+.dream-levels-journey-stop.dream-levels-entry.is-riddle .dream-levels-entry-title {
+  font-size: clamp(2.9rem, 5.4vw, 5rem);
+}
+
+.dream-levels-journey-stop.dream-levels-entry.is-riddle .dream-levels-entry-description {
+  max-width: 920px;
+  font-size: clamp(1.26rem, 1.8vw, 1.6rem);
+}
+
+.dream-levels-journey-stop.is-journey-heading-card {
+  width: min(calc(86vw * var(--vu, 1)), 1420px);
+  min-height: clamp(440px, calc(62vh * var(--vu, 1)), 680px);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: clamp(2.8rem, 5vw, 4.6rem) clamp(2rem, 5vw, 5.2rem);
+  border-radius: 28px;
+}
+
+.dream-levels-journey-stop.is-journey-heading-card .dream-levels-cards-description {
+  max-width: 940px;
+  font-size: clamp(1.25rem, 1.7vw, 1.55rem);
+}
+
+.dream-levels-journey-stop .dream-level-teaser-card {
+  min-height: clamp(560px, calc(76vh * var(--vu, 1)), 860px);
+  border-radius: 28px;
+}
+
+.dream-levels-journey-stop .dream-level-teaser-content {
+  padding: clamp(2.2rem, 3.8vw, 3.8rem);
+}
+
+.dream-levels-journey-stop .dream-level-teaser-title {
+  font-size: clamp(2.8rem, 4.6vw, 4.8rem);
+}
+
+.dream-levels-journey-stop .dream-level-teaser-description {
+  max-width: 60rem;
+  font-size: clamp(1.25rem, 1.7vw, 1.6rem);
+}
+
+.dream-levels-journey-stop .dream-level-teaser-hook {
+  max-width: 60rem;
+  font-size: clamp(1.3rem, 1.8vw, 1.7rem);
+}
+
+.dream-levels-journey-stop.is-journey-finale {
+  width: min(calc(84vw * var(--vu, 1)), 1320px);
+  min-height: clamp(400px, calc(56vh * var(--vu, 1)), 600px);
+  justify-content: center;
+  padding: clamp(2.8rem, 5vw, 4.6rem);
+  border-radius: 28px;
+}
+
+.dream-levels-journey-stop.is-journey-finale .dream-level-map-finale-node {
+  width: 108px;
+  height: 108px;
+  font-size: 2.9rem;
+}
+
+.dream-levels-journey-route-slot {
+  width: min(calc(68vw * var(--vu, 1)), 680px);
+  height: clamp(240px, calc(32vh * var(--vu, 1)), 380px);
+}
+
+@media (max-width: 700px) {
+  /* Keep the compass rail clear of the cards: narrower stops, centred a little
+     to the left of the rail. */
+  .dream-levels-journey-camera-stage {
+    padding-right: 2.9rem;
+    padding-left: 0.5rem;
+  }
+
+  .dream-levels-journey-stop {
+    width: calc(100vw - 4.2rem);
+  }
+
+  .dream-levels-journey-stop.dream-levels-entry.is-riddle,
+  .dream-levels-journey-stop.is-journey-heading-card,
+  .dream-levels-journey-stop.is-journey-finale {
+    width: calc(100vw - 4.2rem);
+    min-height: auto;
+  }
+
+  .dream-levels-journey-stop .dream-level-teaser-card {
+    min-height: clamp(380px, 68vh, 520px);
+  }
+}
+
+
+/* ==========================================================================
+   RETRO LEVELS — JOHN FORD'S BASEMENT ARCADE
+   A row of CSS-drawn cabinets (one per retro level + switched-off "???" ones)
+   in a wood-panelled basement, and an "attract mode" panel for the selected
+   level. Levels come from src/data/retroLevels.ts. Infinite animations are
+   transform/opacity only and run while the hall carries `is-in-view`.
+   ========================================================================== */
+
+/* Warm, dim basement instead of the synthwave grid on this page. */
+.retro-games-page-backdrop.retro-arcade-backdrop {
+  background:
+    radial-gradient(ellipse 80% 45% at 50% 0%, rgba(251, 191, 36, 0.1), transparent 70%),
+    radial-gradient(ellipse 60% 40% at 50% 100%, rgba(244, 114, 182, 0.06), transparent 70%),
+    linear-gradient(180deg, #130d10 0%, #0e0a12 50%, #08070c 100%);
+}
+
+.retro-games-page-backdrop.retro-arcade-backdrop::after {
+  display: none;
+}
+
+.retro-arcade-main {
+  position: relative;
+  z-index: 2;
+  flex: 1;
+  padding: clamp(7rem, 12vh, 8.5rem) 0 clamp(3rem, 6vw, 5rem);
+}
+
+/* ---------- Intro ---------- */
+.retro-arcade-intro {
+  width: min(calc(100% - 2rem), 860px);
+  margin: 0 auto;
+  text-align: center;
+}
+
+.retro-arcade-kicker {
+  display: block;
+  margin-bottom: 0.8rem;
+  font-size: clamp(0.92rem, 1.2vw, 1.12rem);
+  letter-spacing: 0.2em;
+}
+
+.retro-arcade-title {
+  margin: 0;
+  font-family: var(--font-display), serif;
+  font-size: clamp(2.8rem, 7vw, 6.2rem);
+  letter-spacing: 0.08em;
+  line-height: 1;
+}
+
+.retro-arcade-subtitle {
+  max-width: 640px;
+  margin: 1.1rem auto 0;
+  color: rgba(254, 243, 199, 0.86);
+  font-family: var(--font-display), serif;
+  font-size: clamp(1.1rem, 1.5vw, 1.35rem);
+  line-height: 1.6;
+}
+
+/* ---------- The hall: wood-panel wall, lamps, carpet ---------- */
+.retro-arcade-hall {
+  position: relative;
+  isolation: isolate;
+  width: min(calc(100% - 2rem), 1280px);
+  margin: clamp(2.2rem, 4vw, 3.4rem) auto 0;
+  padding: clamp(3.2rem, 5vw, 4.6rem) 0 clamp(1.6rem, 3vw, 2.4rem);
+  overflow: hidden;
+  border: 1px solid rgba(251, 191, 36, 0.16);
+  border-radius: 24px;
+  background:
+    linear-gradient(180deg, rgba(8, 6, 10, 0.15) 0%, rgba(8, 6, 10, 0.6) 64%, transparent 64%),
+    repeating-linear-gradient(90deg, #2c1c15 0 58px, #1c120d 58px 61px, #33211a 61px 119px, #1c120d 119px 122px);
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.55), inset 0 0 80px rgba(0, 0, 0, 0.55);
+}
+
+/* Carpet + baseboard along the bottom third. */
+.retro-arcade-hall::before {
+  content: "";
+  position: absolute;
+  inset: auto 0 0;
+  z-index: -1;
+  height: 36%;
+  border-top: 6px solid #160e0b;
+  background:
+    radial-gradient(circle at 25% 25%, rgba(244, 114, 182, 0.09) 0 2px, transparent 3px) 0 0 / 30px 30px,
+    radial-gradient(circle at 75% 75%, rgba(56, 189, 248, 0.08) 0 2px, transparent 3px) 0 0 / 30px 30px,
+    linear-gradient(180deg, #1a1222, #0c0912);
+}
+
+/* Soft vignette so the room falls into darkness at the edges. */
+.retro-arcade-hall::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background: radial-gradient(ellipse 75% 85% at 50% 45%, transparent 55%, rgba(5, 3, 8, 0.75));
+}
+
+.retro-arcade-lamps {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+}
+
+.retro-arcade-lamps span {
+  position: absolute;
+  top: 0;
+  width: min(36vw, 420px);
+  height: 92%;
+  transform: translateX(-50%);
+  background: radial-gradient(ellipse 50% 62% at 50% 0%, rgba(255, 214, 140, 0.2), transparent 72%);
+}
+
+.retro-arcade-lamps span::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 50%;
+  width: 46px;
+  height: 14px;
+  transform: translateX(-50%);
+  border-radius: 0 0 24px 24px;
+  background: linear-gradient(180deg, #3a2a20, #1b120d);
+  box-shadow: 0 6px 18px rgba(255, 214, 140, 0.55);
+}
+
+.retro-arcade-lamps span:nth-child(1) { left: 18%; }
+.retro-arcade-lamps span:nth-child(2) { left: 50%; }
+.retro-arcade-lamps span:nth-child(3) { left: 82%; }
+
+/* ---------- Row of cabinets ---------- */
+.retro-arcade-row-scroller {
+  position: relative;
+  z-index: 2;
+}
+
+.retro-arcade-row {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: flex-end;
+  gap: clamp(1.6rem, 2.8vw, 2.8rem) clamp(1.25rem, 2.5vw, 2.5rem);
+  padding: 2.9rem clamp(1rem, 3vw, 2.2rem) 2.4rem;
+}
+
+.retro-arcade-cabinet {
+  --cab-w: clamp(192px, 16.5vw, 236px);
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: var(--cab-w);
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+  outline: none;
+  -webkit-tap-highlight-color: transparent;
+  transition:
+    transform 340ms cubic-bezier(0.22, 1, 0.36, 1),
+    filter 340ms ease;
+}
+
+/* Complete upright cabinet chassis */
+.retro-arcade-cabinet-chassis {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  width: 100%;
+  filter: drop-shadow(0 18px 26px rgba(3, 2, 7, 0.78));
+}
+
+/* Wooden side-panel wings with extruded T-molding rubber trim */
+.retro-arcade-cabinet-wing {
+  position: absolute;
+  top: 4px;
+  bottom: 8px;
+  width: 10px;
+  z-index: 3;
+  pointer-events: none;
+  background:
+    linear-gradient(180deg,
+      #231829 0%,
+      #160f1b 22%,
+      #271b30 48%,
+      #140d19 56%,
+      #1c1322 100%);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.12),
+    0 4px 10px rgba(0, 0, 0, 0.55);
+}
+
+.retro-arcade-cabinet-wing.is-left {
+  left: 0;
+  border-radius: 5px 2px 2px 3px;
+  border-left: 3px solid color-mix(in srgb, var(--cab-accent) 78%, #2a1d33);
+  border-right: 1px solid rgba(0, 0, 0, 0.75);
+  clip-path: polygon(
+    0 0,
+    100% 2%,
+    100% 19%,
+    78% 23%,
+    78% 55%,
+    100% 59%,
+    100% 68%,
+    84% 70%,
+    84% 100%,
+    20% 100%,
+    20% 69%,
+    0 66%,
+    0 57%,
+    16% 53%,
+    16% 22%,
+    0 18%
+  );
+}
+
+.retro-arcade-cabinet-wing.is-right {
+  right: 0;
+  border-radius: 2px 5px 3px 2px;
+  border-right: 3px solid color-mix(in srgb, var(--cab-accent) 78%, #2a1d33);
+  border-left: 1px solid rgba(0, 0, 0, 0.75);
+  clip-path: polygon(
+    0 2%,
+    100% 0,
+    100% 18%,
+    84% 22%,
+    84% 53%,
+    100% 57%,
+    100% 66%,
+    80% 69%,
+    80% 100%,
+    16% 100%,
+    16% 70%,
+    0 68%,
+    0 59%,
+    22% 55%,
+    22% 23%,
+    0 19%
+  );
+}
+
+/* Overhanging marquee hood */
+.retro-arcade-cabinet-hood {
+  position: relative;
+  z-index: 4;
+  margin: 0 3px;
+  padding: 5px 6px 6px;
+  border-radius: 6px 6px 2px 2px;
+  background:
+    linear-gradient(180deg, #32283c 0%, #17121e 35%, #0c0910 100%);
+  border-top: 1px solid rgba(255, 255, 255, 0.18);
+  border-bottom: 3px solid #07050a;
+  box-shadow:
+    0 6px 14px rgba(0, 0, 0, 0.65),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+/* Backlit acrylic marquee sign inside aluminum retainer frame */
+.retro-arcade-cabinet-marquee {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 48px;
+  overflow: hidden;
+  border-radius: 3px;
+  border: 2px solid #0e0b13;
+  background:
+    radial-gradient(ellipse 78% 95% at 50% 48%,
+      #fffef5 0%,
+      color-mix(in srgb, var(--cab-accent) 42%, #fff6d6) 44%,
+      color-mix(in srgb, var(--cab-accent) 88%, #2a1026) 84%,
+      color-mix(in srgb, var(--cab-accent) 55%, #110814) 100%);
+  box-shadow:
+    0 0 22px color-mix(in srgb, var(--cab-glow) 75%, transparent),
+    inset 0 0 12px rgba(18, 8, 22, 0.55),
+    inset 0 2px 0 rgba(255, 255, 255, 0.45),
+    inset 0 -2px 0 rgba(0, 0, 0, 0.45);
+}
+
+/* Vintage silkscreened acrylic marquee graphic overlay per unit */
+.retro-arcade-cabinet-marquee-art {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.34;
+  background:
+    repeating-linear-gradient(
+      90deg,
+      rgba(20, 10, 26, 0.36) 0 4px,
+      transparent 4px 8px
+    ) 0 100% / 100% 5px no-repeat,
+    linear-gradient(
+      115deg,
+      rgba(255, 255, 255, 0.38) 0%,
+      transparent 34%,
+      transparent 68%,
+      rgba(0, 0, 0, 0.28) 100%
+    );
+}
+
+.is-unit-02 .retro-arcade-cabinet-marquee-art {
+  background:
+    radial-gradient(circle at 14% 50%, rgba(180, 52, 8, 0.38) 0 9px, transparent 10px),
+    radial-gradient(circle at 86% 50%, rgba(180, 52, 8, 0.38) 0 9px, transparent 10px),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.35), transparent 45%);
+}
+
+/* 4 corner Phillips retainer screws on the marquee frame */
+.retro-arcade-cabinet-screw {
+  position: absolute;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: #221c29;
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.75), 0 1px 0 rgba(255, 255, 255, 0.35);
+}
+.retro-arcade-cabinet-screw.is-tl { top: 3px; left: 4px; }
+.retro-arcade-cabinet-screw.is-tr { top: 3px; right: 4px; }
+.retro-arcade-cabinet-screw.is-bl { bottom: 3px; left: 4px; }
+.retro-arcade-cabinet-screw.is-br { bottom: 3px; right: 4px; }
+
+.retro-arcade-cabinet-marquee-title {
+  position: relative;
+  z-index: 1;
+  color: #160a1d;
+  font-family: var(--font-display), serif;
+  font-size: 0.9rem;
+  font-weight: 800;
+  letter-spacing: 0.15em;
+  line-height: 1.05;
+  text-transform: uppercase;
+  text-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.65),
+    0 0 10px rgba(255, 250, 220, 0.55);
+  white-space: nowrap;
+}
+
+.retro-arcade-cabinet-marquee-sub {
+  position: relative;
+  z-index: 1;
+  margin-top: 2px;
+  color: rgba(24, 11, 31, 0.76);
+  font-family: ui-monospace, "SFMono-Regular", Consolas, monospace;
+  font-size: 0.46rem;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  line-height: 1;
+}
+
+/* Recessed stereo speaker louver grille beneath marquee hood */
+.retro-arcade-cabinet-speakers {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin: 0 9px;
+  height: 18px;
+  padding: 0 12px;
+  background: linear-gradient(180deg, #09070d 0%, #181220 65%, #110d17 100%);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  box-shadow: inset 0 4px 6px rgba(0, 0, 0, 0.85);
+}
+
+.retro-arcade-cabinet-speaker-grille {
+  flex: 1;
+  height: 10px;
+  background:
+    repeating-linear-gradient(
+      90deg,
+      #050408 0 3px,
+      #221a2d 3px 5px
+    );
+  border-radius: 1px;
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.9);
+  opacity: 0.85;
+}
+
+.retro-arcade-cabinet-speaker-badge {
+  padding: 1px 4px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 2px;
+  background: #0d0a12;
+  color: rgba(226, 232, 240, 0.55);
+  font-family: ui-monospace, "SFMono-Regular", Consolas, monospace;
+  font-size: 0.42rem;
+  letter-spacing: 0.12em;
+}
+
+/* Deep recessed CRT monitor cavity */
+.retro-arcade-cabinet-well {
+  position: relative;
+  z-index: 1;
+  margin: 0 7px;
+  padding: 7px 10px 8px;
+  background:
+    radial-gradient(circle at 50% 50%, color-mix(in srgb, var(--cab-glow) 28%, transparent), transparent 72%),
+    linear-gradient(90deg, #09060d 0%, #171120 12%, #120d19 88%, #09060d 100%);
+  box-shadow:
+    inset 0 8px 14px rgba(0, 0, 0, 0.85),
+    inset 0 -6px 10px rgba(0, 0, 0, 0.8);
+}
+
+/* Molded dark charcoal ribbed plastic CRT bezel shroud */
+.retro-arcade-cabinet-bezel {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  padding: 9px 9px 6px;
+  border-radius: 6px;
+  background:
+    repeating-linear-gradient(
+      0deg,
+      rgba(255, 255, 255, 0.018) 0 2px,
+      rgba(0, 0, 0, 0.18) 2px 4px
+    ),
+    linear-gradient(180deg, #1d1826 0%, #100d16 52%, #181320 100%);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow:
+    inset 0 2px 5px rgba(0, 0, 0, 0.9),
+    0 2px 6px rgba(0, 0, 0, 0.7);
+}
+
+.retro-arcade-cabinet-bezel-screw {
+  position: absolute;
+  width: 3.5px;
+  height: 3.5px;
+  border-radius: 50%;
+  background: #08060c;
+  box-shadow: 0 0.5px 0 rgba(255, 255, 255, 0.16);
+}
+.retro-arcade-cabinet-bezel-screw.is-tl { top: 4px; left: 4px; }
+.retro-arcade-cabinet-bezel-screw.is-tr { top: 4px; right: 4px; }
+.retro-arcade-cabinet-bezel-screw.is-bl { bottom: 4px; left: 4px; }
+.retro-arcade-cabinet-bezel-screw.is-br { bottom: 4px; right: 4px; }
+
+/* Curved 4:3 CRT glass tube */
+.retro-arcade-cabinet-screen {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  overflow: hidden;
+  border-radius: 11px / 9px;
+  border: 3px solid #050408;
+  background: #050409;
+  box-shadow:
+    inset 0 0 18px rgba(0, 0, 0, 0.85),
+    0 0 0 1px rgba(255, 255, 255, 0.07),
+    0 0 18px color-mix(in srgb, var(--cab-glow) 45%, transparent);
+}
+
+.retro-arcade-cabinet-screen img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  filter: contrast(1.06) saturate(1.08);
+}
+
+/* Faintly visible ghost image on a known cabinet that is powered down for repair */
+.retro-arcade-cabinet-screen img.retro-arcade-cabinet-ghost-poster {
+  opacity: 0.18;
+  filter: grayscale(0.65) contrast(1.2) brightness(0.55);
+}
+
+/* Diegetic arcade attract-mode score bar inside the CRT */
+.retro-arcade-cabinet-crt-hud {
+  position: absolute;
+  left: 6px;
+  right: 6px;
+  bottom: 5px;
+  z-index: 2;
+  display: flex;
+  justify-content: space-between;
+  padding: 2px 5px;
+  border-radius: 2px;
+  background: rgba(6, 4, 12, 0.72);
+  color: #fef08a;
+  font-family: ui-monospace, "SFMono-Regular", Consolas, monospace;
+  font-size: 0.44rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-shadow: 0 0 4px rgba(250, 204, 21, 0.65);
+  pointer-events: none;
+}
+
+/* Curved CRT phosphor scanlines, barrel vignette & glass specular reflection */
+.retro-arcade-cabinet-glass {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  pointer-events: none;
+  background:
+    radial-gradient(circle at 26% 22%, rgba(255, 255, 255, 0.18) 0%, rgba(255, 255, 255, 0.04) 26%, transparent 52%),
+    linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, transparent 38%, rgba(0, 0, 0, 0.35) 100%),
+    repeating-linear-gradient(
+      180deg,
+      transparent 0 2px,
+      rgba(4, 3, 8, 0.32) 2px 3px
+    ),
+    radial-gradient(ellipse at 50% 50%, transparent 62%, rgba(2, 1, 5, 0.65) 100%);
+}
+
+/* Unpowered smoked phosphor CRT on mystery / under-repair cabinets */
+.retro-arcade-cabinet-static {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(ellipse at 50% 45%, #1d1a26 0%, #100e16 68%, #07060b 100%);
+}
+
+.retro-arcade-cabinet-off-line {
+  position: absolute;
+  left: 14%;
+  right: 14%;
+  top: 50%;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(148, 163, 184, 0.24), transparent);
+  box-shadow: 0 0 6px rgba(148, 163, 184, 0.2);
+}
+
+.retro-arcade-cabinet-bezel-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 4px;
+  padding: 0 3px;
+}
+
+.retro-arcade-cabinet-bezel-spec {
+  color: rgba(148, 163, 184, 0.42);
+  font-family: ui-monospace, "SFMono-Regular", Consolas, monospace;
+  font-size: 0.4rem;
+  letter-spacing: 0.12em;
+}
+
+.retro-arcade-cabinet-power-led {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: #22c55e;
+  box-shadow: 0 0 6px rgba(34, 197, 94, 0.85);
+}
+
+/* Forward-jutting trapezoidal control deck */
+.retro-arcade-cabinet-deck-wrap {
+  position: relative;
+  z-index: 4;
+  margin: -1px 2px 0;
+}
+
+.retro-arcade-cabinet-deck {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  height: 44px;
+  padding: 5px 16px 6px;
+  background:
+    linear-gradient(90deg,
+      color-mix(in srgb, var(--cab-accent) 45%, transparent) 0 2px,
+      transparent 2px calc(100% - 2px),
+      color-mix(in srgb, var(--cab-accent) 45%, transparent) calc(100% - 2px)),
+    linear-gradient(180deg, #2a2036 0%, #1b1424 58%, #120d18 100%);
+  clip-path: polygon(5% 0, 95% 0, 100% 100%, 0 100%);
+  border-top: 1px solid rgba(255, 255, 255, 0.14);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+/* Brushed aluminum front wrist-rest lip on the control panel */
+.retro-arcade-cabinet-deck-lip {
+  display: block;
+  height: 6px;
+  background: linear-gradient(180deg, #3c314a 0%, #191321 55%, #09060d 100%);
+  border-top: 1px solid rgba(255, 255, 255, 0.18);
+  border-bottom: 1px solid #050308;
+  border-radius: 0 0 2px 2px;
+  box-shadow: 0 5px 10px rgba(0, 0, 0, 0.65);
+}
+
+/* 1P / 2P small start buttons along top of deck */
+.retro-arcade-cabinet-deck-starts {
+  display: flex;
+  justify-content: space-between;
+  padding: 0 6px;
+}
+
+.retro-arcade-cabinet-start-btn {
+  width: 9px;
+  height: 5px;
+  border-radius: 999px;
+  background: linear-gradient(180deg, #f8fafc, #94a3b8);
+  border: 1px solid #09070d;
+  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.8);
+}
+
+.retro-arcade-cabinet-deck-controls {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 8px 1px;
+}
+
+/* Ball-top microswitch joystick with black dust washer & chrome shaft */
+.retro-arcade-cabinet-joystick {
+  position: relative;
+  width: 28px;
+  height: 22px;
+}
+
+.retro-arcade-cabinet-washer {
+  position: absolute;
+  left: 5px;
+  bottom: 1px;
+  width: 18px;
+  height: 8px;
+  border-radius: 50%;
+  background: radial-gradient(circle, #09070d 35%, #1e1828 75%, #07050b 100%);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 2px 3px rgba(0, 0, 0, 0.8);
+}
+
+.retro-arcade-cabinet-shaft {
+  position: absolute;
+  left: 12.5px;
+  bottom: 5px;
+  width: 3px;
+  height: 9px;
+  border-radius: 1px;
+  background: linear-gradient(90deg, #64748b, #f8fafc 50%, #334155);
+  box-shadow: 2px 2px 3px rgba(0, 0, 0, 0.65);
+}
+
+.retro-arcade-cabinet-ball {
+  position: absolute;
+  left: 7.5px;
+  top: 0;
+  width: 13px;
+  height: 13px;
+  border-radius: 50%;
+  background:
+    radial-gradient(circle at 32% 28%,
+      #ffffff 0%,
+      color-mix(in srgb, var(--cab-accent) 65%, #fb7185) 36%,
+      color-mix(in srgb, var(--cab-accent) 92%, #9f1239) 74%,
+      #1f0918 100%);
+  box-shadow:
+    0 3px 5px rgba(0, 0, 0, 0.75),
+    inset 0 -2px 3px rgba(0, 0, 0, 0.45);
+}
+
+/* 6-button curved Japanese/American arcade pushbutton cluster */
+.retro-arcade-cabinet-buttons {
+  display: grid;
+  grid-template-columns: repeat(3, 10px);
+  grid-template-rows: repeat(2, 8px);
+  gap: 3px 4px;
+  transform: rotate(-7deg);
+}
+
+.retro-arcade-cabinet-btn {
+  display: block;
+  width: 10px;
+  height: 8px;
+  border-radius: 50%;
+  border: 1.5px solid #09070e;
+  box-shadow:
+    0 1.5px 0 #050408,
+    inset 0 1px 1px rgba(255, 255, 255, 0.45);
+}
+
+.retro-arcade-cabinet-btn.is-row1.is-c1,
+.retro-arcade-cabinet-btn.is-row2.is-c1 {
+  background: radial-gradient(circle at 40% 35%, #fda4af, #e11d48 72%);
+}
+
+.retro-arcade-cabinet-btn.is-row1.is-c2,
+.retro-arcade-cabinet-btn.is-row2.is-c2 {
+  background: radial-gradient(circle at 40% 35%, #fde68a, #d97706 72%);
+}
+
+.retro-arcade-cabinet-btn.is-row1.is-c3,
+.retro-arcade-cabinet-btn.is-row2.is-c3 {
+  background: radial-gradient(circle at 40% 35%, #7dd3fc, #0284c7 72%);
+}
+
+/* Lower cabinet & heavy steel double coin door */
+.retro-arcade-cabinet-lower {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin: 0 9px;
+  padding: 10px 14px 8px;
+  background:
+    linear-gradient(90deg, #0b0810 0%, #1b1323 14%, #150e1c 50%, #1b1323 86%, #0b0810 100%);
+  border-bottom: 2px solid #060409;
+  box-shadow: inset 0 6px 12px rgba(0, 0, 0, 0.78);
+}
+
+/* Hammered-steel outer coin door frame */
+.retro-arcade-cabinet-coindoor {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: 100%;
+  padding: 9px 8px 7px;
+  border-radius: 4px;
+  background:
+    radial-gradient(circle at 50% 20%, rgba(255, 255, 255, 0.04), transparent 70%),
+    linear-gradient(180deg, #1b1722 0%, #100d15 55%, #16121d 100%);
+  border: 2px solid #282131;
+  box-shadow:
+    inset 0 2px 5px rgba(0, 0, 0, 0.9),
+    0 2px 0 rgba(255, 255, 255, 0.06),
+    0 4px 10px rgba(0, 0, 0, 0.65);
+}
+
+/* Top-center tubular key cylinder */
+.retro-arcade-cabinet-keylock {
+  position: absolute;
+  top: 3px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: radial-gradient(circle, #09080c 30%, #cbd5e1 62%, #475569 100%);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
+}
+
+/* Dual coin acceptor mechanisms */
+.retro-arcade-cabinet-coin-pair {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+  margin-top: 4px;
+  padding: 5px 6px;
+  border-radius: 3px;
+  background: #0b0910;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.95);
+}
+
+.retro-arcade-cabinet-coin-mech {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  padding: 3px 4px;
+  border-radius: 2px;
+  background: linear-gradient(180deg, #181420, #0e0b13);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.retro-arcade-cabinet-coin-slot {
+  width: 10px;
+  height: 3px;
+  border-radius: 1px;
+  background: linear-gradient(90deg, #475569, #cbd5e1 50%, #475569);
+  box-shadow: inset 0 1px 0 #09070d;
+}
+
+/* Backlit translucent amber-orange 25¢ mechanical reject button */
+.retro-arcade-cabinet-coin-lamp {
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 15px;
+  border-radius: 2px;
+  border: 1px solid #3f1d0b;
+  background:
+    radial-gradient(circle at 50% 42%, #fef08a 0%, #fb923c 52%, #dc2626 95%);
+  box-shadow:
+    0 0 8px rgba(251, 146, 60, 0.65),
+    inset 0 1px 0 rgba(255, 255, 255, 0.55),
+    inset 0 -1px 2px rgba(124, 45, 18, 0.8);
+  color: #290d05;
+  font-family: ui-monospace, "SFMono-Regular", Consolas, monospace;
+  font-size: 0.44rem;
+  font-weight: 900;
+  letter-spacing: 0.02em;
+  line-height: 1;
+}
+
+.retro-arcade-cabinet-coin-return {
+  width: 14px;
+  height: 6px;
+  border-radius: 1px;
+  background: #050408;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: inset 0 2px 3px rgba(0, 0, 0, 0.95);
+}
+
+/* Lower cashbox vault compartment with riveted unit plate */
+.retro-arcade-cabinet-cashbox {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 24px;
+  border-radius: 2px;
+  background: linear-gradient(180deg, #14101b 0%, #0c0911 100%);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.85);
+}
+
+.retro-arcade-cabinet-cashbox-lock {
+  position: absolute;
+  left: 7px;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: radial-gradient(circle, #09080c 30%, #94a3b8 65%, #334155 100%);
+}
+
+.retro-arcade-cabinet-plate {
+  padding: 2px 8px;
+  border: 1px solid color-mix(in srgb, var(--cab-accent) 48%, rgba(255, 255, 255, 0.16));
+  border-radius: 2px;
+  background: linear-gradient(180deg, #1e1726, #0d0912);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.12),
+    0 1px 2px rgba(0, 0, 0, 0.8);
+  color: color-mix(in srgb, var(--cab-accent) 85%, #f8fafc);
+  font-family: ui-monospace, "SFMono-Regular", Consolas, monospace;
+  font-size: 0.56rem;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+}
+
+/* Recessed kickplate louver at bottom of cabinet */
+.retro-arcade-cabinet-kickplate {
+  width: 82%;
+  height: 6px;
+  margin-top: 6px;
+  background:
+    repeating-linear-gradient(
+      90deg,
+      #060409 0 4px,
+      #1b1424 4px 6px
+    );
+  opacity: 0.75;
+}
+
+/* Heavy rubber leveling feet grounded on the carpet */
+.retro-arcade-cabinet-feet {
+  display: flex;
+  justify-content: space-between;
+  width: 84%;
+  margin: 0 auto;
+  height: 6px;
+}
+
+.retro-arcade-cabinet-feet i {
+  display: block;
+  width: 24px;
+  height: 6px;
+  border-radius: 0 0 3px 3px;
+  background: linear-gradient(180deg, #1e1926, #07050a);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.9);
+}
+
+/* ---------- Physical Under-Repair Hazard Ribbons & Service Tags ---------- */
+.retro-arcade-cabinet-repair-wrap {
+  position: absolute;
+  inset: 0;
+  z-index: 7;
+  pointer-events: none;
+  overflow: visible;
+}
+
+.retro-arcade-cabinet-tape {
+  position: absolute;
+  left: -7%;
+  right: -7%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 20px;
+  overflow: hidden;
+  border-top: 1px solid rgba(254, 240, 138, 0.55);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.85);
+  background:
+    linear-gradient(
+      90deg,
+      rgba(0, 0, 0, 0.48) 0%,
+      transparent 10%,
+      rgba(255, 255, 255, 0.14) 48%,
+      transparent 90%,
+      rgba(0, 0, 0, 0.52) 100%
+    ),
+    repeating-linear-gradient(
+      -52deg,
+      #eab308 0 11px,
+      #17131c 11px 22px
+    );
+  box-shadow:
+    0 5px 10px rgba(0, 0, 0, 0.72),
+    inset 0 1px 0 rgba(255, 255, 255, 0.25);
+  clip-path: polygon(
+    1% 0,
+    99% 3%,
+    100% 48%,
+    98.5% 100%,
+    1.5% 97%,
+    0 52%
+  );
+}
+
+.retro-arcade-cabinet-tape span {
+  padding: 1px 8px;
+  background: rgba(18, 14, 22, 0.88);
+  border-top: 1px solid rgba(250, 204, 21, 0.45);
+  border-bottom: 1px solid rgba(250, 204, 21, 0.45);
+  color: #fde047;
+  font-family: ui-monospace, "SFMono-Regular", Consolas, monospace;
+  font-size: 0.46rem;
+  font-weight: 800;
+  letter-spacing: 0.16em;
+  white-space: nowrap;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.95);
+}
+
+/* Strip positions & unique angles per cabinet so they look hand-applied */
+.is-tape-1 .retro-arcade-cabinet-tape.is-strip-a {
+  top: 34%;
+  transform: rotate(-14deg);
+}
+.is-tape-1 .retro-arcade-cabinet-tape.is-strip-b {
+  top: 56%;
+  transform: rotate(9deg);
+}
+
+.is-tape-2 .retro-arcade-cabinet-tape.is-strip-a {
+  top: 31%;
+  transform: rotate(12deg);
+}
+.is-tape-2 .retro-arcade-cabinet-tape.is-strip-b {
+  top: 58%;
+  transform: rotate(-11deg);
+}
+
+.is-tape-3 .retro-arcade-cabinet-tape.is-strip-a {
+  top: 36%;
+  transform: rotate(-10deg);
+}
+.is-tape-3 .retro-arcade-cabinet-tape.is-strip-b {
+  top: 52%;
+  transform: rotate(15deg);
+}
+
+/* Taped paper workshop service tag pinned over the CRT glass */
+.retro-arcade-cabinet-service-note {
+  position: absolute;
+  top: 25%;
+  right: 14%;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 1px;
+  padding: 6px 8px 5px;
+  border-radius: 2px;
+  background:
+    linear-gradient(165deg, #f5e6c8 0%, #dfc79a 62%, #cbb07d 100%);
+  border: 1px solid rgba(58, 40, 18, 0.55);
+  box-shadow:
+    0 6px 12px rgba(0, 0, 0, 0.78),
+    inset 0 0 8px rgba(120, 82, 36, 0.25);
+  transform: rotate(6deg);
+}
+
+.is-tape-2 .retro-arcade-cabinet-service-note {
+  right: auto;
+  left: 15%;
+  top: 23%;
+  transform: rotate(-7deg);
+}
+
+.is-tape-3 .retro-arcade-cabinet-service-note {
+  right: 16%;
+  top: 26%;
+  transform: rotate(4deg);
+}
+
+/* Translucent masking-tape tab holding the service tag to the CRT glass */
+.retro-arcade-cabinet-note-pin {
+  position: absolute;
+  top: -5px;
+  left: 50%;
+  transform: translateX(-50%) rotate(-4deg);
+  width: 26px;
+  height: 8px;
+  background: rgba(254, 243, 199, 0.62);
+  border: 1px solid rgba(180, 145, 85, 0.42);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.35);
+}
+
+.retro-arcade-cabinet-note-kicker {
+  color: #573b1a;
+  font-family: ui-monospace, "SFMono-Regular", Consolas, monospace;
+  font-size: 0.36rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+}
+
+.retro-arcade-cabinet-note-title {
+  color: #991b1b;
+  font-family: ui-monospace, "SFMono-Regular", Consolas, monospace;
+  font-size: 0.48rem;
+  font-weight: 900;
+  letter-spacing: 0.1em;
+  line-height: 1.1;
+  border-bottom: 1px solid rgba(153, 27, 27, 0.4);
+}
+
+.retro-arcade-cabinet-note-sub {
+  margin-top: 1px;
+  color: #3b2812;
+  font-family: ui-monospace, "SFMono-Regular", Consolas, monospace;
+  font-size: 0.38rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+}
+
+/* Light pool & contact shadow on the carpet in front of each cabinet */
+.retro-arcade-cabinet-floor {
+  position: absolute;
+  left: -20%;
+  right: -20%;
+  bottom: -24px;
+  z-index: -2;
+  height: 44px;
+  background:
+    radial-gradient(ellipse 55% 32% at 50% 36%, rgba(0, 0, 0, 0.82), transparent 72%),
+    radial-gradient(ellipse 80% 65% at 50% 25%, var(--cab-glow), transparent 72%);
+  opacity: 0.55;
+  transition: opacity 340ms ease, transform 340ms ease;
+}
+
+/* Riveted metal status topper tag (replaces the pastel pill badge) */
+.retro-arcade-cabinet-badge {
+  position: absolute;
+  top: -1.95rem;
+  left: 50%;
+  transform: translateX(-50%);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0.22rem 0.65rem;
+  border: 1px solid color-mix(in srgb, var(--cab-accent) 65%, rgba(255, 255, 255, 0.25));
+  border-radius: 3px;
+  background: linear-gradient(180deg, #1e1628 0%, #0e0a14 100%);
+  box-shadow:
+    0 4px 12px rgba(0, 0, 0, 0.75),
+    0 0 14px color-mix(in srgb, var(--cab-glow) 65%, transparent),
+    inset 0 1px 0 rgba(255, 255, 255, 0.16);
+  color: #f8fafc;
+  font-family: ui-monospace, "SFMono-Regular", Consolas, monospace;
+  font-size: 0.58rem;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.retro-arcade-cabinet-badge-led {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--cab-accent);
+  box-shadow: 0 0 8px var(--cab-accent);
+}
+
+.retro-arcade-cabinet.is-selected {
+  transform: translateY(-8px) scale(1.035);
+}
+
+.retro-arcade-cabinet.is-selected .retro-arcade-cabinet-floor {
+  opacity: 0.95;
+  transform: scaleX(1.08);
+}
+
+.retro-arcade-cabinet.is-selected .retro-arcade-cabinet-marquee {
+  box-shadow:
+    0 0 30px var(--cab-glow),
+    inset 0 0 10px rgba(18, 8, 22, 0.45),
+    inset 0 2px 0 rgba(255, 255, 255, 0.6),
+    inset 0 -2px 0 rgba(0, 0, 0, 0.45);
+}
+
+.retro-arcade-cabinet.is-selected .retro-arcade-cabinet-screen {
+  box-shadow:
+    inset 0 0 16px rgba(0, 0, 0, 0.8),
+    0 0 0 1px rgba(255, 255, 255, 0.12),
+    0 0 26px color-mix(in srgb, var(--cab-glow) 72%, transparent);
+}
+
+/* Selected marquee buzzes subtly like a warm fluorescent tube */
+.retro-arcade-hall.is-in-view .retro-arcade-cabinet.is-selected .retro-arcade-cabinet-marquee-title {
+  animation: retroArcadeBuzz 6s steps(1, end) infinite;
+}
+
+@keyframes retroArcadeBuzz {
+  0%, 46%, 49%, 100% { opacity: 1; }
+  47% { opacity: 0.72; }
+  48% { opacity: 0.92; }
+}
+
+/* Keyboard focus uses subtle marquee/floor highlight instead of a floating pill box */
+.retro-arcade-cabinet:focus-visible .retro-arcade-cabinet-hood {
+  box-shadow:
+    0 0 0 2px var(--cab-accent),
+    0 6px 14px rgba(0, 0, 0, 0.65);
+}
+
+@media (hover: hover) {
+  .retro-arcade-cabinet:not(.is-mystery):not(.is-selected):hover {
+    transform: translateY(-5px);
+  }
+
+  .retro-arcade-cabinet:not(.is-mystery):hover .retro-arcade-cabinet-floor {
+    opacity: 0.78;
+  }
+}
+
+/* Switched-off mystery & under-repair cabinets: dusty unlit acrylic, dark phosphor tube, unpowered amber reject lamps */
+.retro-arcade-cabinet.is-mystery {
+  cursor: default;
+}
+
+.retro-arcade-cabinet.is-mystery .retro-arcade-cabinet-wing.is-left {
+  border-left-color: #2c2536;
+}
+
+.retro-arcade-cabinet.is-mystery .retro-arcade-cabinet-wing.is-right {
+  border-right-color: #2c2536;
+}
+
+/* Keep dimmed amber T-molding and warm unlit acrylic tint on FALCON while powered down for repair */
+.retro-arcade-cabinet.is-under-repair .retro-arcade-cabinet-wing.is-left {
+  border-left-color: #5c3d1e;
+}
+
+.retro-arcade-cabinet.is-under-repair .retro-arcade-cabinet-wing.is-right {
+  border-right-color: #5c3d1e;
+}
+
+.retro-arcade-cabinet.is-mystery .retro-arcade-cabinet-marquee {
+  background: linear-gradient(180deg, #231f2b 0%, #16131c 58%, #100e15 100%);
+  box-shadow:
+    inset 0 2px 5px rgba(0, 0, 0, 0.75),
+    inset 0 -2px 0 rgba(0, 0, 0, 0.45);
+}
+
+.retro-arcade-cabinet.is-under-repair .retro-arcade-cabinet-marquee {
+  background: linear-gradient(180deg, #3b2a1a 0%, #241911 58%, #16100b 100%);
+}
+
+.retro-arcade-cabinet.is-mystery .retro-arcade-cabinet-marquee-title {
+  color: #686177;
+  text-shadow: 0 1px 0 rgba(0, 0, 0, 0.8);
+}
+
+.retro-arcade-cabinet.is-under-repair .retro-arcade-cabinet-marquee-title {
+  color: #9a7b56;
+}
+
+.retro-arcade-cabinet.is-mystery .retro-arcade-cabinet-marquee-sub {
+  color: rgba(148, 163, 184, 0.34);
+}
+
+.retro-arcade-cabinet.is-mystery .retro-arcade-cabinet-screen {
+  box-shadow:
+    inset 0 0 22px rgba(0, 0, 0, 0.95),
+    0 0 0 1px rgba(255, 255, 255, 0.04);
+}
+
+.retro-arcade-cabinet.is-mystery .retro-arcade-cabinet-power-led {
+  background: #ef4444;
+  box-shadow: 0 0 5px rgba(239, 68, 68, 0.55);
+}
+
+.retro-arcade-cabinet.is-mystery .retro-arcade-cabinet-coin-lamp {
+  border-color: #1e1926;
+  background: linear-gradient(180deg, #2d2224, #1b1418);
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.8);
+  color: rgba(148, 163, 184, 0.28);
+}
+
+.retro-arcade-cabinet.is-mystery .retro-arcade-cabinet-btn,
+.retro-arcade-cabinet.is-mystery .retro-arcade-cabinet-ball,
+.retro-arcade-cabinet.is-mystery .retro-arcade-cabinet-start-btn {
+  filter: grayscale(0.85) brightness(0.48);
+}
+
+.retro-arcade-cabinet.is-mystery .retro-arcade-cabinet-plate {
+  border-color: rgba(148, 163, 184, 0.16);
+  color: #645d73;
+}
+
+.retro-arcade-cabinet.is-mystery .retro-arcade-cabinet-floor {
+  opacity: 0.28;
+}
+
+.retro-arcade-cabinet-hint {
+  position: absolute;
+  top: -1.95rem;
+  left: 50%;
+  transform: translate(-50%, 4px);
+  padding: 0.22rem 0.65rem;
+  border: 1px solid rgba(148, 163, 184, 0.28);
+  border-radius: 3px;
+  background: rgba(12, 10, 18, 0.94);
+  color: #cbd5e1;
+  font-family: ui-monospace, "SFMono-Regular", Consolas, monospace;
+  font-size: 0.6rem;
+  letter-spacing: 0.1em;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 200ms ease, transform 200ms ease;
+}
+
+.retro-arcade-cabinet.is-mystery:hover .retro-arcade-cabinet-hint {
+  opacity: 1;
+  transform: translate(-50%, 0);
+}
+
+.retro-arcade-hint {
+  position: relative;
+  z-index: 2;
+  margin: 0.4rem 0 0;
+  color: rgba(254, 243, 199, 0.72);
+  font-size: 0.98rem;
+  text-align: center;
+}
+
+.retro-arcade-coming {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.5rem;
+  margin: 0.5rem 0 0;
+  color: #f9a8d4;
+  font-size: 0.86rem;
+  letter-spacing: 0.2em;
+  text-align: center;
+}
+
+/* ---------- Attract-mode panel for the selected level ---------- */
+.retro-arcade-panel {
+  width: min(calc(100% - 2rem), 1180px);
+  margin: clamp(2.2rem, 4vw, 3.4rem) auto 0;
+}
+
+.retro-arcade-panel-inner {
+  animation: retroArcadePanelIn 420ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+@keyframes retroArcadePanelIn {
+  from { opacity: 0; transform: translateY(14px); }
+  to { opacity: 1; transform: none; }
+}
+
+.retro-arcade-panel-main {
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
+  align-items: center;
+  gap: clamp(1.4rem, 3vw, 2.6rem);
+  padding: clamp(1.3rem, 2.6vw, 2.2rem);
+  border: 1px solid color-mix(in srgb, var(--cab-accent) 45%, transparent);
+  border-radius: 22px;
+  background: linear-gradient(160deg, rgba(25, 17, 33, 0.96), rgba(11, 8, 18, 0.97));
+  box-shadow: 0 0 44px color-mix(in srgb, var(--cab-glow) 35%, transparent), 0 28px 70px rgba(0, 0, 0, 0.55);
+}
+
+.retro-arcade-panel-crt {
+  position: relative;
+  padding: 12px;
+  border-radius: 18px;
+  background: linear-gradient(160deg, #0b0910, #040306);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.06), 0 14px 34px rgba(0, 0, 0, 0.5);
+}
+
+.retro-arcade-panel-crt::after {
+  content: "";
+  position: absolute;
+  inset: 12px;
+  border-radius: 12px;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse at 50% 50%, transparent 60%, rgba(0, 0, 0, 0.45)),
+    repeating-linear-gradient(180deg, transparent 0 2px, rgba(4, 3, 8, 0.22) 2px 4px);
+}
+
+.retro-arcade-panel-media {
+  display: block;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  border-radius: 12px;
+  object-fit: cover;
+  background: #000;
+}
+
+.retro-arcade-panel-kicker {
+  display: block;
+  color: var(--cab-accent);
+  font-family: ui-monospace, "SFMono-Regular", Consolas, monospace;
+  font-size: 0.88rem;
+  letter-spacing: 0.22em;
+}
+
+.retro-arcade-panel-title {
+  margin: 0.5rem 0 0;
+  font-family: var(--font-display), serif;
+  font-size: clamp(1.8rem, 3vw, 3rem);
+  letter-spacing: 0.08em;
+  line-height: 1.1;
+}
+
+.retro-arcade-panel-role {
+  margin: 0.6rem 0 0;
+  color: #fbbf24;
+  font-size: clamp(0.95rem, 1.2vw, 1.08rem);
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.retro-arcade-panel-overview {
+  margin: 1rem 0 0;
+  color: rgba(254, 249, 235, 0.92);
+  font-size: clamp(1.05rem, 1.25vw, 1.2rem);
+  line-height: 1.65;
+}
+
+.retro-arcade-panel-challenge {
+  margin-top: 1.2rem;
+  padding: 0.9rem 1rem;
+  border-left: 3px solid var(--cab-accent);
+  border-radius: 0 10px 10px 0;
+  background: color-mix(in srgb, var(--cab-accent) 9%, transparent);
+}
+
+.retro-arcade-panel-challenge span {
+  display: block;
+  margin-bottom: 0.35rem;
+  color: var(--cab-accent);
+  font-size: 0.88rem;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+}
+
+.retro-arcade-panel-challenge p {
+  margin: 0;
+  color: #f8fafc;
+  font-size: clamp(1.05rem, 1.25vw, 1.16rem);
+  line-height: 1.55;
+}
+
+.retro-arcade-panel-chapters {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr));
+  gap: clamp(1rem, 2vw, 1.5rem);
+  margin-top: clamp(1rem, 2vw, 1.5rem);
+}
+
+.retro-arcade-chapter {
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 16px;
+  background: rgba(14, 10, 22, 0.92);
+}
+
+.retro-arcade-chapter-img {
+  display: block;
+  width: 100%;
+  aspect-ratio: 16 / 7;
+  object-fit: cover;
+}
+
+.retro-arcade-chapter-copy {
+  padding: 1.05rem 1.3rem 1.25rem;
+}
+
+.retro-arcade-chapter-index {
+  color: var(--cab-accent);
+  font-family: ui-monospace, "SFMono-Regular", Consolas, monospace;
+  font-size: 0.85rem;
+  letter-spacing: 0.18em;
+}
+
+.retro-arcade-chapter-title {
+  margin: 0.3rem 0 0;
+  color: #fff;
+  font-family: var(--font-display), serif;
+  font-size: clamp(1.25rem, 1.8vw, 1.55rem);
+  letter-spacing: 0.04em;
+  line-height: 1.25;
+}
+
+.retro-arcade-chapter-list {
+  margin: 0.75rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.retro-arcade-chapter-list li {
+  position: relative;
+  padding-left: 1.15rem;
+  color: rgba(254, 249, 235, 0.88);
+  font-size: clamp(1rem, 1.15vw, 1.1rem);
+  line-height: 1.55;
+}
+
+.retro-arcade-chapter-list li + li {
+  margin-top: 0.55rem;
+}
+
+.retro-arcade-chapter-list li::before {
+  content: "";
+  position: absolute;
+  top: 0.62em;
+  left: 0;
+  width: 7px;
+  height: 7px;
+  background: var(--cab-accent);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .retro-arcade-cabinet,
+  .retro-arcade-cabinet-floor,
+  .retro-arcade-cabinet-hint {
+    transition: none;
+  }
+
+  .retro-arcade-panel-inner,
+  .retro-arcade-hall.is-in-view .retro-arcade-cabinet-static,
+  .retro-arcade-hall.is-in-view .retro-arcade-cabinet.is-selected .retro-arcade-cabinet-marquee span {
+    animation: none;
+  }
+}
+
+@media (max-width: 1000px) {
+  .retro-arcade-panel-main {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 700px) {
+  .retro-arcade-main {
+    padding-top: 6.2rem;
+  }
+
+  .retro-arcade-title {
+    font-size: clamp(2.3rem, 11.5vw, 3.6rem);
+  }
+
+  .retro-arcade-hall {
+    width: calc(100% - 1rem);
+    padding-top: 2.4rem;
+    border-radius: 16px;
+  }
+
+  /* Phones: one scrollable shelf of cabinets instead of wrapping rows. */
+  .retro-arcade-row-scroller {
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    scrollbar-width: none;
+    -webkit-mask-image: linear-gradient(90deg, transparent, #000 6%, #000 94%, transparent);
+    mask-image: linear-gradient(90deg, transparent, #000 6%, #000 94%, transparent);
+  }
+
+  .retro-arcade-row-scroller::-webkit-scrollbar {
+    display: none;
+  }
+
+  .retro-arcade-row {
+    flex-wrap: nowrap;
+    justify-content: flex-start;
+    width: max-content;
+    /* extra top room: the scroller clips, and the selected cabinet lifts + shows a badge */
+    padding: 3.6rem 1.6rem 2.2rem;
+  }
+
+  .retro-arcade-cabinet {
+    --cab-w: 138px;
+    scroll-snap-align: center;
+  }
+
+  .retro-arcade-lamps span:nth-child(1),
+  .retro-arcade-lamps span:nth-child(3) {
+    display: none;
+  }
+
+  .retro-arcade-lamps span:nth-child(2) {
+    width: 90vw;
+  }
+
+  .retro-arcade-panel {
+    width: calc(100% - 1rem);
+  }
+
+  .retro-arcade-panel-main {
+    padding: 0.9rem;
+    border-radius: 16px;
+  }
+
+  .retro-arcade-panel-crt {
+    padding: 8px;
+  }
+
+  .retro-arcade-panel-crt::after {
+    inset: 8px;
+  }
+
+  .retro-arcade-chapter-copy {
+    padding: 0.95rem 1rem 1.1rem;
   }
 }

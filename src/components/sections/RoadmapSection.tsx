@@ -7,6 +7,7 @@ import {
   type RoadmapMilestone,
 } from "@/data/gameData";
 import { DeckledCanvasFrame } from "@/components/ui/CanvasFrames";
+import { ScrollTextReveal } from "@/components/ui/ScrollTextReveal";
 import { useLanguage } from "@/i18n/LanguageContext";
 
 function RoadmapMilestoneRow({
@@ -64,7 +65,12 @@ function RoadmapMilestoneRow({
           </div>
           <div className="lunoris-timeline-card-mobile-date">{item.date}</div>
           <h3 className="lunoris-roadmap-title">{item.title}</h3>
-          <p className="lunoris-roadmap-desc">{item.desc}</p>
+          <ScrollTextReveal
+            text={item.desc}
+            className="lunoris-roadmap-desc"
+            startViewportRatio={0.96}
+            endViewportRatio={0.75}
+          />
         </div>
       </article>
     </div>

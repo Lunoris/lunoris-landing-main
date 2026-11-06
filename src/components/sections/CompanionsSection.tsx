@@ -51,6 +51,8 @@ export function CompanionsSection() {
               <article
                 key={pet.name}
                 className={`lunoris-pillar ${isExpanded ? "is-active" : ""}`}
+                data-cursor-primary={pet.glowPrimary}
+                data-cursor-secondary={pet.glowSecondary}
                 onMouseEnter={() => setActiveCompanion(idx)}
                 onClick={() => setActiveCompanion(idx)}
               >

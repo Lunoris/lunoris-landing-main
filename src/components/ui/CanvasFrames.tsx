@@ -263,9 +263,9 @@ export function DeckledCanvasFrame() {
         preserveAspectRatio="none"
         aria-hidden="true"
       >
-        {/* Organic brushstroke perimeter */}
+        {/* Organic brushstroke perimeter hugging the outer edge */}
         <path
-          d="M36,12 C164,6 348,8 472,16 C486,18 492,30 490,54 C494,138 491,226 486,304 C484,322 470,329 446,328 C312,333 168,331 28,324 C14,322 8,310 10,286 C6,196 9,104 14,34 C16,18 24,13 36,12 Z"
+          d="M18,5 C164,3 348,3 484,6 C493,7 496,13 496,24 C497,130 496,232 495,318 C494,329 488,335 476,335 C318,337 166,336 18,334 C9,333 4,327 5,314 C3,208 4,104 6,22 C7,11 11,6 18,5 Z"
           fill="none"
           stroke="rgba(251, 191, 36, 0.52)"
           strokeWidth="2"
@@ -275,7 +275,63 @@ export function DeckledCanvasFrame() {
         />
         {/* Inner sketchy artist pencil/chalk guide line */}
         <path
-          d="M42,22 C178,17 340,18 464,25 C476,26 480,36 479,58 C481,142 479,224 475,296 C473,310 462,317 440,317 C308,321 170,319 36,314 C24,312 19,302 20,280 C18,194 20,108 24,42 C25,28 32,23 42,22 Z"
+          d="M22,10 C172,8 344,8 479,11 C487,12 490,17 490,28 C491,134 490,230 489,313 C488,323 482,329 470,329 C314,331 168,330 22,328 C14,327 10,321 11,309 C9,204 10,106 12,26 C13,16 16,11 22,10 Z"
+          fill="none"
+          stroke="rgba(255, 255, 255, 0.18)"
+          strokeWidth="1"
+          vectorEffect="non-scaling-stroke"
+        />
+      </svg>
+      <CanvasStar className="star-card-tl" />
+      <CanvasStar className="star-card-br" />
+    </>
+  );
+}
+
+export function WideDeckledCanvasFrame() {
+  return (
+    <>
+      <svg
+        className="canvas-deckled-frame-svg"
+        viewBox="0 0 1200 680"
+        preserveAspectRatio="none"
+        aria-hidden="true"
+      >
+        {/* Outer gold brushstroke perimeter tailored for wide showcase cards */}
+        <path
+          d="M26,7 C380,4 820,4 1176,8 C1190,9 1195,16 1194,32 C1196,236 1195,454 1193,648 C1192,664 1184,672 1168,672 C796,675 404,674 26,671 C12,670 6,662 7,646 C5,436 6,220 8,30 C9,15 15,8 26,7 Z"
+          className="retro-energy-circuit-path"
+          pathLength="100"
+          fill="none"
+          stroke="rgba(255, 245, 255, 0.96)"
+          strokeWidth="3.5"
+          strokeLinecap="round"
+          strokeDasharray="9 91"
+          vectorEffect="non-scaling-stroke"
+        />
+        <path
+          d="M26,7 C380,4 820,4 1176,8 C1190,9 1195,16 1194,32 C1196,236 1195,454 1193,648 C1192,664 1184,672 1168,672 C796,675 404,674 26,671 C12,670 6,662 7,646 C5,436 6,220 8,30 C9,15 15,8 26,7 Z"
+          className="retro-energy-discharge-path"
+          pathLength="100"
+          fill="none"
+          stroke="rgba(255, 255, 255, 0.98)"
+          strokeWidth="2.5"
+          strokeLinecap="round"
+          strokeDasharray="0.3 22 0.15 47"
+          vectorEffect="non-scaling-stroke"
+        />
+        <path
+          d="M26,7 C380,4 820,4 1176,8 C1190,9 1195,16 1194,32 C1196,236 1195,454 1193,648 C1192,664 1184,672 1168,672 C796,675 404,675 26,671 C12,670 6,662 7,646 C5,436 6,220 8,30 C9,15 15,8 26,7 Z"
+          fill="none"
+          stroke="rgba(251, 191, 36, 0.54)"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeDasharray="280 12 190 10 240 14"
+          vectorEffect="non-scaling-stroke"
+        />
+        {/* Inner chalk guide line hugging close to the outer perimeter */}
+        <path
+          d="M32,14 C390,11 810,11 1168,15 C1181,16 1186,22 1185,38 C1187,240 1186,450 1184,641 C1183,656 1175,664 1160,664 C792,667 408,666 32,663 C19,662 14,654 15,639 C13,432 14,224 16,36 C17,22 22,15 32,14 Z"
           fill="none"
           stroke="rgba(255, 255, 255, 0.18)"
           strokeWidth="1"

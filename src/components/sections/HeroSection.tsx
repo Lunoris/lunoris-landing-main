@@ -15,16 +15,33 @@ export function HeroSection({ heroRef }: HeroSectionProps) {
   return (
     <section className="lunoris-hero" ref={heroRef}>
       <div className="lunoris-hero-video-bg" aria-hidden="true">
+        {/* LAYER 1: Deep Background Video (subtle parallax shift) */}
         <ResilientVideo
           className="lunoris-hero-video"
           src="/assets/PressAnyKeyVideo.mp4"
           poster="/assets/dream-level-1.png"
           preload="auto"
         />
+
+        {/* LAYER 2: Counter-Moving Dream Clouds & Nebula Mist */}
+        <div className="lunoris-hero-clouds-layer">
+          <div className="lunoris-dream-cloud lunoris-dream-cloud--far" />
+          <div className="lunoris-dream-cloud lunoris-dream-cloud--near" />
+        </div>
+
+        {/* LAYER 3: Cursor-Reactive Ethereal Light Elements */}
+        <div className="lunoris-hero-lights-layer">
+          <div className="lunoris-hero-godrays" />
+          <div className="lunoris-hero-light-orb lunoris-hero-light-orb--gold" />
+          <div className="lunoris-hero-light-orb lunoris-hero-light-orb--cyan" />
+          <div className="lunoris-hero-light-orb lunoris-hero-light-orb--violet" />
+        </div>
+
         <div className="lunoris-hero-vignette" />
         <div className="lunoris-hero-bottom-fade" />
       </div>
 
+      {/* LAYER 4: Foreground Typography & Floating Award Emblem (strongest parallax shift) */}
       <div className="lunoris-wide-wrap lunoris-hero-foreground">
         <div className="lunoris-hero-clean-layout">
           <div className="lunoris-hero-quote-block">

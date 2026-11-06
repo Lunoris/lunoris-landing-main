@@ -9,6 +9,7 @@ import {
   TallDeckledCanvasFrame,
 } from "@/components/ui/CanvasFrames";
 import { TeamSocialLinks } from "@/components/ui/SocialPlatformIcon";
+import { ScrollTextReveal } from "@/components/ui/ScrollTextReveal";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { localizeLeader } from "@/i18n/helpers";
 
@@ -92,7 +93,12 @@ export function LeaderPortraitCard({ leader }: { leader: TeamLeader }) {
         ) : null}
         <h3 className="lunoris-leader-name">{localized.name}</h3>
         {localized.bio?.trim() ? (
-          <p className="lunoris-leader-bio">{localized.bio}</p>
+          <ScrollTextReveal
+            text={localized.bio}
+            className="lunoris-leader-bio"
+            startViewportRatio={0.96}
+            endViewportRatio={0.76}
+          />
         ) : null}
         <TeamSocialLinks
           links={localized.links}
@@ -137,9 +143,10 @@ export function TeamSection() {
           <span className="lunoris-title-minor">{t.team.minor}</span>
           <h2 className="lunoris-title-major">{t.team.major}</h2>
           <div className="lunoris-center-bar" />
-          <p className="lunoris-mural-body lunoris-team-intro">
-            {t.team.intro}
-          </p>
+          <ScrollTextReveal
+            text={t.team.intro}
+            className="lunoris-mural-body lunoris-team-intro"
+          />
         </div>
 
         {leaders.length > 0 ? (

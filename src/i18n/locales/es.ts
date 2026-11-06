@@ -238,13 +238,149 @@ export const es: SiteTranslations = {
         desc: "Cruza las puertas de la Escuela de Lunora hacia los tres Niveles de Sueño: surca islas flotantes en «El mundo que responde», adéntrate en el lienzo vivo de Van Gogh de «El hombre en el recuerdo» y asciende hacia el portal dorado de esperanza de «Despertar».",
       },
       "retro-games": {
-        title: "Juegos Retro",
+        title: "Niveles Retro",
         desc: "Conduce un 1967 Chevrolet Impala por una interminable autopista de medianoche entre sueños, donde las reliquias familiares y las frecuencias de radio del salpicadero transforman recuerdos en 3D en capítulos arcade retro jugables en 2D.",
       },
       nightmare: {
         title: "Pesadilla",
         desc: "Sumérgete a través del espejo empañado o del vórtice violeta-índigo del sótano hacia cambiantes corredores de Pesadilla: cruza fisuras magenta en disolución para enfrentarte a FearClaw o recuperar el aliento en el santuario Matchi Matchi.",
       },
+    },
+  },
+  portalPages: {
+    dreamRiddle: {
+      eyebrow: "TRES PUERTAS · UNA SALIDA",
+      title: "¿Qué puerta nunca abrirías?",
+      body: "Tras una: el dolor que recuerdas. Tras otra: la culpa que escondes. Tras la tercera: lo que más temes, la verdad. Lunora ya eligió. ¿Y tú?",
+      cue: "Desliza hacia abajo, si te atreves",
+    },
+    retroComingSoon: {
+      kicker: "EL ARCADE CONTINÚA",
+      title: "PRÓXIMAMENTE MÁS NIVELES",
+    },
+    navWorld: "Portales del mundo",
+    dream: {
+      heroMinor: "CAMPAÑA PRINCIPAL · REINO DE LOS SUEÑOS",
+      heroSubtitle: "Plataformas en 3D a través de las siete etapas del duelo",
+      heroOverview: "Cada salto, planeo y escalada expresa el estado interior de Lunora a lo largo de siete mundos oníricos surrealistas.",
+      mapLabel: "Mapa de progreso de Dream Levels",
+      levels: [
+        {
+          description: "Un bosque surrealista se funde con las ruinas de Diriyah y cambia según cómo lo mires.",
+          hook: "¿Seguro que puedes confiar en el camino?",
+        },
+        {
+          description: "Planea sobre islas fracturadas con Kurtam y encuentra la primera grieta hacia Nightmare.",
+          hook: "¿Y si la grieta ya te ha encontrado?",
+        },
+        {
+          description: "Tras enfrentarte a FearClaw, unas piedras dispersas se convierten en una escalera sobre el abismo.",
+          hook: "En la cima: una respuesta y una sombra de la que no puedes escapar.",
+        },
+      ],
+      comingSoon: "PRÓXIMAMENTE MÁS NIVELES",
+    },
+    retro: {
+      introMinor: "EL SÓTANO DE JOHN FORD · RECUERDOS ECO",
+      introSubtitle: "Máquinas arcade en el sótano de John Ford. Cada una guarda un recuerdo jugable. Algunas todavía no se han encendido…",
+      ui: {
+        rowLabel: "Máquinas arcade",
+        cabinetLabel: "MÁQUINA",
+        nowPlaying: "EN JUEGO",
+        mysteryHint: "Todavía apagada",
+        selectHint: "Elige una máquina para ver su recuerdo",
+        challengeLabel: "TU DESAFÍO",
+      },
+      levels: {
+        "car-level": {
+          roleSuffix: "Diriyah 1988 · Chevrolet Impala 1967",
+          overview: "Conduce el Chevrolet Impala de 1967 de John Ford por una autopista recta de Diriyah en 1988 mientras Lulwah Al Rashed corre a casa de su madre para dar a luz a Lunora.",
+          challenge: "Esquiva el tráfico de la autopista de 1988 y llega a la puerta antes de que se agote el tiempo.",
+          chapters: [
+            {
+              title: "Chevrolet de juguete y llave del garaje",
+              bullets: [
+                "Sigue con Freddy el rastro oculto de Lucid Orbs en Dream Level 2 para recuperar el coche de juguete.",
+                "Escanea el Impala de 1967 real en el Dream Hub con Retro Vision (R3) para empezar la carrera.",
+              ],
+            },
+            {
+              title: "Carrera de desplazamiento lateral: Diriyah 1988",
+              bullets: [
+                "Cámara 2D lateral fija al estilo de la era Dreamcast, con temporizador de victoria o derrota y obstáculos que esquivar.",
+                "Termina en la puerta de la abuela materna con la entrada 9 del registro de diálogos («Madres e hijas»).",
+              ],
+            },
+          ],
+        },
+        "falcon-hunting": {
+          roleSuffix: "Último recuerdo con Lulwah Al Rashed (6 años)",
+          overview: "Toma el control directo del halcón de Lulwah sobre el cálido desierto saudí de 1988 antes de que regrese a su brazo enguantado mientras Lunora, de seis años, lo observa.",
+          challenge: "Guía al halcón sobre el desierto y devuélvelo al brazo de Lulwah antes de que el recuerdo se desvanezca.",
+          chapters: [
+            {
+              title: "Al-Ghashwa (la caperuza del halcón)",
+              bullets: [
+                "Retira con cuidado la caperuza de cuero del ave posada en la sección 7 de Dream Level 1.",
+                "Completa el Puzzle Shrine derecho de la Nightmare Zone 1 para desbloquear Retro Vision y escanea la caperuza en el Dream Hub.",
+              ],
+            },
+            {
+              title: "Vuelo cenital sobre el desierto",
+              bullets: [
+                "Cámara ortográfica cenital fija con gráficos retro del desierto al estilo de PS1 y Dreamcast.",
+                "Encarna la idea central del nivel: el halcón que se va y vuelve, en el último recuerdo de Lunora con su madre.",
+              ],
+            },
+          ],
+        },
+      },
+    },
+    arcade: {
+      triggerLabel: "Máquina arcade secreta · Impala 1967",
+      triggerTitle: "Easter egg: iniciar la máquina arcade Impala 1967",
+      badge: "✦ 1988 · ARCADE",
+      close: "Cerrar la máquina",
+      cabinetTitle: "MÁQUINA SECRETA DE JOHN FORD · DIRIYAH 1988",
+      attractMode: "MODO DEMO · PULSA START",
+      controls: "CONTROLES · A / D O ◀ / ▶",
+      echoMemory: "RECUERDO ECO 01 · DIRIYAH 1988",
+      driveHint: "Conduce el Chevrolet Impala de 1967 por la autopista de medianoche",
+      startRace: "✦ INSERT COIN · EMPEZAR CARRERA ✦",
+      memoryCompleted: "RECUERDO COMPLETADO · DIRIYAH 1988",
+      arrived: "¡LLEGASTE A CASA DE LA ABUELA!",
+      quote: "«Terca e impaciente. Igual que su madre».",
+      interrupted: "RECUERDO INTERRUMPIDO",
+      retry: "INSERT COIN · REINTENTAR",
+      playAgain: "JUGAR DE NUEVO",
+      buildVideo: "VER VÍDEO DEL JUEGO",
+      exitToVideo: "✦ VOLVER AL VÍDEO",
+    },
+    nightmare: {
+      navWasteland: "Páramo",
+      kicker: "NOTAS DE CAMPO DEL PÁRAMO HELADO",
+      settingIndex: "EL ESCENARIO",
+      settingTitle: "El páramo helado",
+      panoramaAlt: "El páramo de Nightmare y sus siete zonas",
+      panoramaCaption: "Siete zonas · Cinco en la superficie · Dos bajo tierra",
+      notes: "Es una extensión conectada, no un pasillo lleno de marcadores. Lee el terreno a través de hogueras moradas, túneles y faros de santuarios.",
+      countsLabel: "Contenido del mundo",
+      safeSpots: "refugios",
+      matchiAlt: "El santuario de montaña de Matchi Matchi",
+      matchiCaption: "UN RINCÓN TRANQUILO EN EL PÁRAMO",
+      matchiIndex: "DESVÍO OPCIONAL · ZONA 1",
+      matchiBody: "Más allá del interminable túnel izquierdo de la zona 1 se encuentra Matchi Mountain, un raro lugar para recuperar el aliento y visitar el puesto de matcha.",
+      matchiCondition: "Para romper el bucle: alcanza el Hope máximo y lleva el cuadro enmarcado de Papá.",
+      matchiReward: "Una pausa · Un vendedor · Fragmentos emocionales",
+      fearclawAlt: "FearClaw surge entre la niebla carmesí de la arena",
+      fearclawIndex: "EL CLÍMAX · ARENA DE LA ZONA 2",
+      fearclawBody: "Al final del Party School Path comienza la cacería en tres fases. Calcula tus paradas con el Breaker, llena el medidor de aturdimiento y purifica a FearClaw para convertirlo en FrayClaw.",
+      phases: [
+        "Lee el ritmo de los ataques",
+        "Para con el Breaker",
+        "Aturde y purifica",
+      ],
+      fearclawReward: "Recompensa: pistola Stillness · Abre la puerta 3 de Dream Island 1",
     },
   },
   companions: {

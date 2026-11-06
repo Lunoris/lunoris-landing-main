@@ -9,6 +9,9 @@ import {
   SteamLogoSvg,
 } from "@/components/ui/CanvasFrames";
 import { LanguageSwitcher } from "@/components/ui/LanguageSwitcher";
+import { FloatingLetters } from "@/components/ui/FloatingLetters";
+import { MagneticLetters } from "@/components/ui/MagneticLetters";
+import { DreamRevealLetters } from "@/components/ui/DreamRevealLetters";
 import { useLanguage } from "@/i18n/LanguageContext";
 
 const SPARKLE_STARS = [
@@ -26,6 +29,12 @@ interface HeaderBarProps {
   navLinks?: NavLinkItem[];
   logoHref?: string;
   enableFlyingCta?: boolean;
+  floatingLetters?: boolean;
+  floatingGlowColor?: string;
+  floatingIntensity?: number;
+  floatingLanguageLetters?: boolean;
+  retroCrt?: boolean;
+  voidDistortion?: boolean;
 }
 
 export function HeaderBar({
@@ -34,9 +43,16 @@ export function HeaderBar({
   navLinks,
   logoHref = "#top",
   enableFlyingCta = true,
+  floatingLetters = false,
+  floatingGlowColor,
+  floatingIntensity,
+  floatingLanguageLetters = false,
+  retroCrt = false,
+  voidDistortion = false,
 }: HeaderBarProps) {
   const { t } = useLanguage();
   const isAnchorLogo = logoHref.startsWith("#");
+  const isStyledBrand = floatingLetters || retroCrt || voidDistortion;
 
   const resolvedNavLinks: NavLinkItem[] = navLinks ?? [
     { href: "#news", label: t.nav.latestNews },
@@ -47,25 +63,79 @@ export function HeaderBar({
     { href: "#roadmap", label: t.nav.roadmap },
   ];
 
+  const brandContent = voidDistortion ? (
+    <span className="lunoris-dream-brand-wrap is-nightmare-brand">
+      <span
+        className="lunoris-dream-brand-star is-nightmare-star"
+        aria-hidden="true"
+      >
+        ✦
+      </span>
+      <span className="lunoris-dream-brand-wordmark">
+        <DreamRevealLetters
+          text="LUNORIS"
+          variant="heading"
+          glowColor="rgba(217, 70, 239, 0.92)"
+        />
+      </span>
+    </span>
+  ) : retroCrt ? (
+    <span className="lunoris-dream-brand-wrap is-retro-brand">
+      <span className="lunoris-dream-brand-star is-retro-star" aria-hidden="true">
+        ✦
+      </span>
+      <span className="lunoris-dream-brand-wordmark">
+        <MagneticLetters
+          text="LUNORIS"
+          glowColor="rgba(251, 191, 36, 0.94)"
+          intensity={1.08}
+        />
+      </span>
+    </span>
+  ) : floatingLetters ? (
+    <span className="lunoris-dream-brand-wrap">
+      <span className="lunoris-dream-brand-star" aria-hidden="true">
+        ✦
+      </span>
+      <span className="lunoris-dream-brand-wordmark">
+        <FloatingLetters
+          text="LUNORIS"
+          glowColor={floatingGlowColor ?? "rgba(34, 211, 238, 0.92)"}
+          intensity={floatingIntensity ?? 0.95}
+        />
+      </span>
+    </span>
+  ) : (
+    <img
+      src="/assets/logo-wordmark.svg"
+      alt="Lunoris: Piece of Mind"
+      width={184}
+      height={42}
+      className="lunoris-logo-img"
+    />
+  );
+
   return (
     <header className="lunoris-header">
       <div className="lunoris-header-inner">
         <div className="lunoris-header-left">
           {isAnchorLogo ? (
-            <a href={logoHref} className="lunoris-logo-link">
-              <img
-                src="/assets/logo-wordmark.svg"
-                alt="Lunoris: Piece of Mind"
-                className="lunoris-logo-img"
-              />
+            <a
+              href={logoHref}
+              className={`lunoris-logo-link ${
+                isStyledBrand ? "is-dream-brand" : ""
+              }`}
+            >
+              {brandContent}
             </a>
           ) : (
-            <Link href={logoHref} className="lunoris-logo-link">
-              <img
-                src="/assets/logo-wordmark.svg"
-                alt="Lunoris: Piece of Mind"
-                className="lunoris-logo-img"
-              />
+            <Link
+              href={logoHref}
+              className={`lunoris-logo-link ${
+                isStyledBrand ? "is-dream-brand" : ""
+              }`}
+            >
+              {brandContent}
             </Link>
           )}
 
@@ -73,11 +143,51 @@ export function HeaderBar({
             {resolvedNavLinks.map((link) =>
               link.href.startsWith("#") ? (
                 <a key={link.href} href={link.href}>
-                  {link.label}
+                  {voidDistortion ? (
+                    <DreamRevealLetters
+                      text={link.label}
+                      variant="body"
+                      glowColor="rgba(217, 70, 239, 0.85)"
+                    />
+                  ) : retroCrt ? (
+                    <MagneticLetters
+                      text={link.label}
+                      glowColor="rgba(251, 191, 36, 0.88)"
+                      intensity={0.95}
+                    />
+                  ) : floatingLetters ? (
+                    <FloatingLetters
+                      text={link.label}
+                      glowColor={floatingGlowColor ?? "rgba(34, 211, 238, 0.85)"}
+                      intensity={floatingIntensity ?? 0.62}
+                    />
+                  ) : (
+                    link.label
+                  )}
                 </a>
               ) : (
                 <Link key={link.href} href={link.href}>
-                  {link.label}
+                  {voidDistortion ? (
+                    <DreamRevealLetters
+                      text={link.label}
+                      variant="body"
+                      glowColor="rgba(217, 70, 239, 0.85)"
+                    />
+                  ) : retroCrt ? (
+                    <MagneticLetters
+                      text={link.label}
+                      glowColor="rgba(251, 191, 36, 0.88)"
+                      intensity={0.95}
+                    />
+                  ) : floatingLetters ? (
+                    <FloatingLetters
+                      text={link.label}
+                      glowColor={floatingGlowColor ?? "rgba(34, 211, 38, 0.85)"}
+                      intensity={floatingIntensity ?? 0.62}
+                    />
+                  ) : (
+                    link.label
+                  )}
                 </Link>
               )
             )}
@@ -85,7 +195,11 @@ export function HeaderBar({
         </div>
 
         <div className="lunoris-header-right">
-          <LanguageSwitcher />
+          <LanguageSwitcher
+            floatingLetters={floatingLanguageLetters}
+            glowColor={floatingGlowColor}
+            intensity={floatingIntensity}
+          />
 
           {enableFlyingCta ? (
             <div ref={navBtnSlotRef} className="lunoris-steam-nav-slot">

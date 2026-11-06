@@ -238,13 +238,149 @@ export const fr: SiteTranslations = {
         desc: "Franchissez les portes de l’École de Lunora vers les trois chapitres oniriques — survolez les îles flottantes dans « Le Monde qui répond », pénétrez la toile vivante inspirée de Van Gogh dans « L’Homme dans le souvenir » et élevez-vous vers le portail doré d’espoir de « Percée ».",
       },
       "retro-games": {
-        title: "Jeux Rétro",
+        title: "Niveaux Rétro",
         desc: "Prenez la route à bord d’une 1967 Chevrolet Impala sur une autoroute de minuit infinie entre deux songes, où souvenirs de famille et fréquences radio du tableau de bord transforment la mémoire 3D en chapitres d’arcade rétro jouables en 2D.",
       },
       nightmare: {
         title: "Cauchemar",
         desc: "Plongez à travers le miroir embué ou le vortex violet-indigo du sous-sol vers des couloirs de Cauchemar mouvants — franchissez des brèches magenta en dissolution pour affronter FearClaw ou reprendre souffle au sanctuaire Matchi Matchi.",
       },
+    },
+  },
+  portalPages: {
+    dreamRiddle: {
+      eyebrow: "TROIS PORTES · UNE SEULE ISSUE",
+      title: "Quelle porte n’ouvririez-vous jamais ?",
+      body: "Derrière l’une : la douleur dont vous vous souvenez. Derrière l’autre : la culpabilité que vous cachez. Derrière la troisième : ce que vous redoutez le plus — la vérité. Lunora a déjà choisi. Et vous ?",
+      cue: "Faites défiler — si vous l’osez",
+    },
+    retroComingSoon: {
+      kicker: "L’ARCADE CONTINUE",
+      title: "D’AUTRES NIVEAUX ARRIVENT BIENTÔT",
+    },
+    navWorld: "Portails du monde",
+    dream: {
+      heroMinor: "CAMPAGNE PRINCIPALE · ROYAUME DES RÊVES",
+      heroSubtitle: "Plateforme 3D à travers les sept étapes du deuil",
+      heroOverview: "Chaque saut, chaque vol plané et chaque ascension exprime l’état intérieur de Lunora à travers sept mondes oniriques surréalistes.",
+      mapLabel: "Carte de progression des Dream Levels",
+      levels: [
+        {
+          description: "Une forêt surréaliste se mêle aux ruines de Diriyah et change selon votre regard.",
+          hook: "Êtes-vous sûr de pouvoir vous fier au chemin ?",
+        },
+        {
+          description: "Planez au-dessus d’îles brisées avec Kurtam et trouvez la première faille vers le Cauchemar.",
+          hook: "Et si la faille vous avait déjà trouvé ?",
+        },
+        {
+          description: "Après l’affrontement avec FearClaw, des pierres éparses forment un escalier au-dessus de l’abîme.",
+          hook: "Au sommet : une réponse — et une ombre à laquelle on n’échappe pas.",
+        },
+      ],
+      comingSoon: "D’AUTRES NIVEAUX ARRIVENT BIENTÔT",
+    },
+    retro: {
+      introMinor: "LE SOUS-SOL DE JOHN FORD · SOUVENIRS ÉCHO",
+      introSubtitle: "Des bornes d’arcade dans le sous-sol de John Ford. Chacune renferme un souvenir jouable. Certaines n’ont pas encore été allumées…",
+      ui: {
+        rowLabel: "Bornes d’arcade",
+        cabinetLabel: "BORNE",
+        nowPlaying: "EN COURS",
+        mysteryHint: "Pas encore allumée",
+        selectHint: "Choisissez une borne pour voir son souvenir",
+        challengeLabel: "VOTRE DÉFI",
+      },
+      levels: {
+        "car-level": {
+          roleSuffix: "Diriyah 1988 · Chevrolet Impala 1967",
+          overview: "Conduisez la Chevrolet Impala 1967 de John Ford sur une autoroute rectiligne de Diriyah en 1988, tandis que Lulwah Al Rashed se précipite chez sa mère pour donner naissance à Lunora.",
+          challenge: "Slalomez sur l’autoroute de 1988 et atteignez la porte avant la fin du chrono.",
+          chapters: [
+            {
+              title: "Chevrolet miniature & clé du garage",
+              bullets: [
+                "Suivez avec Freddy la piste cachée des Lucid Orbs dans Dream Level 2 pour retrouver la voiture miniature.",
+                "Scannez la vraie Impala 1967 dans le Dream Hub avec Retro Vision (R3) pour lancer la course.",
+              ],
+            },
+            {
+              title: "Course à défilement latéral : Diriyah 1988",
+              bullets: [
+                "Caméra 2D latérale fixe façon Dreamcast, chrono de victoire ou de défaite et obstacles à esquiver.",
+                "Se termine devant la porte de la grand-mère maternelle avec l’entrée 9 du journal des dialogues (« Mères et filles »).",
+              ],
+            },
+          ],
+        },
+        "falcon-hunting": {
+          roleSuffix: "Dernier souvenir avec Lulwah Al Rashed (6 ans)",
+          overview: "Prenez directement les commandes du faucon de Lulwah au-dessus du chaud désert saoudien de 1988, avant qu’il ne revienne se poser sur son bras ganté sous le regard de Lunora, six ans.",
+          challenge: "Guidez le faucon au-dessus du désert et ramenez-le sur le bras de Lulwah avant que le souvenir ne s’efface.",
+          chapters: [
+            {
+              title: "Al-Ghashwa (le chaperon du faucon)",
+              bullets: [
+                "Retirez délicatement le chaperon de cuir de l’oiseau perché dans la section 7 de Dream Level 1.",
+                "Terminez le Puzzle Shrine de droite de la Nightmare Zone 1 pour débloquer Retro Vision, puis scannez le chaperon dans le Dream Hub.",
+              ],
+            },
+            {
+              title: "Vol au-dessus du désert en vue de dessus",
+              bullets: [
+                "Caméra orthographique fixe en vue de dessus et visuels rétro du désert façon PS1 et Dreamcast.",
+                "Incarne l’idée centrale du niveau : le faucon qui s’en va puis revient, dans le dernier souvenir de Lunora avec sa mère.",
+              ],
+            },
+          ],
+        },
+      },
+    },
+    arcade: {
+      triggerLabel: "Borne d’arcade secrète · Impala 1967",
+      triggerTitle: "Easter egg : lancer la borne d’arcade Impala 1967",
+      badge: "✦ 1988 · ARCADE",
+      close: "Fermer la borne",
+      cabinetTitle: "BORNE SECRÈTE DE JOHN FORD · DIRIYAH 1988",
+      attractMode: "MODE DÉMO · APPUYEZ SUR START",
+      controls: "COMMANDES · A / D OU ◀ / ▶",
+      echoMemory: "SOUVENIR ÉCHO 01 · DIRIYAH 1988",
+      driveHint: "Conduisez la Chevrolet Impala 1967 sur l’autoroute de minuit",
+      startRace: "✦ INSERT COIN · LANCER LA COURSE ✦",
+      memoryCompleted: "SOUVENIR TERMINÉ · DIRIYAH 1988",
+      arrived: "ARRIVÉE CHEZ GRAND-MÈRE !",
+      quote: "« Têtue et impatiente. Tout comme sa mère. »",
+      interrupted: "SOUVENIR INTERROMPU",
+      retry: "INSERT COIN · RÉESSAYER",
+      playAgain: "REJOUER",
+      buildVideo: "VOIR LA VIDÉO DU JEU",
+      exitToVideo: "✦ RETOUR À LA VIDÉO",
+    },
+    nightmare: {
+      navWasteland: "Terres désolées",
+      kicker: "CARNET DE ROUTE DES TERRES GELÉES",
+      settingIndex: "LE DÉCOR",
+      settingTitle: "Les terres gelées",
+      panoramaAlt: "Les terres désolées du Cauchemar et leurs sept zones",
+      panoramaCaption: "Sept zones · Cinq en surface · Deux sous terre",
+      notes: "C’est une étendue d’un seul tenant, pas un couloir jalonné de marqueurs. Lisez le terrain grâce aux feux de camp violets, aux tunnels et aux balises des sanctuaires.",
+      countsLabel: "Contenu du monde",
+      safeSpots: "refuges",
+      matchiAlt: "Le sanctuaire montagnard de Matchi Matchi",
+      matchiCaption: "UN ABRI PAISIBLE DANS LES TERRES DÉSOLÉES",
+      matchiIndex: "DÉTOUR FACULTATIF · ZONE 1",
+      matchiBody: "Au-delà de l’interminable tunnel de gauche de la zone 1 se trouve Matchi Mountain — un rare endroit pour reprendre son souffle et passer au stand de matcha.",
+      matchiCondition: "Pour briser la boucle : atteindre le Hope maximal et porter le tableau encadré de Père.",
+      matchiReward: "Une pause · Un marchand · Des fragments d’émotion",
+      fearclawAlt: "FearClaw surgit de la brume pourpre de l’arène",
+      fearclawIndex: "LE POINT CULMINANT · ARÈNE DE LA ZONE 2",
+      fearclawBody: "Au bout du Party School Path commence une traque en trois phases. Parez au bon moment avec le Breaker, remplissez la jauge d’étourdissement et purifiez FearClaw en FrayClaw.",
+      phases: [
+        "Lire le rythme des attaques",
+        "Parer avec le Breaker",
+        "Étourdir et purifier",
+      ],
+      fearclawReward: "Récompense : pistolet Stillness · Ouvre la porte 3 de Dream Island 1",
     },
   },
   companions: {
