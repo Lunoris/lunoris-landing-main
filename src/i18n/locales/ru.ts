@@ -492,6 +492,7 @@ export const ru: SiteTranslations = {
       "narrative & design": "Нарратив и геймдизайн",
       marketing: "Маркетинг",
       "marketing & community": "Маркетинг и сообщество",
+      "business development & marketing": "Развитие бизнеса и маркетинг",
       studio: "Команда студии",
       "studio team": "Команда студии",
     },

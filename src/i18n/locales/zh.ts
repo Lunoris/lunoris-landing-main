@@ -487,6 +487,7 @@ export const zh: SiteTranslations = {
       "narrative & design": "叙事与游戏设计",
       marketing: "市场营销",
       "marketing & community": "市场与社区运营",
+      "business development & marketing": "业务拓展与市场营销",
       studio: "工作室团队",
       "studio team": "工作室团队",
     },

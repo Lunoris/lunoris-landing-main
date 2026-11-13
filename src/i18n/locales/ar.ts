@@ -492,6 +492,7 @@ export const ar: SiteTranslations = {
       "narrative & design": "السرد والتصميم",
       marketing: "التسويق",
       "marketing & community": "التسويق والمجتمع",
+      "business development & marketing": "تطوير الأعمال والتسويق",
       studio: "فريق الاستوديو",
       "studio team": "فريق الاستوديو",
     },

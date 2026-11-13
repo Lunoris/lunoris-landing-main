@@ -490,6 +490,7 @@ export const ja: SiteTranslations = {
       "narrative & design": "ナラティブ＆ゲームデザイン",
       marketing: "マーケティング",
       "marketing & community": "マーケティング＆コミュニティ",
+      "business development & marketing": "事業開発＆マーケティング",
       studio: "スタジオチーム",
       "studio team": "スタジオチーム",
     },

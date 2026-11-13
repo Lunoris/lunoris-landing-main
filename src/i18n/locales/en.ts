@@ -492,6 +492,7 @@ export const en: SiteTranslations = {
       "narrative & design": "Narrative & Design",
       marketing: "Marketing",
       "marketing & community": "Marketing & Community",
+      "business development & marketing": "Business Development & Marketing",
       studio: "Studio Team",
       "studio team": "Studio Team",
     },
