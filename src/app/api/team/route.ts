@@ -1,17 +1,19 @@
 import { NextRequest, NextResponse } from "next/server";
 import { revalidatePath, revalidateTag } from "next/cache";
 import {
+  hasAuthCredentialsHeader,
   readAuthenticatedJsonText,
+  verifyNewsWriteAuth,
   withSecurityHeaders,
 } from "@/lib/newsAuth";
 import { getResolvedSiteTeamData, TEAM_TAG } from "@/lib/teamStore";
 import { LOCALE_COOKIE_NAME, normalizeLocale } from "@/i18n/types";
+import { isPlainObject } from "@/lib/newsValidator";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-// The push is only a "something changed" signal (the roster itself is read from the wiki), but it carries the
-// wiki's snapshot, which may hold inline base64 avatars.
+// Webhook payload from Lunoris Wiki may carry snapshot metadata + inline base64 avatars
 const MAX_TEAM_WEBHOOK_BYTES = 10 * 1024 * 1024;
 
 export async function GET(req: NextRequest) {
@@ -28,9 +30,19 @@ export async function GET(req: NextRequest) {
       searchParams.get("locale") ||
       req.cookies.get(LOCALE_COOKIE_NAME)?.value;
     const lang = normalizeLocale(langParam);
-    const forcePull =
+
+    const requestedPull =
       searchParams.get("refresh") === "1" ||
       searchParams.get("pull") === "1";
+
+    // Only honor cache-busting forcePull if valid publishing credentials are supplied
+    const forcePull =
+      requestedPull &&
+      hasAuthCredentialsHeader(req) &&
+      verifyNewsWriteAuth(req, "", {
+        allowLegacyHmac: true,
+        recordAttempt: false,
+      }).ok;
 
     const resolved = await getResolvedSiteTeamData({
       forcePull,
@@ -72,13 +84,14 @@ export async function GET(req: NextRequest) {
 
 /**
  * Webhook endpoint receiving automatic Push signals from Lunoris Wiki
- * (`POST ${LUNORIS_SITE_URL}/api/team`) whenever a team member toggles `public`,
- * uploads a new `avatar_url`, or updates their `bio`, `title`, or `links`.
+ * (`POST ${LUNORIS_SITE_URL}/api/team`). Preserves `allowLegacyHmac: true` so existing
+ * Wiki webhook signatures (`sha256=HMAC(secret, "<timestamp>.<rawBody>")`) continue to work alongside HMAC v2.
  */
 export async function POST(req: NextRequest) {
   const bodyResult = await readAuthenticatedJsonText(
     req,
-    MAX_TEAM_WEBHOOK_BYTES
+    MAX_TEAM_WEBHOOK_BYTES,
+    { allowLegacyHmac: true }
   );
   if (!bodyResult.ok) {
     return bodyResult.response;
@@ -86,11 +99,11 @@ export async function POST(req: NextRequest) {
 
   let payload: Record<string, unknown>;
   try {
-    const parsed = JSON.parse(bodyResult.rawBody);
-    if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
+    const parsed: unknown = JSON.parse(bodyResult.rawBody);
+    if (!isPlainObject(parsed)) {
       throw new Error("Expected a JSON object body.");
     }
-    payload = parsed as Record<string, unknown>;
+    payload = parsed;
   } catch {
     return withSecurityHeaders(
       NextResponse.json({ error: "Invalid JSON body." }, { status: 400 })
@@ -101,7 +114,6 @@ export async function POST(req: NextRequest) {
     revalidateTag(TEAM_TAG, { expire: 0 });
     const resolved = await getResolvedSiteTeamData({ forcePull: true });
 
-    // Immediately revalidate both the Main Landing Page (/#team) and /team
     revalidatePath("/");
     revalidatePath("/team");
 
@@ -109,7 +121,8 @@ export async function POST(req: NextRequest) {
       NextResponse.json(
         {
           ok: true,
-          event: payload.event || "team.updated",
+          event:
+            typeof payload.event === "string" ? payload.event : "team.updated",
           updated_at: resolved.updated_at,
           allowed_social_platforms: resolved.allowed_social_platforms,
           leaders: resolved.leaders,
@@ -120,11 +133,12 @@ export async function POST(req: NextRequest) {
         { status: 200 }
       )
     );
-  } catch (err) {
-    const message =
-      err instanceof Error ? err.message : "Failed to save team snapshot.";
+  } catch {
     return withSecurityHeaders(
-      NextResponse.json({ error: message }, { status: 400 })
+      NextResponse.json(
+        { error: "Failed to refresh team snapshot." },
+        { status: 500 }
+      )
     );
   }
 }

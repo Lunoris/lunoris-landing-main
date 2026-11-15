@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Lunoris News Publisher CLI
+ * Lunoris News Publisher CLI (HMAC-SHA256 v2)
  *
  * Supports:
  * 1) Publishing a news JSON file (with optional local image/video upload or remote media URLs):
@@ -43,7 +43,7 @@ async function loadEnvLocal() {
   }
 }
 
-function buildAuthHeaders(rawBody = "") {
+function buildAuthHeaders(method, pathname, bodyBytes = Buffer.alloc(0)) {
   const apiKey = process.env.LUNORIS_NEWS_API_KEY || "";
   const hmacSecret = process.env.LUNORIS_NEWS_HMAC_SECRET || apiKey;
   if (!apiKey && !hmacSecret) {
@@ -56,18 +56,39 @@ function buildAuthHeaders(rawBody = "") {
   const headers = {};
 
   if (hmacSecret) {
+    const bodySha256 = crypto
+      .createHash("sha256")
+      .update(bodyBytes)
+      .digest("hex");
+    const canonical = `v2.${timestamp}.${method.toUpperCase()}.${pathname}.${bodySha256}`;
     const sig = crypto
       .createHmac("sha256", hmacSecret)
-      .update(`${timestamp}.${rawBody}`, "utf8")
+      .update(canonical, "utf8")
       .digest("hex");
     headers["X-Lunoris-Timestamp"] = timestamp;
-    headers["X-Lunoris-Signature"] = `sha256=${sig}`;
+    headers["X-Lunoris-Signature"] = `v2=${sig}`;
   }
   if (apiKey) {
     headers["Authorization"] = `Bearer ${apiKey}`;
   }
 
   return headers;
+}
+
+async function sendMultipartSigned(targetUrl, method, form) {
+  const parsedUrl = new URL(targetUrl);
+  const serialized = new Request(targetUrl, { method, body: form });
+  const contentType = serialized.headers.get("content-type");
+  const rawBuffer = Buffer.from(await serialized.arrayBuffer());
+
+  return fetch(targetUrl, {
+    method,
+    headers: {
+      ...(contentType ? { "Content-Type": contentType } : {}),
+      ...buildAuthHeaders(method, parsedUrl.pathname, rawBuffer),
+    },
+    body: rawBuffer,
+  });
 }
 
 function parseArgs(argv) {
@@ -99,13 +120,12 @@ async function main() {
 
   // 1. Delete article by slug
   if (typeof args.delete === "string") {
-    const res = await fetch(
-      `${baseUrl}/api/news/${encodeURIComponent(args.delete)}`,
-      {
-        method: "DELETE",
-        headers: buildAuthHeaders(""),
-      }
-    );
+    const targetUrl = `${baseUrl}/api/news/${encodeURIComponent(args.delete)}`;
+    const parsedUrl = new URL(targetUrl);
+    const res = await fetch(targetUrl, {
+      method: "DELETE",
+      headers: buildAuthHeaders("DELETE", parsedUrl.pathname, ""),
+    });
     const data = await res.json();
     console.log(JSON.stringify(data, null, 2));
     process.exit(res.ok ? 0 : 1);
@@ -115,16 +135,12 @@ async function main() {
   if (typeof args.upload === "string") {
     const fileBuf = await fs.readFile(args.upload);
     const form = new FormData();
-    form.append(
-      "file",
-      new Blob([fileBuf]),
-      path.basename(args.upload)
+    form.append("file", new Blob([fileBuf]), path.basename(args.upload));
+    const res = await sendMultipartSigned(
+      `${baseUrl}/api/news/upload`,
+      "POST",
+      form
     );
-    const res = await fetch(`${baseUrl}/api/news/upload`, {
-      method: "POST",
-      headers: buildAuthHeaders(""),
-      body: form,
-    });
     const data = await res.json();
     console.log(JSON.stringify(data, null, 2));
     process.exit(res.ok ? 0 : 1);
@@ -132,12 +148,14 @@ async function main() {
 
   // 3. Mirror external media URL
   if (typeof args["mirror-url"] === "string") {
+    const targetUrl = `${baseUrl}/api/news/upload`;
+    const parsedUrl = new URL(targetUrl);
     const rawBody = JSON.stringify({ url: args["mirror-url"] });
-    const res = await fetch(`${baseUrl}/api/news/upload`, {
+    const res = await fetch(targetUrl, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        ...buildAuthHeaders(rawBody),
+        ...buildAuthHeaders("POST", parsedUrl.pathname, Buffer.from(rawBody, "utf8")),
       },
       body: rawBody,
     });
@@ -150,6 +168,7 @@ async function main() {
   if (typeof args.file === "string") {
     const rawJson = await fs.readFile(args.file, "utf8");
     const parsed = JSON.parse(rawJson);
+    const targetUrl = `${baseUrl}/api/news`;
 
     if (args.image || args.video) {
       const form = new FormData();
@@ -164,21 +183,18 @@ async function main() {
         form.append("videoFile", new Blob([vidBuf]), path.basename(args.video));
       }
 
-      const res = await fetch(`${baseUrl}/api/news`, {
-        method: "POST",
-        headers: buildAuthHeaders(""),
-        body: form,
-      });
+      const res = await sendMultipartSigned(targetUrl, "POST", form);
       const data = await res.json();
       console.log(JSON.stringify(data, null, 2));
       process.exit(res.ok ? 0 : 1);
     } else {
+      const parsedUrl = new URL(targetUrl);
       const bodyStr = JSON.stringify(parsed);
-      const res = await fetch(`${baseUrl}/api/news`, {
+      const res = await fetch(targetUrl, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          ...buildAuthHeaders(bodyStr),
+          ...buildAuthHeaders("POST", parsedUrl.pathname, Buffer.from(bodyStr, "utf8")),
         },
         body: bodyStr,
       });

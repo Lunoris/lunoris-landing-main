@@ -10,12 +10,23 @@ import {
 import { NewsArticleCard } from "@/components/ui/NewsArticleCard";
 import { useLanguage } from "@/i18n/LanguageContext";
 
-export function LatestNewsSection() {
+export function LatestNewsSection({
+  initialArticles,
+}: {
+  initialArticles?: NewsArticle[];
+}) {
   const { t } = useLanguage();
-  const [articles, setArticles] = useState<NewsArticle[]>(LUNORIS_NEWS);
+  const [articles, setArticles] = useState<NewsArticle[]>(
+    initialArticles && initialArticles.length > 0
+      ? initialArticles
+      : LUNORIS_NEWS
+  );
   const [newsOffset, setNewsOffset] = useState(0);
 
   useEffect(() => {
+    if (initialArticles && initialArticles.length > 0) {
+      return;
+    }
     let active = true;
     fetch("/api/news", { cache: "no-store" })
       .then((res) => (res.ok ? res.json() : null))
@@ -30,7 +41,7 @@ export function LatestNewsSection() {
     return () => {
       active = false;
     };
-  }, []);
+  }, [initialArticles]);
 
   const visibleCount = Math.min(4, articles.length);
   const visibleNews =

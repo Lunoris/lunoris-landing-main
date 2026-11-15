@@ -1,6 +1,11 @@
 "use client";
 
 import React, { useEffect, useRef, useState } from "react";
+import {
+  playBufferedOrHtmlAudio,
+  preloadDecodedAudioBuffer,
+  resumeSharedAudioContext,
+} from "@/lib/sharedAudioContext";
 
 export interface DreamDissolveOptions {
   /** Image URL of the portal / outgoing scene */
@@ -40,44 +45,13 @@ const GLASS_OUT_URLS = [
   "/assets/sfx/glass-transition-out-2.wav",
 ];
 
-let sharedAudioCtx: AudioContext | null = null;
-const decodedBufferCache = new Map<string, AudioBuffer>();
 let audioPreloadStarted = false;
-
-function getOrCreateAudioContext(): AudioContext | null {
-  if (typeof window === "undefined") return null;
-  if (!sharedAudioCtx) {
-    const AudioCtx =
-      window.AudioContext ||
-      (window as unknown as { webkitAudioContext?: typeof AudioContext })
-        .webkitAudioContext;
-    if (AudioCtx) {
-      sharedAudioCtx = new AudioCtx();
-    }
-  }
-  return sharedAudioCtx;
-}
 
 async function preloadGameSfxBuffers() {
   if (audioPreloadStarted || typeof window === "undefined") return;
   audioPreloadStarted = true;
-  const ctx = getOrCreateAudioContext();
-  if (!ctx) return;
-
   const allUrls = [...GLASS_IN_URLS, ...GLASS_OUT_URLS];
-  await Promise.all(
-    allUrls.map(async (url) => {
-      try {
-        const res = await fetch(url);
-        if (!res.ok) return;
-        const arr = await res.arrayBuffer();
-        const buf = await ctx.decodeAudioData(arr.slice(0));
-        decodedBufferCache.set(url, buf);
-      } catch {
-        // Ignore decode errors; HTMLAudioElement fallback handles playback
-      }
-    })
-  );
+  await Promise.all(allUrls.map((url) => preloadDecodedAudioBuffer(url)));
 }
 
 /** Fetch + decode the glass transition SFX ahead of time (idempotent). */
@@ -91,46 +65,14 @@ export function preloadShatteredAudio() {
  */
 export function unlockShatteredAudio() {
   if (typeof window === "undefined") return;
-  const ctx = getOrCreateAudioContext();
-  if (ctx && ctx.state === "suspended") {
-    ctx.resume().catch(() => {});
-  }
-  preloadGameSfxBuffers();
+  resumeSharedAudioContext();
+  preloadShatteredAudio();
 }
 
 function playGameSfx(urls: string[], volume = 0.78) {
   if (typeof window === "undefined") return;
   const url = urls[Math.floor(Math.random() * urls.length)];
-  const ctx = getOrCreateAudioContext();
-
-  if (ctx) {
-    if (ctx.state === "suspended") {
-      ctx.resume().catch(() => {});
-    }
-    const buf = decodedBufferCache.get(url);
-    if (buf) {
-      try {
-        const source = ctx.createBufferSource();
-        const gain = ctx.createGain();
-        gain.gain.value = volume;
-        source.buffer = buf;
-        source.connect(gain);
-        gain.connect(ctx.destination);
-        source.start(0);
-        return;
-      } catch {
-        // Fallback to HTMLAudioElement below
-      }
-    }
-  }
-
-  try {
-    const audio = new Audio(url);
-    audio.volume = volume;
-    audio.play().catch(() => {});
-  } catch {
-    // Ignore autoplay block if any
-  }
+  playBufferedOrHtmlAudio(url, volume);
 }
 
 export function triggerShatteredReality(options: ShatteredRealityOptions = {}) {
@@ -476,8 +418,8 @@ function buildSourceSceneCanvas(
   if (img && img.naturalWidth > 0 && img.naturalHeight > 0) {
     const imgAspect = img.naturalWidth / img.naturalHeight;
     const viewAspect = vw / vh;
-    let drawW = vw;
-    let drawH = vh;
+    let drawW: number;
+    let drawH: number;
     let offsetX = 0;
     let offsetY = 0;
 
@@ -707,8 +649,8 @@ export function DreamDissolveTransition() {
             elapsed = holdEnd - 1;
           }
 
-          let shaderProgress = 0;
-          let isDissolveOut = 0;
+          let shaderProgress: number;
+          let isDissolveOut: number;
 
           if (elapsed < phaseDurationMs) {
             // Phase 1: DissolveIn (progress 0 -> 1)

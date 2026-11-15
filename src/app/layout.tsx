@@ -1,18 +1,9 @@
 import type { Metadata } from "next";
-import { cookies } from "next/headers";
 import localFont from "next/font/local";
 import { LanguageProvider } from "@/i18n/LanguageContext";
-import { DreamDissolveTransition } from "@/components/ui/DreamDissolveTransition";
-import { NightmareRiftTransition } from "@/components/ui/NightmareRiftTransition";
-import { RetroArcadeTransition } from "@/components/ui/RetroArcadeTransition";
-import { DreamParticles } from "@/components/ui/DreamParticles";
-import { LivingPaintingBackground } from "@/components/ui/LivingPaintingBackground";
+import { GlobalStageOverlays } from "@/components/ui/GlobalStageOverlays";
 import { RouteReadySignal } from "@/components/ui/routeReady";
-import {
-  LOCALE_COOKIE_NAME,
-  getLocaleOption,
-  normalizeLocale,
-} from "@/i18n/types";
+import { DEFAULT_LOCALE, LOCALE_COOKIE_NAME } from "@/i18n/types";
 import "./globals.css";
 
 const ovoFont = localFont({
@@ -21,15 +12,27 @@ const ovoFont = localFont({
   style: "normal",
   variable: "--font-ovo-local",
   display: "swap",
+  preload: true,
   adjustFontFallback: false,
 });
+
+const siteUrl = (
+  process.env.LUNORIS_SITE_URL ||
+  process.env.NEXT_PUBLIC_SITE_URL ||
+  "https://lunoris-investor-pitch.vercel.app"
+).replace(/\/+$/, "");
 
 const title = "Lunoris: Piece of Mind | Official Game Experience";
 const description =
   "Explore five interconnected realms inside a young artist's fractured subconscious in Lunoris: Piece of Mind, an emotional 3D action-adventure for PC, PlayStation 5, and Xbox Series X|S.";
 
-// The share image comes from opengraph-image.tsx / twitter-image.tsx.
+// Synchronously aligns <html lang> and <html dir> before first paint without forcing dynamic SSR cookies()
+const LOCALE_BOOT_SCRIPT = `(function(){try{var k=${JSON.stringify(
+  LOCALE_COOKIE_NAME
+)};var m=document.cookie.match(new RegExp("(?:^|;\\\\s*)"+k+"=([^;]+)"));var v=m?decodeURIComponent(m[1]):localStorage.getItem(k);var ok={en:1,ru:1,ar:1,de:1,fr:1,es:1,zh:1,ja:1};var l=v&&ok[v]?v:"en";var d=document.documentElement;d.lang=l;d.dir=l==="ar"?"rtl":"ltr";}catch(e){}})();`;
+
 export const metadata: Metadata = {
+  metadataBase: new URL(siteUrl),
   title,
   description,
   icons: {
@@ -48,39 +51,25 @@ export const metadata: Metadata = {
   },
 };
 
-export default async function RootLayout({
+export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const cookieStore = await cookies();
-  const initialLocale = normalizeLocale(
-    cookieStore.get(LOCALE_COOKIE_NAME)?.value
-  );
-  const localeMeta = getLocaleOption(initialLocale);
-
   return (
     <html
-      lang={initialLocale}
-      dir={localeMeta.dir}
+      lang={DEFAULT_LOCALE}
+      dir="ltr"
+      data-scroll-behavior="smooth"
       className={ovoFont.variable}
+      suppressHydrationWarning
     >
       <head>
-        <link
-          rel="preload"
-          href="/fonts/Ovo-Regular.ttf"
-          as="font"
-          type="font/ttf"
-          crossOrigin="anonymous"
-        />
+        <script dangerouslySetInnerHTML={{ __html: LOCALE_BOOT_SCRIPT }} />
       </head>
       <body>
-        <LanguageProvider initialLocale={initialLocale}>
-          <LivingPaintingBackground />
-          <DreamParticles />
-          <DreamDissolveTransition />
-          <NightmareRiftTransition />
-          <RetroArcadeTransition />
+        <LanguageProvider>
+          <GlobalStageOverlays />
           <RouteReadySignal />
           {children}
         </LanguageProvider>

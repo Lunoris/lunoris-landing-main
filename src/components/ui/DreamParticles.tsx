@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import { usePathname } from "next/navigation";
 
 interface PaletteColor {
   name: string;
@@ -138,8 +139,23 @@ function createGlowSprite(color: PaletteColor): HTMLCanvasElement {
   return offscreen;
 }
 
+const HIDDEN_ON_PATHS = ["/dream-levels", "/nightmare", "/retro-levels"];
+
 export function DreamParticles() {
+  const pathname = usePathname();
+  if (pathname && HIDDEN_ON_PATHS.some((path) => pathname.startsWith(path))) {
+    return null;
+  }
+  return <DreamParticlesCanvas pathname={pathname || "/"} />;
+}
+
+function DreamParticlesCanvas({ pathname }: { pathname: string }) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const pathnameRef = useRef(pathname);
+
+  useEffect(() => {
+    pathnameRef.current = pathname;
+  }, [pathname]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -148,7 +164,6 @@ export function DreamParticles() {
     const ctx = canvas.getContext("2d", { alpha: true });
     if (!ctx) return;
 
-    const rootEl = document.documentElement;
     const reducedMotionQuery = window.matchMedia(
       "(prefers-reduced-motion: reduce)"
     );
@@ -164,7 +179,16 @@ export function DreamParticles() {
     let cachedRectHeight = 1;
     let dpr = 1;
     let particles: Particle[] = [];
-    let rafId = 0;
+    let currentAlphas = new Float32Array(0);
+    let glowLightFactors = new Float32Array(0);
+    let renderX = new Float32Array(0);
+    let renderY = new Float32Array(0);
+    let cachedHeroEl: HTMLElement | null = null;
+    let cachedFlowCanvasEl: HTMLElement | null = null;
+    let lastObservedPath = "";
+    let pathProbeCount = 0;
+    let lastPathProbeAt = -10000;
+    let rafId: number | null = null;
     let lastTime = performance.now();
     let lastScrollY = window.scrollY || 0;
 
@@ -368,22 +392,48 @@ export function DreamParticles() {
       pointer.targetHoverBoost = 1;
     };
 
-    const renderFrame = (now: number) => {
-      if (document.hidden) {
-        lastTime = now;
-        lastScrollY = window.scrollY || 0;
-        rafId = window.requestAnimationFrame(renderFrame);
-        return;
+    const resolveParallaxTargets = (now: number) => {
+      if (lastObservedPath !== pathnameRef.current) {
+        lastObservedPath = pathnameRef.current;
+        cachedHeroEl = null;
+        cachedFlowCanvasEl = null;
+        pathProbeCount = 0;
+        lastPathProbeAt = -10000;
       }
+      if (cachedHeroEl && !cachedHeroEl.isConnected) {
+        cachedHeroEl = null;
+      }
+      if (cachedFlowCanvasEl && !cachedFlowCanvasEl.isConnected) {
+        cachedFlowCanvasEl = null;
+      }
+      if (
+        (!cachedHeroEl || !cachedFlowCanvasEl) &&
+        pathProbeCount < 4 &&
+        now - lastPathProbeAt > 350
+      ) {
+        lastPathProbeAt = now;
+        pathProbeCount += 1;
+        if (!cachedHeroEl) {
+          cachedHeroEl = document.querySelector<HTMLElement>(".lunoris-hero");
+        }
+        if (!cachedFlowCanvasEl) {
+          cachedFlowCanvasEl =
+            document.querySelector<HTMLElement>(".lp-flow-canvas");
+        }
+      }
+    };
 
+    const drawFrame = (now: number, advanceMotion: boolean) => {
       // Clamp delta time so tab switching never causes a large jump
-      const dt = Math.min(0.05, Math.max(0.001, (now - lastTime) / 1000));
+      const dt = advanceMotion
+        ? Math.min(0.05, Math.max(0.001, (now - lastTime) / 1000))
+        : 0.016;
       lastTime = now;
-      const timeSec = now * 0.001;
+      const timeSec = advanceMotion ? now * 0.001 : 0;
 
       // Measure page scroll delta so particles live in page-space and change as you scroll
       const currentScrollY = window.scrollY || 0;
-      const rawScrollDelta = currentScrollY - lastScrollY;
+      const rawScrollDelta = advanceMotion ? currentScrollY - lastScrollY : 0;
       lastScrollY = currentScrollY;
       // Clamp extreme jump (e.g. anchor jump) to at most 1.5 screens
       const scrollDelta = Math.max(
@@ -393,7 +443,7 @@ export function DreamParticles() {
       const scrollScreens = currentScrollY / Math.max(1, height);
 
       // Smoothly interpolate global Mouse Parallax coordinates (--mx, --my)
-      if (prefersReducedMotion) {
+      if (prefersReducedMotion || !advanceMotion) {
         pointer.smoothMx = 0;
         pointer.smoothMy = 0;
       } else {
@@ -410,18 +460,15 @@ export function DreamParticles() {
         pointer.lastCssMy = pointer.smoothMy;
         const mxStr = pointer.smoothMx.toFixed(4);
         const myStr = pointer.smoothMy.toFixed(4);
-        // Set --mx / --my ONLY on .lunoris-hero and .lp-flow-canvas (never on documentElement!)
-        // so mutating mouse parallax never triggers Recalculate Style on thousands of text spans
-        const heroEl = document.querySelector<HTMLElement>(".lunoris-hero");
-        if (heroEl && currentScrollY < height * 1.3) {
-          heroEl.style.setProperty("--mx", mxStr);
-          heroEl.style.setProperty("--my", myStr);
+        // Set --mx / --my ONLY on cached .lunoris-hero and .lp-flow-canvas (never on documentElement!)
+        resolveParallaxTargets(now);
+        if (cachedHeroEl && currentScrollY < height * 1.3) {
+          cachedHeroEl.style.setProperty("--mx", mxStr);
+          cachedHeroEl.style.setProperty("--my", myStr);
         }
-        const flowCanvasEl =
-          document.querySelector<HTMLElement>(".lp-flow-canvas");
-        if (flowCanvasEl) {
-          flowCanvasEl.style.setProperty("--mx", mxStr);
-          flowCanvasEl.style.setProperty("--my", myStr);
+        if (cachedFlowCanvasEl) {
+          cachedFlowCanvasEl.style.setProperty("--mx", mxStr);
+          cachedFlowCanvasEl.style.setProperty("--my", myStr);
         }
       }
 
@@ -533,10 +580,12 @@ export function DreamParticles() {
 
       // 1. Update positions, scroll-through-world travel, cursor deflection & particle illumination
       const count = particles.length;
-      const currentAlphas = new Float32Array(count);
-      const glowLightFactors = new Float32Array(count);
-      const renderX = new Float32Array(count);
-      const renderY = new Float32Array(count);
+      if (currentAlphas.length < count) {
+        currentAlphas = new Float32Array(count);
+        glowLightFactors = new Float32Array(count);
+        renderX = new Float32Array(count);
+        renderY = new Float32Array(count);
+      }
 
       for (let i = 0; i < count; i++) {
         const p = particles[i];
@@ -742,20 +791,75 @@ export function DreamParticles() {
         }
       }
       ctx.globalAlpha = 1;
+    };
 
+    const renderFrame = (now: number) => {
+      rafId = null;
+      if (document.hidden || prefersReducedMotion) {
+        return;
+      }
+      drawFrame(now, true);
       rafId = window.requestAnimationFrame(renderFrame);
+    };
+
+    const stopLoop = () => {
+      if (rafId !== null) {
+        window.cancelAnimationFrame(rafId);
+        rafId = null;
+      }
+    };
+
+    const startLoop = () => {
+      if (rafId === null && !prefersReducedMotion && !document.hidden) {
+        lastTime = performance.now();
+        lastScrollY = window.scrollY || 0;
+        rafId = window.requestAnimationFrame(renderFrame);
+      }
+    };
+
+    const handleResize = () => {
+      syncViewport();
+      if (prefersReducedMotion && !document.hidden) {
+        drawFrame(performance.now(), false);
+      }
+    };
+
+    const handleVisibilityChange = () => {
+      if (document.hidden) {
+        stopLoop();
+      } else if (prefersReducedMotion) {
+        drawFrame(performance.now(), false);
+      } else {
+        startLoop();
+      }
     };
 
     const handleReducedMotionChange = (e: MediaQueryListEvent) => {
       prefersReducedMotion = e.matches;
+      if (prefersReducedMotion) {
+        stopLoop();
+        pointer.active = false;
+        pointer.presence = 0;
+        pointer.targetMx = 0;
+        pointer.targetMy = 0;
+        if (!document.hidden) {
+          drawFrame(performance.now(), false);
+        }
+      } else {
+        startLoop();
+      }
     };
 
     syncViewport();
-    lastTime = performance.now();
-    lastScrollY = window.scrollY || 0;
-    rafId = window.requestAnimationFrame(renderFrame);
+    if (prefersReducedMotion) {
+      if (!document.hidden) {
+        drawFrame(performance.now(), false);
+      }
+    } else {
+      startLoop();
+    }
 
-    window.addEventListener("resize", syncViewport, { passive: true });
+    window.addEventListener("resize", handleResize, { passive: true });
     window.addEventListener("pointermove", handlePointerMove, {
       passive: true,
     });
@@ -763,14 +867,16 @@ export function DreamParticles() {
       passive: true,
     });
     window.addEventListener("blur", handlePointerLeave, { passive: true });
+    document.addEventListener("visibilitychange", handleVisibilityChange);
     reducedMotionQuery.addEventListener("change", handleReducedMotionChange);
 
     return () => {
-      window.cancelAnimationFrame(rafId);
-      window.removeEventListener("resize", syncViewport);
+      stopLoop();
+      window.removeEventListener("resize", handleResize);
       window.removeEventListener("pointermove", handlePointerMove);
       window.removeEventListener("pointerleave", handlePointerLeave);
       window.removeEventListener("blur", handlePointerLeave);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
       reducedMotionQuery.removeEventListener(
         "change",
         handleReducedMotionChange

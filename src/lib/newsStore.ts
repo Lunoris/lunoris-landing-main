@@ -1,20 +1,18 @@
 import fs from "fs/promises";
 import path from "path";
+import { cache } from "react";
 import { del, list, put } from "@vercel/blob";
 import { revalidateTag, unstable_cache } from "next/cache";
 import { LUNORIS_NEWS, type NewsArticle } from "@/data/newsData";
+import { NewsValidationError } from "@/lib/newsValidator";
 
 const DATA_DIR = path.join(process.cwd(), "data");
 const NEWS_FILE = path.join(DATA_DIR, "published-news.json");
 
-// On Vercel the disk does not persist, so articles live in Vercel Blob. Every save writes a new
-// immutable version (news/store/articles-<ms>-<suffix>.json) and readers take the newest one from list():
-// overwriting one file is not safe there, because a direct origin read can briefly return nothing or an old copy.
-// Without a Blob token (plain local dev) they stay in data/published-news.json.
 const USE_BLOB = !!process.env.BLOB_READ_WRITE_TOKEN;
 const BLOB_PREFIX = "news/store/articles-";
-const KEEP_VERSIONS = 10; // older versions are pruned; these double as a short undo history
-const NEWS_TAG = "news";
+const KEEP_VERSIONS = 10;
+export const NEWS_TAG = "news";
 
 /** All stored versions, newest first (the pathname carries the write time). */
 async function listBlobVersions() {
@@ -34,11 +32,13 @@ async function readBlobStore(): Promise<NewsArticle[] | null> {
 }
 
 // Page views read through Next's shared data cache; every save expires it. Errors are not cached.
-const readBlobCached = unstable_cache(readBlobStore, ["news-store"], { tags: [NEWS_TAG] });
+const readBlobCached = unstable_cache(readBlobStore, ["news-store"], {
+  tags: [NEWS_TAG],
+});
 
-// ponytail: two saves landing in the same instant on different instances keep only the later one;
-// news is written by a handful of editors, add a lock (e.g. ifMatch on a pointer blob) if that changes.
-async function updateBlobStore<T>(change: (all: NewsArticle[]) => { next: NewsArticle[] | null; result: T }): Promise<T> {
+async function updateBlobStore<T>(
+  change: (all: NewsArticle[]) => { next: NewsArticle[] | null; result: T }
+): Promise<T> {
   const { next, result } = change((await readBlobStore()) ?? [...LUNORIS_NEWS]);
   if (next) {
     await put(`${BLOB_PREFIX}${Date.now()}.json`, JSON.stringify(next, null, 2), {
@@ -70,7 +70,7 @@ async function ensureNewsStoreInitialized(): Promise<NewsArticle[]> {
     try {
       return (await readBlobCached()) ?? [...LUNORIS_NEWS];
     } catch {
-      return [...LUNORIS_NEWS]; // Blob unreachable: show the built-in articles rather than an error page
+      return [...LUNORIS_NEWS];
     }
   }
   try {
@@ -83,7 +83,6 @@ async function ensureNewsStoreInitialized(): Promise<NewsArticle[]> {
     // File does not exist yet or is invalid JSON; initialize with LUNORIS_NEWS
   }
 
-  // Seed the store from the built-in articles. Where the disk is read-only (Vercel), serve them from memory.
   try {
     await fs.mkdir(DATA_DIR, { recursive: true });
     const tempFile = `${NEWS_FILE}.seed-${process.pid}.tmp`;
@@ -113,6 +112,13 @@ export async function getNewsBySlug(
   return all.find((item) => item.slug === slug);
 }
 
+/** Per-request React.cache wrappers for Server Components (deduplicates generateMetadata + Page reads). */
+export const getCachedAllNews = cache(getAllNews);
+export const getCachedNewsBySlug = cache(async (slug: string) => {
+  const all = await getCachedAllNews();
+  return all.find((item) => item.slug === slug);
+});
+
 export async function upsertNewsArticle(
   article: NewsArticle,
   options: { allowOverwrite?: boolean; targetSlug?: string } = {
@@ -123,31 +129,30 @@ export async function upsertNewsArticle(
     const lookupSlug = options.targetSlug || article.slug;
     const existingIndex = all.findIndex((item) => item.slug === lookupSlug);
 
-    // If renaming slug via PATCH (lookupSlug !== article.slug), ensure no other article already owns the new slug
     if (lookupSlug !== article.slug) {
       const collisionIndex = all.findIndex(
         (item, idx) => item.slug === article.slug && idx !== existingIndex
       );
       if (collisionIndex !== -1) {
-        throw new Error(
-          `Cannot rename slug to "${article.slug}": another article with that slug already exists.`
+        throw new NewsValidationError(
+          `Cannot rename slug to "${article.slug}": another article with that slug already exists.`,
+          409
         );
       }
     }
 
     if (existingIndex !== -1 && options.allowOverwrite === false) {
-      throw new Error(
-        `An article with slug "${article.slug}" already exists. Use PATCH /api/news/${article.slug} or set "upsert": true.`
+      throw new NewsValidationError(
+        `An article with slug "${article.slug}" already exists. Use PATCH /api/news/${article.slug} or set "upsert": true.`,
+        409
       );
     }
 
     let created = true;
     if (existingIndex !== -1) {
-      // Update in-place to preserve exact list order (even when slug is renamed)
       all[existingIndex] = article;
       created = false;
     } else {
-      // Prepend newest article at index 0 so it appears first in Latest News
       all.unshift(article);
     }
 
@@ -157,6 +162,7 @@ export async function upsertNewsArticle(
   return enqueueWrite(async () => {
     const { next, result } = change(await ensureNewsStoreInitialized());
     await writeNewsAtomically(next);
+    revalidateTag(NEWS_TAG, { expire: 0 });
     return result;
   });
 }
@@ -164,12 +170,17 @@ export async function upsertNewsArticle(
 export async function deleteNewsBySlug(slug: string): Promise<boolean> {
   const change = (all: NewsArticle[]) => {
     const next = all.filter((item) => item.slug !== slug);
-    return next.length === all.length ? { next: null, result: false } : { next, result: true };
+    return next.length === all.length
+      ? { next: null, result: false }
+      : { next, result: true };
   };
   if (USE_BLOB) return enqueueWrite(() => updateBlobStore(change));
   return enqueueWrite(async () => {
     const { next, result } = change(await ensureNewsStoreInitialized());
-    if (next) await writeNewsAtomically(next);
+    if (next) {
+      await writeNewsAtomically(next);
+      revalidateTag(NEWS_TAG, { expire: 0 });
+    }
     return result;
   });
 }

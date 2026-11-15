@@ -156,10 +156,16 @@ export function FloatingLetters({
     });
   }, [text, isArabicCursive, tierPrefix]);
 
+  const totalUnits = useMemo(
+    () => wordTokens.reduce((sum, word) => sum + word.chars.length, 0),
+    [wordTokens]
+  );
+
   useEffect(() => {
     const container = containerRef.current;
     if (!container) return;
 
+    charRefs.current.length = totalUnits;
     ensureGlobalInfrastructure();
 
     const radius = 120;
@@ -305,7 +311,7 @@ export function FloatingLetters({
       activeInstances.delete(instance);
       stopObserving();
     };
-  }, [wordTokens, intensity]);
+  }, [wordTokens, totalUnits, intensity]);
 
   let flatCursor = 0;
 

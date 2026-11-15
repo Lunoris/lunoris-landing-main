@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import type { TeamLeader } from "@/data/teamData";
 import {
@@ -33,7 +33,6 @@ export function LeaderPortraitCard({ leader }: { leader: TeamLeader }) {
       <div className="lunoris-canvas-weave" aria-hidden="true" />
       <TallDeckledCanvasFrame />
 
-      {/* Dedicated Profile Photo Slot */}
       <div className="lunoris-leader-portrait-slot">
         {showPhoto && avatarSrc ? (
           <img
@@ -110,12 +109,26 @@ export function LeaderPortraitCard({ leader }: { leader: TeamLeader }) {
   );
 }
 
-export function TeamSection() {
+export function TeamSection({
+  initialLeaders,
+}: {
+  initialLeaders?: TeamLeader[];
+}) {
   const { locale, t } = useLanguage();
-  const [leaders, setLeaders] = useState<TeamLeader[]>([]);
-  const [loaded, setLoaded] = useState(false);
+  const hasServerInitial = initialLeaders !== undefined;
+  const [leaders, setLeaders] = useState<TeamLeader[]>(initialLeaders ?? []);
+  const [loaded, setLoaded] = useState<boolean>(hasServerInitial);
+  const fetchedNonEnRef = useRef(false);
 
   useEffect(() => {
+    // Skip redundant client waterfall on initial English load when server already passed initialLeaders
+    if (hasServerInitial && locale === "en" && !fetchedNonEnRef.current) {
+      return;
+    }
+    if (locale !== "en") {
+      fetchedNonEnRef.current = true;
+    }
+
     let active = true;
     fetch(`/api/team?lang=${encodeURIComponent(locale)}`, { cache: "no-store" })
       .then((res) => (res.ok ? res.json() : null))
@@ -133,7 +146,7 @@ export function TeamSection() {
     return () => {
       active = false;
     };
-  }, [locale]);
+  }, [locale, hasServerInitial]);
 
   return (
     <section id="team" className="lunoris-team-section">

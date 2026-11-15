@@ -182,7 +182,7 @@ export function HeaderBar({
                   ) : floatingLetters ? (
                     <FloatingLetters
                       text={link.label}
-                      glowColor={floatingGlowColor ?? "rgba(34, 211, 38, 0.85)"}
+                      glowColor={floatingGlowColor ?? "rgba(34, 211, 238, 0.85)"}
                       intensity={floatingIntensity ?? 0.62}
                     />
                   ) : (

@@ -11,6 +11,9 @@ interface ResilientVideoProps {
   pauseWhenOffscreen?: boolean;
 }
 
+const MAX_ERROR_RETRIES = 3;
+const ERROR_BACKOFF_MS = [700, 2000, 5000] as const;
+
 export function ResilientVideo({
   src,
   poster,
@@ -22,10 +25,18 @@ export function ResilientVideo({
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const isIntersectingRef = useRef<boolean>(true);
   const retryTimerRef = useRef<number | null>(null);
+  const errorCountRef = useRef<number>(0);
+  const reducedMotionRef = useRef<boolean>(false);
+
+  useEffect(() => {
+    errorCountRef.current = 0;
+  }, [src]);
 
   const safePlay = useCallback(() => {
     const video = videoRef.current;
     if (!video) return;
+    if (errorCountRef.current >= MAX_ERROR_RETRIES) return;
+    if (!controls && reducedMotionRef.current) return;
     if (pauseWhenOffscreen && !isIntersectingRef.current) return;
     if (document.visibilityState === "hidden") return;
 
@@ -37,17 +48,33 @@ export function ResilientVideo({
         // Autoplay or transient decode lock; retry gently
       });
     }
-  }, [pauseWhenOffscreen]);
+  }, [controls, pauseWhenOffscreen]);
 
   const scheduleRecovery = useCallback(
     (reloadSource = false) => {
+      if (!controls && reducedMotionRef.current) return;
+      if (errorCountRef.current >= MAX_ERROR_RETRIES) return;
+
+      let delayMs = 700;
+      if (reloadSource) {
+        const attempt = errorCountRef.current;
+        errorCountRef.current += 1;
+        delayMs =
+          ERROR_BACKOFF_MS[Math.min(attempt, ERROR_BACKOFF_MS.length - 1)];
+      }
+
       if (retryTimerRef.current !== null) {
         window.clearTimeout(retryTimerRef.current);
       }
       retryTimerRef.current = window.setTimeout(() => {
+        retryTimerRef.current = null;
         const video = videoRef.current;
         if (!video) return;
-        if (reloadSource || video.networkState === HTMLMediaElement.NETWORK_NO_SOURCE) {
+        if (!controls && reducedMotionRef.current) return;
+        if (
+          reloadSource ||
+          video.networkState === HTMLMediaElement.NETWORK_NO_SOURCE
+        ) {
           const lastTime = video.currentTime || 0;
           video.load();
           if (lastTime > 0.1) {
@@ -63,19 +90,28 @@ export function ResilientVideo({
           }
         }
         safePlay();
-      }, 650);
+      }, delayMs);
     },
-    [safePlay]
+    [controls, safePlay]
   );
 
   useEffect(() => {
     const video = videoRef.current;
     if (!video) return;
 
+    const reducedMotionQuery = window.matchMedia(
+      "(prefers-reduced-motion: reduce)"
+    );
+    reducedMotionRef.current = reducedMotionQuery.matches;
+
     video.defaultMuted = true;
     video.muted = true;
     video.playsInline = true;
     video.setAttribute("webkit-playsinline", "true");
+
+    if (!controls && reducedMotionRef.current && !video.paused) {
+      video.pause();
+    }
 
     const observer = new IntersectionObserver(
       (entries) => {
@@ -100,11 +136,29 @@ export function ResilientVideo({
       }
     };
 
+    const handleReducedMotionChange = (e: MediaQueryListEvent) => {
+      reducedMotionRef.current = e.matches;
+      const v = videoRef.current;
+      if (!v) return;
+      if (!controls && e.matches) {
+        if (!v.paused) {
+          v.pause();
+        }
+      } else if (
+        document.visibilityState === "visible" &&
+        isIntersectingRef.current
+      ) {
+        safePlay();
+      }
+    };
+
     // Periodic lightweight watchdog: if video is visible on screen and tab is active,
     // but browser evicted the decoder or paused it silently, resume it.
     const watchdogId = window.setInterval(() => {
       const v = videoRef.current;
       if (!v) return;
+      if (errorCountRef.current >= MAX_ERROR_RETRIES) return;
+      if (!controls && reducedMotionRef.current) return;
       if (
         document.visibilityState === "visible" &&
         isIntersectingRef.current &&
@@ -121,8 +175,11 @@ export function ResilientVideo({
     document.addEventListener("visibilitychange", handleVisibilityOrFocus);
     window.addEventListener("focus", handleVisibilityOrFocus);
     window.addEventListener("pageshow", handleVisibilityOrFocus);
+    reducedMotionQuery.addEventListener("change", handleReducedMotionChange);
 
-    safePlay();
+    if (controls || !reducedMotionRef.current) {
+      safePlay();
+    }
 
     return () => {
       observer.disconnect();
@@ -133,8 +190,12 @@ export function ResilientVideo({
       document.removeEventListener("visibilitychange", handleVisibilityOrFocus);
       window.removeEventListener("focus", handleVisibilityOrFocus);
       window.removeEventListener("pageshow", handleVisibilityOrFocus);
+      reducedMotionQuery.removeEventListener(
+        "change",
+        handleReducedMotionChange
+      );
     };
-  }, [pauseWhenOffscreen, safePlay]);
+  }, [controls, pauseWhenOffscreen, safePlay]);
 
   return (
     <video
@@ -142,7 +203,7 @@ export function ResilientVideo({
       className={className}
       src={src}
       poster={poster}
-      autoPlay
+      autoPlay={controls}
       loop
       muted
       playsInline
@@ -159,7 +220,10 @@ export function ResilientVideo({
             }
           : undefined
       }
-      onLoadedData={safePlay}
+      onLoadedData={() => {
+        errorCountRef.current = 0;
+        safePlay();
+      }}
       onCanPlay={safePlay}
       onEnded={() => {
         const video = videoRef.current;

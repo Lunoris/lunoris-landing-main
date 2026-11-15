@@ -144,9 +144,13 @@ function LivingPaintingCanvas() {
   const sceneIndexRef = useRef(0);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
 
-  // Cycle the active painted dream scene every 16 seconds
+  // Cycle the active painted dream scene every 16 seconds (pause when tab is hidden or reduced-motion is active)
   useEffect(() => {
+    const reducedMotionQuery = window.matchMedia(
+      "(prefers-reduced-motion: reduce)"
+    );
     const interval = window.setInterval(() => {
+      if (document.hidden || reducedMotionQuery.matches) return;
       setSceneIndex((prev) => {
         const next = (prev + 1) % DREAM_SCENES.length;
         sceneIndexRef.current = next;
@@ -170,7 +174,7 @@ function LivingPaintingCanvas() {
     let width = 0;
     let height = 0;
     let dpr = 1;
-    let rafId = 0;
+    let rafId: number | null = null;
     let lastTime = performance.now();
     let fieldSeed = Math.random() * 100;
 
@@ -251,16 +255,12 @@ function LivingPaintingCanvas() {
 
     let lastObservedScene = sceneIndexRef.current;
 
-    const render = (now: number) => {
-      if (document.hidden) {
-        lastTime = now;
-        rafId = window.requestAnimationFrame(render);
-        return;
-      }
-
-      const dt = Math.min(0.05, Math.max(0.001, (now - lastTime) / 1000));
+    const drawFrame = (now: number, advanceMotion: boolean) => {
+      const dt = advanceMotion
+        ? Math.min(0.05, Math.max(0.001, (now - lastTime) / 1000))
+        : 0.016;
       lastTime = now;
-      const t = now * 0.001;
+      const t = advanceMotion ? now * 0.001 : 0;
 
       // When scene changes, assign new target colors from the new Dream Scene palette
       if (sceneIndexRef.current !== lastObservedScene) {
@@ -277,7 +277,7 @@ function LivingPaintingCanvas() {
       ctx.clearRect(0, 0, width, height);
 
       const scrollOffset = window.scrollY || 0;
-      const colorLerp = 1 - Math.pow(0.08, dt);
+      const colorLerp = advanceMotion ? 1 - Math.pow(0.08, dt) : 1;
 
       // 1. Render ephemeral drifting & morphing cloud-swirl vortices (never fixed in one place)
       for (let i = 0; i < vortices.length; i++) {
@@ -416,24 +416,77 @@ function LivingPaintingCanvas() {
         }
         ctx.stroke();
       }
+    };
 
+    const render = (now: number) => {
+      rafId = null;
+      if (document.hidden || prefersReducedMotion) {
+        return;
+      }
+      drawFrame(now, true);
       rafId = window.requestAnimationFrame(render);
+    };
+
+    const stopLoop = () => {
+      if (rafId !== null) {
+        window.cancelAnimationFrame(rafId);
+        rafId = null;
+      }
+    };
+
+    const startLoop = () => {
+      if (rafId === null && !prefersReducedMotion && !document.hidden) {
+        lastTime = performance.now();
+        rafId = window.requestAnimationFrame(render);
+      }
+    };
+
+    const handleResize = () => {
+      syncSize();
+      if (prefersReducedMotion && !document.hidden) {
+        drawFrame(performance.now(), false);
+      }
+    };
+
+    const handleVisibilityChange = () => {
+      if (document.hidden) {
+        stopLoop();
+      } else if (prefersReducedMotion) {
+        drawFrame(performance.now(), false);
+      } else {
+        startLoop();
+      }
     };
 
     const handleReducedMotionChange = (e: MediaQueryListEvent) => {
       prefersReducedMotion = e.matches;
+      if (prefersReducedMotion) {
+        stopLoop();
+        if (!document.hidden) {
+          drawFrame(performance.now(), false);
+        }
+      } else {
+        startLoop();
+      }
     };
 
     syncSize();
-    lastTime = performance.now();
-    rafId = window.requestAnimationFrame(render);
+    if (prefersReducedMotion) {
+      if (!document.hidden) {
+        drawFrame(performance.now(), false);
+      }
+    } else {
+      startLoop();
+    }
 
-    window.addEventListener("resize", syncSize, { passive: true });
+    window.addEventListener("resize", handleResize, { passive: true });
+    document.addEventListener("visibilitychange", handleVisibilityChange);
     reducedMotionQuery.addEventListener("change", handleReducedMotionChange);
 
     return () => {
-      window.cancelAnimationFrame(rafId);
-      window.removeEventListener("resize", syncSize);
+      stopLoop();
+      window.removeEventListener("resize", handleResize);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
       reducedMotionQuery.removeEventListener(
         "change",
         handleReducedMotionChange

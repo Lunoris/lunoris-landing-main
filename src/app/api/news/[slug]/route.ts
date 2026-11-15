@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { revalidatePath } from "next/cache";
 import {
+  readAuthenticatedFormData,
   readAuthenticatedJsonText,
   verifyNewsWriteAuth,
   withSecurityHeaders,
@@ -10,6 +11,9 @@ import {
   saveUploadedFileObject,
 } from "@/lib/mediaUpload";
 import {
+  isClientValidationError,
+  isPlainObject,
+  NewsValidationError,
   validateAndBuildNewsArticle,
   validateSlug,
 } from "@/lib/newsValidator";
@@ -18,11 +22,52 @@ import {
   getNewsBySlug,
   upsertNewsArticle,
 } from "@/lib/newsStore";
+import type { NewsArticle } from "@/data/newsData";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 const MAX_JSON_BODY_BYTES = 256 * 1024; // 256 KB
+const MAX_SECTION_UPLOADS = 20;
+
+async function mirrorArticleExternalMedia(
+  article: NewsArticle
+): Promise<NewsArticle> {
+  let image = article.image;
+  if (image.startsWith("http://") || image.startsWith("https://")) {
+    const mirrored = await downloadAndSaveExternalMedia(image, "image");
+    image = mirrored.url;
+  }
+
+  let videoSrc = article.videoSrc;
+  if (
+    videoSrc &&
+    (videoSrc.startsWith("http://") || videoSrc.startsWith("https://"))
+  ) {
+    const mirrored = await downloadAndSaveExternalMedia(videoSrc, "video");
+    videoSrc = mirrored.url;
+  }
+
+  const sections = await Promise.all(
+    article.sections.map(async (sec) => {
+      if (
+        sec.image &&
+        (sec.image.startsWith("http://") || sec.image.startsWith("https://"))
+      ) {
+        const mirrored = await downloadAndSaveExternalMedia(sec.image, "image");
+        return { ...sec, image: mirrored.url };
+      }
+      return sec;
+    })
+  );
+
+  return {
+    ...article,
+    image,
+    ...(videoSrc ? { videoSrc } : {}),
+    sections,
+  };
+}
 
 export async function GET(
   _req: NextRequest,
@@ -46,9 +91,13 @@ export async function GET(
       )
     );
   } catch (err) {
-    const message = err instanceof Error ? err.message : "Invalid slug.";
+    if (isClientValidationError(err)) {
+      return withSecurityHeaders(
+        NextResponse.json({ error: err.message }, { status: err.statusCode })
+      );
+    }
     return withSecurityHeaders(
-      NextResponse.json({ error: message }, { status: 400 })
+      NextResponse.json({ error: "Failed to load article." }, { status: 500 })
     );
   }
 }
@@ -62,19 +111,27 @@ export async function PATCH(
     let payload: Record<string, unknown> = {};
     let formData: FormData | null = null;
 
-    // 1. Authenticate and safely read body BEFORE reading disk or checking slug existence
     if (contentType.includes("multipart/form-data")) {
-      const auth = verifyNewsWriteAuth(req, "");
-      if (!auth.ok && auth.response) {
-        return withSecurityHeaders(auth.response);
+      const formResult = await readAuthenticatedFormData(req);
+      if (!formResult.ok) {
+        return formResult.response;
       }
-      formData = await req.formData();
+      formData = formResult.formData;
     } else {
       const bodyResult = await readAuthenticatedJsonText(req, MAX_JSON_BODY_BYTES);
       if (!bodyResult.ok) {
         return bodyResult.response;
       }
-      payload = JSON.parse(bodyResult.rawBody) as Record<string, unknown>;
+      let parsed: unknown;
+      try {
+        parsed = JSON.parse(bodyResult.rawBody);
+      } catch {
+        throw new NewsValidationError("Invalid JSON body.");
+      }
+      if (!isPlainObject(parsed)) {
+        throw new NewsValidationError("Request body must be a JSON object.");
+      }
+      payload = parsed;
     }
 
     const { slug } = await params;
@@ -90,10 +147,18 @@ export async function PATCH(
     if (formData) {
       const rawJsonField = formData.get("payload") ?? formData.get("data");
       if (typeof rawJsonField === "string" && rawJsonField.trim()) {
-        payload = JSON.parse(rawJsonField) as Record<string, unknown>;
+        let parsedJson: unknown;
+        try {
+          parsedJson = JSON.parse(rawJsonField);
+        } catch {
+          throw new NewsValidationError('Invalid JSON in "payload" field.');
+        }
+        if (!isPlainObject(parsedJson)) {
+          throw new NewsValidationError('"payload" field must be a JSON object.');
+        }
+        payload = parsedJson;
       }
 
-      // Allow top-level scalar fields in formData as well
       for (const field of [
         "slug",
         "title",
@@ -118,15 +183,22 @@ export async function PATCH(
 
       const rawHighlights = formData.get("highlights");
       if (typeof rawHighlights === "string" && rawHighlights.trim()) {
-        payload.highlights = JSON.parse(rawHighlights);
+        try {
+          payload.highlights = JSON.parse(rawHighlights);
+        } catch {
+          throw new NewsValidationError('Invalid JSON in "highlights" field.');
+        }
       }
 
       const rawSections = formData.get("sections");
       if (typeof rawSections === "string" && rawSections.trim()) {
-        payload.sections = JSON.parse(rawSections);
+        try {
+          payload.sections = JSON.parse(rawSections);
+        } catch {
+          throw new NewsValidationError('Invalid JSON in "sections" field.');
+        }
       }
 
-      // Process uploaded cover image file if provided
       const imageFile =
         formData.get("imageFile") ??
         (formData.get("image") instanceof File ? formData.get("image") : null);
@@ -135,7 +207,6 @@ export async function PATCH(
         payload.image = savedImg.url;
       }
 
-      // Process uploaded video file if provided
       const videoFile =
         formData.get("videoFile") ??
         (formData.get("video") instanceof File ? formData.get("video") : null);
@@ -145,7 +216,6 @@ export async function PATCH(
         payload.isVideo = true;
       }
 
-      // Check if any sectionImage_${i} files were uploaded
       const baseSections = Array.isArray(payload.sections)
         ? payload.sections
         : existing.sections.map((sec) => ({
@@ -154,12 +224,13 @@ export async function PATCH(
           }));
 
       let sectionImageModified = false;
-      for (let i = 0; i < baseSections.length; i++) {
+      const maxSections = Math.min(MAX_SECTION_UPLOADS, baseSections.length);
+      for (let i = 0; i < maxSections; i++) {
         const secFile = formData.get(`sectionImage_${i}`);
         if (secFile instanceof File && secFile.size > 0) {
           const savedSecImg = await saveUploadedFileObject(secFile, "image");
-          const secObj = baseSections[i] as Record<string, unknown>;
-          if (secObj && typeof secObj === "object") {
+          const secObj = baseSections[i];
+          if (isPlainObject(secObj)) {
             secObj.image = savedSecImg.url;
             sectionImageModified = true;
           }
@@ -170,48 +241,13 @@ export async function PATCH(
       }
     }
 
-    // Optional: if mirrorExternalMedia === true, download remote media links locally
+    // Validate full schema & limits BEFORE mirroring external media
+    let updatedArticle = validateAndBuildNewsArticle(payload, existing);
+
     if (payload.mirrorExternalMedia === true) {
-      if (
-        typeof payload.image === "string" &&
-        payload.image.startsWith("http")
-      ) {
-        const mirrored = await downloadAndSaveExternalMedia(
-          payload.image,
-          "image"
-        );
-        payload.image = mirrored.url;
-      }
-      if (
-        typeof payload.videoSrc === "string" &&
-        payload.videoSrc.startsWith("http")
-      ) {
-        const mirrored = await downloadAndSaveExternalMedia(
-          payload.videoSrc,
-          "video"
-        );
-        payload.videoSrc = mirrored.url;
-      }
-      if (Array.isArray(payload.sections)) {
-        for (const sec of payload.sections) {
-          if (sec && typeof sec === "object") {
-            const s = sec as Record<string, unknown>;
-            if (typeof s.image === "string" && s.image.startsWith("http")) {
-              const mirrored = await downloadAndSaveExternalMedia(
-                s.image,
-                "image"
-              );
-              s.image = mirrored.url;
-            }
-          }
-        }
-      }
+      updatedArticle = await mirrorArticleExternalMedia(updatedArticle);
     }
 
-    // Note: We do NOT force payload.slug = safeSlug here.
-    // If payload.slug is omitted, validateAndBuildNewsArticle(..., existing) keeps existing.slug.
-    // If payload.slug is provided, it validates the new slug and updates the article in-place via targetSlug.
-    const updatedArticle = validateAndBuildNewsArticle(payload, existing);
     await upsertNewsArticle(updatedArticle, {
       allowOverwrite: true,
       targetSlug: safeSlug,
@@ -235,10 +271,16 @@ export async function PATCH(
       )
     );
   } catch (err) {
-    const message =
-      err instanceof Error ? err.message : "Failed to update article.";
+    if (isClientValidationError(err)) {
+      return withSecurityHeaders(
+        NextResponse.json({ error: err.message }, { status: err.statusCode })
+      );
+    }
     return withSecurityHeaders(
-      NextResponse.json({ error: message }, { status: 400 })
+      NextResponse.json(
+        { error: "Failed to update article." },
+        { status: 500 }
+      )
     );
   }
 }
@@ -271,10 +313,16 @@ export async function DELETE(
       NextResponse.json({ ok: true, deletedSlug: safeSlug }, { status: 200 })
     );
   } catch (err) {
-    const message =
-      err instanceof Error ? err.message : "Failed to delete article.";
+    if (isClientValidationError(err)) {
+      return withSecurityHeaders(
+        NextResponse.json({ error: err.message }, { status: err.statusCode })
+      );
+    }
     return withSecurityHeaders(
-      NextResponse.json({ error: message }, { status: 400 })
+      NextResponse.json(
+        { error: "Failed to delete article." },
+        { status: 500 }
+      )
     );
   }
 }
