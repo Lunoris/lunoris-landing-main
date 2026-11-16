@@ -16,8 +16,11 @@ const MYMEMORY_LANG_MAP: Record<Locale, string> = {
 
 const MAX_CHUNK_BYTES = 420;
 const MAX_MEMORY_CACHE_ENTRIES = 800;
+const NEGATIVE_CACHE_TTL_MS = 10 * 60 * 1000; // 10 min circuit breaker / negative cache on quota or API failure
 
 const memoryBioCache = new Map<string, string>();
+const negativeFailureUntil = new Map<string, number>();
+let globalProviderCooldownUntil = 0;
 const inFlightTranslations = new Map<string, Promise<string>>();
 
 function rememberInMemory(key: string, value: string): void {
@@ -34,7 +37,7 @@ function detectSourceLang(text: string): string {
   const kana = (text.match(/[\u3040-\u30FF]/g) || []).length;
   if (kana > 0) return "ja";
 
-  const latin = (text.match(/[A-Za-z]/g) || []).length;
+  const latin = (text.match(/[A-Za-z\u00C0-\u024F]/g) || []).length;
   const hanzi = (text.match(/[\u4E00-\u9FFF]/g) || []).length;
   if (hanzi > 0 && hanzi >= latin * 0.25) return "zh-CN";
 
@@ -43,6 +46,17 @@ function detectSourceLang(text: string): string {
 
   const arabic = (text.match(/[\u0600-\u06FF]/g) || []).length;
   if (arabic > 0 && arabic >= latin * 0.3) return "ar";
+
+  // Distinguish German, Spanish, and French diacritics / common markers from English
+  if (/[äöüßÄÖÜ]/.test(text) || /\b(?:und|nicht|für|über|entwickler)\b/i.test(text)) {
+    return "de";
+  }
+  if (/[ñ¿¡]/.test(text) || /\b(?:desarrollador|juego|para|con|más)\b/i.test(text)) {
+    return "es";
+  }
+  if (/[œæçàèùâêîôûëïü]/i.test(text) && /\b(?:dans|avec|pour|développeur|créateur)\b/i.test(text)) {
+    return "fr";
+  }
 
   return "en";
 }
@@ -112,6 +126,13 @@ function splitParagraphIntoChunks(
   return chunks;
 }
 
+class QuotaExhaustedError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "QuotaExhaustedError";
+  }
+}
+
 async function fetchChunkFromMyMemory(
   chunk: string,
   sourceLang: string,
@@ -128,9 +149,12 @@ async function fetchChunkFromMyMemory(
   const res = await fetch(url, {
     headers: { Accept: "application/json" },
     cache: "no-store",
-    signal: AbortSignal.timeout(4500),
+    signal: AbortSignal.timeout(3500),
   });
 
+  if (res.status === 429) {
+    throw new QuotaExhaustedError("Translation HTTP 429");
+  }
   if (!res.ok) {
     throw new Error(`Translation HTTP ${res.status}`);
   }
@@ -141,20 +165,24 @@ async function fetchChunkFromMyMemory(
     responseData?: { translatedText?: unknown };
   };
 
+  if (data?.quotaFinished === true || Number(data?.responseStatus) === 429) {
+    throw new QuotaExhaustedError("MyMemory quota finished");
+  }
+
   if (
     Number(data?.responseStatus) !== 200 ||
-    data?.quotaFinished === true ||
     typeof data?.responseData?.translatedText !== "string"
   ) {
     throw new Error("Translation response unavailable");
   }
 
   const cleaned = decodeHtmlEntities(data.responseData.translatedText).trim();
+  if (/^MYMEMORY WARNING/i.test(cleaned)) {
+    throw new QuotaExhaustedError("MyMemory warning quota");
+  }
   if (
     !cleaned ||
-    /^(MYMEMORY WARNING|QUERY LENGTH LIMIT|INVALID LANGUAGE PAIR|PLEASE SELECT)/i.test(
-      cleaned
-    )
+    /^(QUERY LENGTH LIMIT|INVALID LANGUAGE PAIR|PLEASE SELECT)/i.test(cleaned)
   ) {
     throw new Error("Translation returned warning");
   }
@@ -205,7 +233,6 @@ export async function translateTeamBio(
   const trimmed = rawBio.trim();
   if (!trimmed) return null;
 
-  // Skip strings that contain no letters at all
   if (!/\p{L}/u.test(trimmed)) return trimmed;
 
   const locale = normalizeLocale(rawLocale);
@@ -222,6 +249,15 @@ export async function translateTeamBio(
     return memHit;
   }
 
+  const now = Date.now();
+  if (globalProviderCooldownUntil > now) {
+    return trimmed;
+  }
+  const keyFailedUntil = negativeFailureUntil.get(cacheKey);
+  if (keyFailedUntil !== undefined && keyFailedUntil > now) {
+    return trimmed;
+  }
+
   const existingFlight = inFlightTranslations.get(cacheKey);
   if (existingFlight) {
     return existingFlight;
@@ -235,12 +271,17 @@ export async function translateTeamBio(
         targetLang
       );
       if (translated) {
+        negativeFailureUntil.delete(cacheKey);
         rememberInMemory(cacheKey, translated);
         return translated;
       }
       return trimmed;
-    } catch {
-      // Graceful fallback to the raw API bio if translation endpoint is offline or rate-limited
+    } catch (err) {
+      const retryAt = Date.now() + NEGATIVE_CACHE_TTL_MS;
+      negativeFailureUntil.set(cacheKey, retryAt);
+      if (err instanceof QuotaExhaustedError) {
+        globalProviderCooldownUntil = retryAt;
+      }
       return trimmed;
     } finally {
       inFlightTranslations.delete(cacheKey);

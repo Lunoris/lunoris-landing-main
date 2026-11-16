@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useRef, useState } from "react";
+import { resumeSharedAudioContext } from "@/lib/sharedAudioContext";
 
 export type RetroTransitionMode = "pixel" | "shutter" | "iris" | "blinds";
 
@@ -29,29 +30,11 @@ const RETRO_MODES_ORDER: RetroTransitionMode[] = [
   "blinds",
 ];
 
-let sharedRetroAudioCtx: AudioContext | null = null;
 let cycleCounter = 0;
-
-function getRetroAudioCtx(): AudioContext | null {
-  if (typeof window === "undefined") return null;
-  if (!sharedRetroAudioCtx) {
-    const AudioCtx =
-      window.AudioContext ||
-      (window as unknown as { webkitAudioContext?: typeof AudioContext })
-        .webkitAudioContext;
-    if (AudioCtx) {
-      sharedRetroAudioCtx = new AudioCtx();
-    }
-  }
-  return sharedRetroAudioCtx;
-}
 
 export function unlockRetroAudio() {
   if (typeof window === "undefined") return;
-  const ctx = getRetroAudioCtx();
-  if (ctx && ctx.state === "suspended") {
-    ctx.resume().catch(() => {});
-  }
+  resumeSharedAudioContext();
 }
 
 function playRetroTransitionSfx(
@@ -59,11 +42,8 @@ function playRetroTransitionSfx(
   phase: "in" | "out"
 ) {
   if (typeof window === "undefined") return;
-  const ctx = getRetroAudioCtx();
+  const ctx = resumeSharedAudioContext();
   if (!ctx) return;
-  if (ctx.state === "suspended") {
-    ctx.resume().catch(() => {});
-  }
 
   try {
     const now = ctx.currentTime;
@@ -322,8 +302,8 @@ export function RetroArcadeTransition() {
           pausedMs += elapsed - (holdEnd - 1);
           elapsed = holdEnd - 1;
         }
-        let progress = 0; // 0 = uncovered, 1 = fully covered
-        let isOpening = false;
+        let progress: number; // 0 = uncovered, 1 = fully covered
+        let isOpening: boolean;
 
         if (elapsed < phaseDurationMs) {
           progress = easeInOutCubic(elapsed / phaseDurationMs);

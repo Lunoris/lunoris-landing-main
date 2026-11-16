@@ -1,21 +1,5 @@
 @import "tailwindcss";
 
-@font-face {
-  font-family: "Ovo";
-  src: url("/fonts/Ovo-Regular.ttf") format("truetype");
-  font-weight: 100 900;
-  font-style: normal;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: "Ovo";
-  src: url("/fonts/Ovo-Regular.ttf") format("truetype");
-  font-weight: 100 900;
-  font-style: italic;
-  font-display: swap;
-}
-
 :root {
   color-scheme: dark;
   --lunoris-black: #000000;
@@ -27,26 +11,63 @@
   --lunoris-cyan: #38bdf8;
   --lunoris-emerald: #34d399;
   --font-ovo:
-    var(--font-ovo-local, "Ovo"),
-    "Ovo",
+    var(--font-ovo-local),
     "Palatino Linotype",
     "Book Antiqua",
     "Palatino",
     "Georgia",
-    "Hiragino Mincho ProN",
-    "Yu Mincho",
-    "Songti SC",
-    "STSong",
-    "Geeza Pro",
-    "Traditional Arabic",
     "Noto Serif",
     serif;
   --font-display: var(--font-ovo);
   --font-body: var(--font-ovo);
-  --font-mono: var(--font-ovo);
+  --font-mono:
+    ui-monospace,
+    "SFMono-Regular",
+    Menlo,
+    Monaco,
+    Consolas,
+    "Liberation Mono",
+    monospace;
   --default-font-family: var(--font-ovo);
-  --default-mono-font-family: var(--font-ovo);
+  --default-mono-font-family: var(--font-mono);
   --vu: 1;
+}
+
+:root:lang(ru) {
+  --font-ovo:
+    "Georgia",
+    "Palatino Linotype",
+    "Book Antiqua",
+    "Noto Serif",
+    serif;
+}
+
+:root:lang(ar) {
+  --font-ovo:
+    "Geeza Pro",
+    "Traditional Arabic",
+    "Amiri",
+    "Noto Naskh Arabic",
+    "Georgia",
+    serif;
+}
+
+:root:lang(zh) {
+  --font-ovo:
+    "Songti SC",
+    "STSong",
+    "Noto Serif SC",
+    "Georgia",
+    serif;
+}
+
+:root:lang(ja) {
+  --font-ovo:
+    "Hiragino Mincho ProN",
+    "Yu Mincho",
+    "Noto Serif JP",
+    "Georgia",
+    serif;
 }
 
 /* Desktop renders at 80% (same as browser zoom 80%). vw/vh lengths are
@@ -67,35 +88,45 @@
   box-sizing: border-box;
   margin: 0;
   padding: 0;
-  font-family: var(--font-ovo) !important;
-  font-weight: 400 !important;
-  font-style: normal !important;
-  font-synthesis: none !important;
 }
 
 html,
-body,
+body {
+  font-family: var(--font-ovo);
+  font-weight: 400;
+  font-style: normal;
+  font-synthesis: none;
+}
+
 h1,
 h2,
 h3,
 h4,
 h5,
-h6,
-p,
-span,
-a,
+h6 {
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-synthesis: none;
+}
+
 button,
+input,
+select,
+textarea {
+  font: inherit;
+  color: inherit;
+}
+
+em,
+i {
+  font-style: italic;
+  font-synthesis: style;
+}
+
 strong,
-div,
-article,
-section,
-nav,
-header,
-footer {
-  font-family: var(--font-ovo) !important;
-  font-weight: 400 !important;
-  font-style: normal !important;
-  font-synthesis: none !important;
+b {
+  font-weight: 600;
+  font-synthesis: weight;
 }
 
 html {
@@ -8805,7 +8836,7 @@ html[dir="rtl"] .news-painterly-quote {
 .dream-levels-journey-scroll-track {
   position: relative;
   width: 100%;
-  height: calc(560vh * var(--vu, 1));
+  height: calc(900vh * var(--vu, 1));
 }
 
 .dream-levels-journey-sticky-viewport {
@@ -9388,8 +9419,14 @@ html[dir="rtl"] .news-painterly-quote {
   padding: 2.9rem clamp(1rem, 3vw, 2.2rem) 2.4rem;
 }
 
+.dream-levels-body-copy {
+  text-shadow:
+    0 2px 16px rgba(8, 6, 20, 0.78),
+    0 0 20px rgba(34, 211, 238, 0.14);
+}
+
 .retro-arcade-cabinet {
-  --cab-w: clamp(192px, 16.5vw, 236px);
+  --cab-w: clamp(192px, calc(16.5vw * var(--vu)), 236px);
   position: relative;
   display: flex;
   flex-direction: column;
@@ -10694,7 +10731,7 @@ html[dir="rtl"] .news-painterly-quote {
 
   .retro-arcade-panel-inner,
   .retro-arcade-hall.is-in-view .retro-arcade-cabinet-static,
-  .retro-arcade-hall.is-in-view .retro-arcade-cabinet.is-selected .retro-arcade-cabinet-marquee span {
+  .retro-arcade-hall.is-in-view .retro-arcade-cabinet.is-selected .retro-arcade-cabinet-marquee-title {
     animation: none;
   }
 }
@@ -10774,5 +10811,12 @@ html[dir="rtl"] .news-painterly-quote {
 
   .retro-arcade-chapter-copy {
     padding: 0.95rem 1rem 1.1rem;
+  }
+}
+
+@media (max-width: 700px) {
+  /* "Breakthrough" is one unbreakable word: keep it inside the narrow phone card. */
+  .dream-levels-journey-stop .dream-level-teaser-title {
+    font-size: clamp(1.6rem, 8.6vw, 2.4rem);
   }
 }

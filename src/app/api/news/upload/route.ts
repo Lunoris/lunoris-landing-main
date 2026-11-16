@@ -1,14 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
 import {
+  readAuthenticatedFormData,
   readAuthenticatedJsonText,
-  verifyNewsWriteAuth,
   withSecurityHeaders,
 } from "@/lib/newsAuth";
 import {
   downloadAndSaveExternalMedia,
+  MediaValidationError,
   saveUploadedFileObject,
   type SavedMediaAsset,
 } from "@/lib/mediaUpload";
+import { isClientValidationError, isPlainObject } from "@/lib/newsValidator";
 
 export const runtime = "nodejs";
 
@@ -18,19 +20,39 @@ const MAX_FILES_PER_UPLOAD = 20;
 export async function POST(req: NextRequest) {
   const contentType = req.headers.get("content-type") || "";
 
-  // 1. JSON mode: download & mirror an external media URL into /uploads/news/
+  // 1. JSON mode: download & mirror an external media URL
   if (contentType.includes("application/json")) {
     const bodyResult = await readAuthenticatedJsonText(req, MAX_UPLOAD_JSON_BYTES);
     if (!bodyResult.ok) {
       return bodyResult.response;
     }
 
+    let parsed: unknown;
     try {
-      const body = JSON.parse(bodyResult.rawBody) as {
-        url?: string;
-        kind?: "image" | "video";
-      };
-      if (!body.url || typeof body.url !== "string") {
+      parsed = JSON.parse(bodyResult.rawBody);
+    } catch {
+      return withSecurityHeaders(
+        NextResponse.json({ error: "Invalid JSON body." }, { status: 400 })
+      );
+    }
+
+    if (!isPlainObject(parsed)) {
+      return withSecurityHeaders(
+        NextResponse.json(
+          { error: "Request body must be a JSON object." },
+          { status: 400 }
+        )
+      );
+    }
+
+    try {
+      const url = typeof parsed.url === "string" ? parsed.url : "";
+      const kind =
+        parsed.kind === "image" || parsed.kind === "video"
+          ? parsed.kind
+          : undefined;
+
+      if (!url) {
         return withSecurityHeaders(
           NextResponse.json(
             { error: 'Field "url" is required when calling upload with JSON.' },
@@ -39,7 +61,7 @@ export async function POST(req: NextRequest) {
         );
       }
 
-      const saved = await downloadAndSaveExternalMedia(body.url, body.kind);
+      const saved = await downloadAndSaveExternalMedia(url, kind);
       return withSecurityHeaders(
         NextResponse.json(
           {
@@ -51,39 +73,43 @@ export async function POST(req: NextRequest) {
         )
       );
     } catch (err) {
-      const message =
-        err instanceof Error ? err.message : "Failed to process media URL.";
+      if (isClientValidationError(err)) {
+        return withSecurityHeaders(
+          NextResponse.json({ error: err.message }, { status: err.statusCode })
+        );
+      }
       return withSecurityHeaders(
-        NextResponse.json({ error: message }, { status: 400 })
+        NextResponse.json(
+          { error: "Failed to process media URL." },
+          { status: 500 }
+        )
       );
     }
   }
 
   // 2. Multipart/form-data mode: direct binary file upload(s)
   if (contentType.includes("multipart/form-data")) {
-    // For multipart uploads, verify Bearer/API-Key or HMAC over empty/header payload
-    const auth = verifyNewsWriteAuth(req, "");
-    if (!auth.ok && auth.response) {
-      return withSecurityHeaders(auth.response);
+    const formResult = await readAuthenticatedFormData(req);
+    if (!formResult.ok) {
+      return formResult.response;
     }
 
     try {
-      const formData = await req.formData();
+      const { formData } = formResult;
       const uploadedAssets: SavedMediaAsset[] = [];
 
       for (const [key, value] of formData.entries()) {
         if (value instanceof File && value.size > 0) {
           if (uploadedAssets.length >= MAX_FILES_PER_UPLOAD) {
-            throw new Error(
+            throw new MediaValidationError(
               `Too many files in a single upload request (maximum ${MAX_FILES_PER_UPLOAD}).`
             );
           }
-          const expectedKind =
-            key.toLowerCase().includes("video")
-              ? "video"
-              : key.toLowerCase().includes("image")
-                ? "image"
-                : undefined;
+          const expectedKind = key.toLowerCase().includes("video")
+            ? "video"
+            : key.toLowerCase().includes("image")
+              ? "image"
+              : undefined;
           const saved = await saveUploadedFileObject(value, expectedKind);
           uploadedAssets.push(saved);
         }
@@ -113,10 +139,16 @@ export async function POST(req: NextRequest) {
         )
       );
     } catch (err) {
-      const message =
-        err instanceof Error ? err.message : "Failed to upload media file.";
+      if (isClientValidationError(err)) {
+        return withSecurityHeaders(
+          NextResponse.json({ error: err.message }, { status: err.statusCode })
+        );
+      }
       return withSecurityHeaders(
-        NextResponse.json({ error: message }, { status: 400 })
+        NextResponse.json(
+          { error: "Failed to upload media file." },
+          { status: 500 }
+        )
       );
     }
   }

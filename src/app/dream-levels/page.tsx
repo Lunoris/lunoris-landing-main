@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useCallback, useEffect, useRef } from "react";
+import React, { useCallback, useEffect, useId, useRef } from "react";
 import type { NavLinkItem } from "@/data/gameData";
 import { getDreamLevelsPageCopy } from "@/data/dreamLevelsData";
 import { HeaderBar } from "@/components/sections/HeaderBar";
@@ -20,7 +20,8 @@ const TOTAL_STAGES = 6; // 0: Riddle Plaque, 1: Dream Levels Intro, 2: Pain, 3: 
  * Alternate connectors are mirrored so the path swings left, then right.
  */
 function DreamLevelRoute({ index }: { index: number }) {
-  const gradientId = "dream-level-route-gradient-" + index;
+  const uid = useId().replace(/:/g, "");
+  const gradientId = `dream-level-route-gradient-${uid}-${index}`;
   const d =
     "M 120 0 C 120 34 205 28 205 64 C 205 104 35 96 35 136 C 35 170 120 166 120 200";
   return (
@@ -95,7 +96,7 @@ function progressToStage(p: number): number {
   // Dwell plateau: first 18% and last 18% of each segment hold near the integer stop,
   // while the middle 64% glides smoothly along the winding path.
   const plateau = 0.18;
-  let easedFrac = 0;
+  let easedFrac: number;
   if (frac <= plateau) {
     easedFrac = (frac / plateau) * 0.06;
   } else if (frac >= 1 - plateau) {
@@ -111,6 +112,10 @@ export default function DreamLevelsPage() {
   const { locale, t } = useLanguage();
   const copy = getDreamLevelsPageCopy(locale);
   const pageCopy = t.portalPages.dream;
+  const heroTitle =
+    locale === "en" || locale === "ru"
+      ? copy.heroTitle
+      : t.world.locations["dream-levels"]?.title || copy.heroTitle;
   const teasers = pageCopy.levels;
   const riddle = t.portalPages.dreamRiddle;
   const pageNav: NavLinkItem[] = [
@@ -132,21 +137,30 @@ export default function DreamLevelsPage() {
     const trackRect = track.getBoundingClientRect();
     const vpRect = viewport.getBoundingClientRect();
     const maxRectScroll = Math.max(1, trackRect.height - vpRect.height);
-    const currentRawP = clamp(-trackRect.top / maxRectScroll, 0, 1);
     const targetP = clamp(targetStop / (TOTAL_STAGES - 1), 0, 1);
-    const maxScrollCss = Math.max(1, track.offsetHeight - viewport.offsetHeight);
     const rootZoom =
       parseFloat(getComputedStyle(document.documentElement).zoom) || 1;
-    const deltaScrollY = (targetP - currentRawP) * maxScrollCss * rootZoom;
-    window.scrollBy({
-      top: deltaScrollY,
-      behavior: "smooth",
+    const rectScale =
+      track.offsetWidth > 0 ? trackRect.width / track.offsetWidth : rootZoom;
+    const safeRectScale = rectScale > 0.01 ? rectScale : 1;
+    const scrollRatio = rootZoom / safeRectScale;
+    const trackStartScrollY = window.scrollY + trackRect.top * scrollRatio;
+    const reducedMotion = window.matchMedia(
+      "(prefers-reduced-motion: reduce)"
+    ).matches;
+    window.scrollTo({
+      top: trackStartScrollY + targetP * maxRectScroll * scrollRatio,
+      behavior: reducedMotion ? "auto" : "smooth",
     });
   }, []);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
 
+    const reducedMotionQuery = window.matchMedia(
+      "(prefers-reduced-motion: reduce)"
+    );
+    let prefersReducedMotion = reducedMotionQuery.matches;
     let rafId: number | null = null;
     let targetP = 0;
     let currentP = 0;
@@ -200,10 +214,20 @@ export default function DreamLevelsPage() {
       for (let i = 0; i < tunnelRingRefs.current.length; i++) {
         const ringEl = tunnelRingRefs.current[i];
         if (!ringEl) continue;
-        const phase = ((s * 0.55 + i / tunnelRingRefs.current.length) % 1 + 1) % 1;
+        if (prefersReducedMotion) {
+          ringEl.style.transform = "translate3d(0px, 0px, 0px) scale(1)";
+          ringEl.style.opacity = "0.14";
+          continue;
+        }
+        const phase =
+          (((s * 0.55 + i / tunnelRingRefs.current.length) % 1) + 1) % 1;
         const ringScale = 0.28 + phase * 1.65;
         const ringAlpha = Math.sin(phase * Math.PI) * 0.34;
-        const swayX = Math.sin(s * Math.PI) * (1 - phase) * 42 * clamp(window.innerWidth / 1100, 0.3, 1);
+        const swayX =
+          Math.sin(s * Math.PI) *
+          (1 - phase) *
+          42 *
+          clamp(window.innerWidth / 1100, 0.3, 1);
         ringEl.style.transform = `translate3d(${swayX.toFixed(1)}px, 0px, 0px) scale(${ringScale.toFixed(3)})`;
         ringEl.style.opacity = ringAlpha.toFixed(3);
       }
@@ -227,6 +251,7 @@ export default function DreamLevelsPage() {
           el.style.opacity = "0";
           el.style.visibility = "hidden";
           el.style.pointerEvents = "none";
+          el.inert = true;
           continue;
         }
 
@@ -234,13 +259,17 @@ export default function DreamLevelsPage() {
         let tx = 0;
         let ty = 0;
         let scale = 1;
-        let opacity = 1;
+        let opacity: number;
 
-        // Only transform + opacity change per frame (compositor-only). A per-frame
-        // `filter: blur()` on these image cards repainted them on every scroll frame.
-        if (delta >= 0) {
+        if (prefersReducedMotion) {
+          opacity = clamp(1 - Math.max(0, absDelta - 0.14) * 2.2, 0, 1);
+        } else if (delta >= 0) {
           // Approaching from the distant horizon along the winding S-curve route
-          tx = bendDir * Math.sin(clamp(delta, 0, 1.2) * Math.PI * 0.85) * 124 * sway;
+          tx =
+            bendDir *
+            Math.sin(clamp(delta, 0, 1.2) * Math.PI * 0.85) *
+            124 *
+            sway;
           ty = delta * 580;
           scale = clamp(1 - delta * 0.34, 0.44, 1);
           opacity = clamp(1 - Math.max(0, delta - 0.16) * 1.15, 0, 1);
@@ -254,10 +283,12 @@ export default function DreamLevelsPage() {
           opacity = clamp(1 - Math.max(0, past - 0.06) * 2.4, 0, 1);
         }
 
+        const isInteractive = absDelta < 0.42;
         el.style.visibility = opacity > 0.01 ? "visible" : "hidden";
         el.style.opacity = opacity.toFixed(3);
         el.style.transform = `translate3d(${tx.toFixed(1)}px, ${ty.toFixed(1)}px, 0px) scale(${scale.toFixed(3)})`;
-        el.style.pointerEvents = absDelta < 0.42 ? "auto" : "none";
+        el.style.pointerEvents = isInteractive ? "auto" : "none";
+        el.inert = !isInteractive;
         el.style.zIndex = String(20 - Math.round(absDelta * 10));
       }
 
@@ -265,6 +296,12 @@ export default function DreamLevelsPage() {
       for (let r = 0; r < TOTAL_STAGES - 1; r++) {
         const routeEl = routeRefs.current[r];
         if (!routeEl) continue;
+
+        if (prefersReducedMotion) {
+          routeEl.style.opacity = "0";
+          routeEl.style.visibility = "hidden";
+          continue;
+        }
 
         const routeCenterStage = r + 0.5;
         const rDelta = routeCenterStage - s;
@@ -278,7 +315,11 @@ export default function DreamLevelsPage() {
 
         const rTy = rDelta * 540;
         const rScale = clamp(1 - rDelta * 0.24, 0.55, 1.35);
-        const rOpacity = clamp(1 - Math.max(0, absRDelta - 0.35) * 1.25, 0, 0.92);
+        const rOpacity = clamp(
+          1 - Math.max(0, absRDelta - 0.35) * 1.25,
+          0,
+          0.92
+        );
 
         routeEl.style.visibility = rOpacity > 0.01 ? "visible" : "hidden";
         routeEl.style.opacity = rOpacity.toFixed(3);
@@ -289,6 +330,11 @@ export default function DreamLevelsPage() {
     const tick = () => {
       rafId = null;
       targetP = measureTargetProgress();
+      if (prefersReducedMotion) {
+        currentP = targetP;
+        applyStageTransforms(currentP);
+        return;
+      }
       const diff = targetP - currentP;
       if (Math.abs(diff) > 0.0004) {
         // Light smoothing only; a heavier lag made the stage trail behind the wheel.
@@ -307,15 +353,24 @@ export default function DreamLevelsPage() {
       }
     };
 
+    const onReducedMotionChange = (e: MediaQueryListEvent) => {
+      prefersReducedMotion = e.matches;
+      targetP = measureTargetProgress();
+      currentP = targetP;
+      applyStageTransforms(currentP);
+    };
+
     targetP = measureTargetProgress();
     currentP = targetP;
     applyStageTransforms(currentP);
 
     window.addEventListener("scroll", onScrollOrResize, { passive: true });
     window.addEventListener("resize", onScrollOrResize, { passive: true });
+    reducedMotionQuery.addEventListener("change", onReducedMotionChange);
     return () => {
       window.removeEventListener("scroll", onScrollOrResize);
       window.removeEventListener("resize", onScrollOrResize);
+      reducedMotionQuery.removeEventListener("change", onReducedMotionChange);
       if (rafId !== null) {
         window.cancelAnimationFrame(rafId);
       }
@@ -324,7 +379,7 @@ export default function DreamLevelsPage() {
 
   const stopLabels = [
     riddle.title,
-    copy.heroTitle,
+    heroTitle,
     "Pain",
     "Guilt",
     "Breakthrough",
@@ -399,8 +454,8 @@ export default function DreamLevelsPage() {
                 >
                   <DreamLevelsText text={riddle.title} />
                 </h2>
-                <p className="dream-levels-entry-description">
-                  <DreamLevelsText text={riddle.body} />
+                <p className="dream-levels-entry-description dream-levels-body-copy">
+                  {riddle.body}
                 </p>
                 <button
                   type="button"
@@ -428,13 +483,13 @@ export default function DreamLevelsPage() {
                   <DreamLevelsText text={pageCopy.heroMinor} />
                 </span>
                 <h1 className="dream-levels-cards-title">
-                  <DreamLevelsText text={copy.heroTitle} />
+                  <DreamLevelsText text={heroTitle} />
                 </h1>
                 <p className="dream-levels-cards-subtitle">
                   <DreamLevelsText text={pageCopy.heroSubtitle} />
                 </p>
-                <p className="dream-levels-cards-description">
-                  <DreamLevelsText text={pageCopy.heroOverview} />
+                <p className="dream-levels-cards-description dream-levels-body-copy">
+                  {pageCopy.heroOverview}
                 </p>
                 <button
                   type="button"
@@ -497,10 +552,8 @@ export default function DreamLevelsPage() {
                             />
                           )}
                         </h2>
-                        <p className="dream-level-teaser-description">
-                          <DreamLevelsText
-                            text={teasers[index]?.description ?? ""}
-                          />
+                        <p className="dream-level-teaser-description dream-levels-body-copy">
+                          {teasers[index]?.description ?? ""}
                         </p>
                         <p className="dream-level-teaser-hook">
                           <DreamLevelsText text={teasers[index]?.hook ?? ""} />

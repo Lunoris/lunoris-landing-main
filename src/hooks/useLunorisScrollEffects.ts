@@ -25,11 +25,36 @@ export function useLunorisScrollEffects() {
     );
     elements.forEach((el) => observer.observe(el));
 
-    // Also observe any [data-reveal] elements rendered asynchronously (e.g. after fetch)
-    const mutationObserver = new MutationObserver(() => {
-      document
-        .querySelectorAll("[data-reveal]:not(.is-visible)")
-        .forEach((el) => observer.observe(el));
+    // Also observe any [data-reveal] elements rendered asynchronously, batched via rAF
+    const pendingRevealRoots = new Set<Element>();
+    let mutationRafId: number | null = null;
+
+    const flushPendingReveals = () => {
+      mutationRafId = null;
+      pendingRevealRoots.forEach((node) => {
+        if (!node.isConnected) return;
+        if (node.matches("[data-reveal]:not(.is-visible)")) {
+          observer.observe(node);
+        }
+        node
+          .querySelectorAll("[data-reveal]:not(.is-visible)")
+          .forEach((el) => observer.observe(el));
+      });
+      pendingRevealRoots.clear();
+    };
+
+    const mutationObserver = new MutationObserver((mutations) => {
+      for (const mutation of mutations) {
+        for (let i = 0; i < mutation.addedNodes.length; i++) {
+          const node = mutation.addedNodes[i];
+          if (node.nodeType === Node.ELEMENT_NODE) {
+            pendingRevealRoots.add(node as Element);
+          }
+        }
+      }
+      if (pendingRevealRoots.size > 0 && mutationRafId === null) {
+        mutationRafId = window.requestAnimationFrame(flushPendingReveals);
+      }
     });
     mutationObserver.observe(document.body, {
       childList: true,
@@ -208,7 +233,8 @@ export function useLunorisScrollEffects() {
               GAME_ROADMAP.length - 1,
               Math.max(0, Math.floor(clamped * GAME_ROADMAP.length))
             );
-            setRoadmapStep(clamped <= 0.02 ? 0 : stepIndex);
+            const nextStep = clamped <= 0.02 ? 0 : stepIndex;
+            setRoadmapStep((prev) => (prev === nextStep ? prev : nextStep));
           }
 
           if (finalCtaSlotRef.current) {
@@ -236,6 +262,10 @@ export function useLunorisScrollEffects() {
     return () => {
       observer.disconnect();
       mutationObserver.disconnect();
+      if (mutationRafId !== null) {
+        window.cancelAnimationFrame(mutationRafId);
+      }
+      pendingRevealRoots.clear();
       window.removeEventListener("scroll", onScroll);
       window.removeEventListener("resize", onScroll);
       if (flightRafId !== null) {

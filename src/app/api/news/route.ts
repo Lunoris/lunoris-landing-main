@@ -1,21 +1,67 @@
 import { NextRequest, NextResponse } from "next/server";
 import { revalidatePath } from "next/cache";
 import {
+  readAuthenticatedFormData,
   readAuthenticatedJsonText,
-  verifyNewsWriteAuth,
   withSecurityHeaders,
 } from "@/lib/newsAuth";
 import {
   downloadAndSaveExternalMedia,
   saveUploadedFileObject,
 } from "@/lib/mediaUpload";
-import { validateAndBuildNewsArticle } from "@/lib/newsValidator";
+import {
+  isClientValidationError,
+  isPlainObject,
+  NewsValidationError,
+  validateAndBuildNewsArticle,
+} from "@/lib/newsValidator";
 import { getAllNews, upsertNewsArticle } from "@/lib/newsStore";
+import type { NewsArticle } from "@/data/newsData";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 const MAX_JSON_BODY_BYTES = 256 * 1024; // 256 KB
+const MAX_SECTION_UPLOADS = 20;
+
+async function mirrorArticleExternalMedia(
+  article: NewsArticle
+): Promise<NewsArticle> {
+  let image = article.image;
+  if (image.startsWith("http://") || image.startsWith("https://")) {
+    const mirrored = await downloadAndSaveExternalMedia(image, "image");
+    image = mirrored.url;
+  }
+
+  let videoSrc = article.videoSrc;
+  if (
+    videoSrc &&
+    (videoSrc.startsWith("http://") || videoSrc.startsWith("https://"))
+  ) {
+    const mirrored = await downloadAndSaveExternalMedia(videoSrc, "video");
+    videoSrc = mirrored.url;
+  }
+
+  const sections = await Promise.all(
+    article.sections.map(async (sec) => {
+      if (
+        sec.image &&
+        (sec.image.startsWith("http://") || sec.image.startsWith("https://"))
+      ) {
+        const mirrored = await downloadAndSaveExternalMedia(sec.image, "image");
+        return { ...sec, image: mirrored.url };
+      }
+      return sec;
+    })
+  );
+
+  return {
+    ...article,
+    image,
+    ...(videoSrc ? { videoSrc } : {}),
+    sections,
+  };
+}
 
 export async function GET(req: NextRequest) {
   try {
@@ -57,26 +103,32 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   const contentType = req.headers.get("content-type") || "";
-
   let payload: Record<string, unknown> = {};
 
   // Mode A: multipart/form-data (simultaneous article creation + binary media file upload)
   if (contentType.includes("multipart/form-data")) {
-    const auth = verifyNewsWriteAuth(req, "");
-    if (!auth.ok && auth.response) {
-      return withSecurityHeaders(auth.response);
+    const formResult = await readAuthenticatedFormData(req);
+    if (!formResult.ok) {
+      return formResult.response;
     }
 
     try {
-      const formData = await req.formData();
+      const { formData } = formResult;
 
-      // Allow base JSON inside "payload" or "data" field
       const rawJsonField = formData.get("payload") ?? formData.get("data");
       if (typeof rawJsonField === "string" && rawJsonField.trim()) {
-        payload = JSON.parse(rawJsonField) as Record<string, unknown>;
+        let parsedJson: unknown;
+        try {
+          parsedJson = JSON.parse(rawJsonField);
+        } catch {
+          throw new NewsValidationError('Invalid JSON in "payload" field.');
+        }
+        if (!isPlainObject(parsedJson)) {
+          throw new NewsValidationError('"payload" field must be a JSON object.');
+        }
+        payload = parsedJson;
       }
 
-      // Allow top-level scalar fields in formData as well
       for (const field of [
         "slug",
         "title",
@@ -101,15 +153,22 @@ export async function POST(req: NextRequest) {
 
       const rawHighlights = formData.get("highlights");
       if (typeof rawHighlights === "string" && rawHighlights.trim()) {
-        payload.highlights = JSON.parse(rawHighlights);
+        try {
+          payload.highlights = JSON.parse(rawHighlights);
+        } catch {
+          throw new NewsValidationError('Invalid JSON in "highlights" field.');
+        }
       }
 
       const rawSections = formData.get("sections");
       if (typeof rawSections === "string" && rawSections.trim()) {
-        payload.sections = JSON.parse(rawSections);
+        try {
+          payload.sections = JSON.parse(rawSections);
+        } catch {
+          throw new NewsValidationError('Invalid JSON in "sections" field.');
+        }
       }
 
-      // Process uploaded cover image file if provided
       const imageFile =
         formData.get("imageFile") ??
         (formData.get("image") instanceof File ? formData.get("image") : null);
@@ -118,7 +177,6 @@ export async function POST(req: NextRequest) {
         payload.image = savedImg.url;
       }
 
-      // Process uploaded video file if provided
       const videoFile =
         formData.get("videoFile") ??
         (formData.get("video") instanceof File ? formData.get("video") : null);
@@ -128,37 +186,53 @@ export async function POST(req: NextRequest) {
         payload.isVideo = true;
       }
 
-      // Process section image files (e.g. sectionImage_0, sectionImage_1)
       if (Array.isArray(payload.sections)) {
-        for (let i = 0; i < payload.sections.length; i++) {
+        const maxSections = Math.min(MAX_SECTION_UPLOADS, payload.sections.length);
+        for (let i = 0; i < maxSections; i++) {
           const secFile = formData.get(`sectionImage_${i}`);
           if (secFile instanceof File && secFile.size > 0) {
             const savedSecImg = await saveUploadedFileObject(secFile, "image");
-            const secObj = payload.sections[i] as Record<string, unknown>;
-            if (secObj && typeof secObj === "object") {
+            const secObj = payload.sections[i];
+            if (isPlainObject(secObj)) {
               secObj.image = savedSecImg.url;
             }
           }
         }
       }
     } catch (err) {
-      const msg =
-        err instanceof Error
-          ? err.message
-          : "Invalid multipart/form-data payload.";
+      if (isClientValidationError(err)) {
+        return withSecurityHeaders(
+          NextResponse.json(
+            { error: err.message },
+            { status: err.statusCode }
+          )
+        );
+      }
       return withSecurityHeaders(
-        NextResponse.json({ error: msg }, { status: 400 })
+        NextResponse.json(
+          { error: "Failed to process multipart upload." },
+          { status: 500 }
+        )
       );
     }
   } else {
-    // Mode B: application/json (supports local media paths OR external https:// media URLs)
+    // Mode B: application/json
     const bodyResult = await readAuthenticatedJsonText(req, MAX_JSON_BODY_BYTES);
     if (!bodyResult.ok) {
       return bodyResult.response;
     }
 
     try {
-      payload = JSON.parse(bodyResult.rawBody) as Record<string, unknown>;
+      const parsed = JSON.parse(bodyResult.rawBody) as unknown;
+      if (!isPlainObject(parsed)) {
+        return withSecurityHeaders(
+          NextResponse.json(
+            { error: "Request body must be a JSON object." },
+            { status: 400 }
+          )
+        );
+      }
+      payload = parsed;
     } catch {
       return withSecurityHeaders(
         NextResponse.json({ error: "Invalid JSON body." }, { status: 400 })
@@ -167,49 +241,16 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    // Optional: if mirrorExternalMedia === true, download remote media links locally
+    // Validate full schema, section count (<=20), and external URL SSRF rules BEFORE mirroring any media
+    let article = validateAndBuildNewsArticle(payload);
+
     if (payload.mirrorExternalMedia === true) {
-      if (
-        typeof payload.image === "string" &&
-        payload.image.startsWith("http")
-      ) {
-        const mirrored = await downloadAndSaveExternalMedia(
-          payload.image,
-          "image"
-        );
-        payload.image = mirrored.url;
-      }
-      if (
-        typeof payload.videoSrc === "string" &&
-        payload.videoSrc.startsWith("http")
-      ) {
-        const mirrored = await downloadAndSaveExternalMedia(
-          payload.videoSrc,
-          "video"
-        );
-        payload.videoSrc = mirrored.url;
-      }
-      if (Array.isArray(payload.sections)) {
-        for (const sec of payload.sections) {
-          if (sec && typeof sec === "object") {
-            const s = sec as Record<string, unknown>;
-            if (typeof s.image === "string" && s.image.startsWith("http")) {
-              const mirrored = await downloadAndSaveExternalMedia(
-                s.image,
-                "image"
-              );
-              s.image = mirrored.url;
-            }
-          }
-        }
-      }
+      article = await mirrorArticleExternalMedia(article);
     }
 
-    const article = validateAndBuildNewsArticle(payload);
     const allowOverwrite = payload.upsert !== false;
     const { created } = await upsertNewsArticle(article, { allowOverwrite });
 
-    // Revalidate landing page, news archive, and single article page
     revalidatePath("/");
     revalidatePath("/news");
     revalidatePath(`/news/${article.slug}`);
@@ -225,10 +266,16 @@ export async function POST(req: NextRequest) {
       )
     );
   } catch (err) {
-    const message =
-      err instanceof Error ? err.message : "Failed to publish news article.";
+    if (isClientValidationError(err)) {
+      return withSecurityHeaders(
+        NextResponse.json({ error: err.message }, { status: err.statusCode })
+      );
+    }
     return withSecurityHeaders(
-      NextResponse.json({ error: message }, { status: 400 })
+      NextResponse.json(
+        { error: "Failed to publish news article." },
+        { status: 500 }
+      )
     );
   }
 }

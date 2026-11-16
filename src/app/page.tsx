@@ -1,51 +1,20 @@
-"use client";
-
 import React from "react";
-import { useLunorisScrollEffects } from "@/hooks/useLunorisScrollEffects";
-import { HeaderBar } from "@/components/sections/HeaderBar";
-import { HeroSection } from "@/components/sections/HeroSection";
-import { LatestNewsSection } from "@/components/sections/LatestNewsSection";
-import { WorldPortalsSection } from "@/components/sections/WorldPortalsSection";
-import { CompanionsSection } from "@/components/sections/CompanionsSection";
-import { CharactersWallSection } from "@/components/sections/CharactersWallSection";
-import { TeamSection } from "@/components/sections/TeamSection";
-import { RoadmapSection } from "@/components/sections/RoadmapSection";
-import { FinalCtaSection } from "@/components/sections/FinalCtaSection";
-import { FooterBar } from "@/components/sections/FooterBar";
+import { getCachedAllNews } from "@/lib/newsStore";
+import { getResolvedSiteTeamData } from "@/lib/teamStore";
+import { LandingPageClient } from "@/components/sections/LandingPageClient";
 
-export default function LunorisLandingPage() {
-  const {
-    heroRef,
-    roadmapTimelineRef,
-    navBtnSlotRef,
-    steamBtnRef,
-    finalCtaSlotRef,
-    roadmapStep,
-  } = useLunorisScrollEffects();
+export const revalidate = 300;
+
+export default async function LunorisLandingPage() {
+  const [initialArticles, teamData] = await Promise.all([
+    getCachedAllNews(),
+    getResolvedSiteTeamData({ lang: "en" }),
+  ]);
 
   return (
-    <div className="lunoris-page">
-      <HeaderBar
-        navBtnSlotRef={navBtnSlotRef}
-        steamBtnRef={steamBtnRef}
-        enableFlyingCta
-      />
-
-      <main id="top">
-        <HeroSection heroRef={heroRef} />
-        <LatestNewsSection />
-        <WorldPortalsSection />
-        <CompanionsSection />
-        <CharactersWallSection />
-        <TeamSection />
-        <RoadmapSection
-          roadmapTimelineRef={roadmapTimelineRef}
-          roadmapStep={roadmapStep}
-        />
-        <FinalCtaSection finalCtaSlotRef={finalCtaSlotRef} />
-      </main>
-
-      <FooterBar />
-    </div>
+    <LandingPageClient
+      initialArticles={initialArticles}
+      initialLeaders={teamData.leaders}
+    />
   );
 }

@@ -1,6 +1,11 @@
 "use client";
 
 import React, { useEffect, useRef } from "react";
+import {
+  playBufferedOrHtmlAudio,
+  preloadDecodedAudioBuffer,
+  resumeSharedAudioContext,
+} from "@/lib/sharedAudioContext";
 
 export interface NightmareRiftTransitionOptions {
   /** Called at climax when 100% of the screen is covered by the Breaker Rift eruption so `/nightmare` mounts underneath */
@@ -32,59 +37,18 @@ const EQUIP_URLS = [
 ];
 const ATTACK_URL = "/assets/sfx/breaker-attack-1.wav";
 
-let sharedAudioCtx: AudioContext | null = null;
-let riftEventBuffer: AudioBuffer | null = null;
-const equipBuffers: (AudioBuffer | null)[] = [null, null];
-let attackBuffer: AudioBuffer | null = null;
 let preloadStarted = false;
-
-function getOrCreateAudioContext(): AudioContext | null {
-  if (typeof window === "undefined") return null;
-  if (!sharedAudioCtx) {
-    const AudioCtx =
-      window.AudioContext ||
-      (window as unknown as { webkitAudioContext?: typeof AudioContext })
-        .webkitAudioContext;
-    if (AudioCtx) {
-      sharedAudioCtx = new AudioCtx();
-    }
-  }
-  return sharedAudioCtx;
-}
-
-async function fetchAndDecode(
-  ctx: AudioContext,
-  url: string
-): Promise<AudioBuffer | null> {
-  try {
-    const res = await fetch(url);
-    if (!res.ok) return null;
-    const arr = await res.arrayBuffer();
-    return await ctx.decodeAudioData(arr.slice(0));
-  } catch {
-    return null;
-  }
-}
 
 /** Fetch + decode the Breaker SFX ahead of time (idempotent). */
 export function preloadBreakerAudio(): void {
   if (typeof window === "undefined" || preloadStarted) return;
   preloadStarted = true;
 
-  const ctx = getOrCreateAudioContext();
-  if (!ctx) return;
-
-  void fetchAndDecode(ctx, RIFT_EVENT_URL).then((buf) => {
-    if (buf) riftEventBuffer = buf;
+  void preloadDecodedAudioBuffer(RIFT_EVENT_URL);
+  EQUIP_URLS.forEach((url) => {
+    void preloadDecodedAudioBuffer(url);
   });
-  EQUIP_URLS.forEach((url, idx) => {
-    void fetchAndDecode(ctx, url).then((buf) => {
-      if (buf) equipBuffers[idx] = buf;
-    });
-  });
-  void fetchAndDecode(ctx, ATTACK_URL).then((buf) => {
-    if (buf) attackBuffer = buf;
-  });
+  void preloadDecodedAudioBuffer(ATTACK_URL);
 }
 
 /**
@@ -93,46 +57,8 @@ export function preloadBreakerAudio(): void {
  */
 export function unlockNightmareAudio(): void {
   if (typeof window === "undefined") return;
-  const ctx = getOrCreateAudioContext();
-  if (ctx && ctx.state === "suspended") {
-    void ctx.resume().catch(() => {});
-  }
+  resumeSharedAudioContext();
   preloadBreakerAudio();
-}
-
-function playDecodedOrHtmlAudio(
-  buffer: AudioBuffer | null,
-  url: string,
-  volume: number
-): void {
-  if (typeof window === "undefined") return;
-  const ctx = getOrCreateAudioContext();
-
-  if (ctx && buffer) {
-    try {
-      if (ctx.state === "suspended") {
-        void ctx.resume().catch(() => {});
-      }
-      const source = ctx.createBufferSource();
-      source.buffer = buffer;
-      const gain = ctx.createGain();
-      gain.gain.value = volume;
-      source.connect(gain);
-      gain.connect(ctx.destination);
-      source.start(0);
-      return;
-    } catch {
-      // Fallback to HTMLAudioElement below
-    }
-  }
-
-  try {
-    const audio = new Audio(url);
-    audio.volume = Math.min(1, Math.max(0, volume));
-    void audio.play().catch(() => {});
-  } catch {
-    // Ignore autoplay restriction
-  }
 }
 
 /**
@@ -140,7 +66,7 @@ function playDecodedOrHtmlAudio(
  * when Lunora begins pulling the Breaker Sword from the Nightmare Rift.
  */
 function playBreakerRiftEventSfx(): void {
-  playDecodedOrHtmlAudio(riftEventBuffer, RIFT_EVENT_URL, 0.92);
+  playBufferedOrHtmlAudio(RIFT_EVENT_URL, 0.92);
 }
 
 /**
@@ -149,8 +75,8 @@ function playBreakerRiftEventSfx(): void {
  */
 function playBreakerEquipClimaxSfx(): void {
   const idx = Math.random() < 0.65 ? 0 : 1;
-  playDecodedOrHtmlAudio(equipBuffers[idx], EQUIP_URLS[idx], 0.95);
-  playDecodedOrHtmlAudio(attackBuffer, ATTACK_URL, 0.55);
+  playBufferedOrHtmlAudio(EQUIP_URLS[idx], 0.95);
+  playBufferedOrHtmlAudio(ATTACK_URL, 0.55);
 }
 
 /**

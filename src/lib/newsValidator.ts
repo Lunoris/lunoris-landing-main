@@ -1,7 +1,34 @@
 import type { NewsArticle } from "@/data/newsData";
-import { validateMediaUrlOrPath } from "@/lib/mediaUpload";
+import { MediaValidationError, validateMediaUrlOrPath } from "@/lib/mediaUpload";
 
 const ALLOWED_CATEGORIES = ["Update", "World & Lore", "Video"] as const;
+
+export class NewsValidationError extends Error {
+  readonly statusCode: number;
+
+  constructor(message: string, statusCode = 400) {
+    super(message);
+    this.name = "NewsValidationError";
+    this.statusCode = statusCode;
+  }
+}
+
+export function isPlainObject(
+  value: unknown
+): value is Record<string, unknown> {
+  return (
+    typeof value === "object" &&
+    value !== null &&
+    !Array.isArray(value) &&
+    Object.prototype.toString.call(value) === "[object Object]"
+  );
+}
+
+export function isClientValidationError(
+  err: unknown
+): err is NewsValidationError | MediaValidationError {
+  return err instanceof NewsValidationError || err instanceof MediaValidationError;
+}
 
 function cleanText(
   value: unknown,
@@ -10,19 +37,19 @@ function cleanText(
   maxLen: number
 ): string {
   if (typeof value !== "string") {
-    throw new Error(`Field "${fieldName}" must be a string.`);
+    throw new NewsValidationError(`Field "${fieldName}" must be a string.`);
   }
   const cleaned = value
     .replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, "")
     .trim();
 
   if (cleaned.length < minLen) {
-    throw new Error(
+    throw new NewsValidationError(
       `Field "${fieldName}" must be at least ${minLen} characters long.`
     );
   }
   if (cleaned.length > maxLen) {
-    throw new Error(
+    throw new NewsValidationError(
       `Field "${fieldName}" exceeds maximum length of ${maxLen} characters.`
     );
   }
@@ -46,7 +73,7 @@ export function validateSlug(rawSlug: string): string {
     cleaned.length > 120 ||
     !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(cleaned)
   ) {
-    throw new Error(
+    throw new NewsValidationError(
       'Invalid "slug". Only lowercase letters, numbers, and single hyphens are allowed (1-120 chars).'
     );
   }
@@ -79,16 +106,20 @@ function estimateReadTime(
 }
 
 export function validateAndBuildNewsArticle(
-  input: Record<string, unknown>,
+  input: unknown,
   existingArticle?: NewsArticle
 ): NewsArticle {
+  if (!isPlainObject(input)) {
+    throw new NewsValidationError("Request payload must be a JSON object.");
+  }
+
   const title =
     input.title !== undefined
       ? cleanText(input.title, "title", 4, 220)
       : existingArticle?.title;
 
   if (!title) {
-    throw new Error('Field "title" is required.');
+    throw new NewsValidationError('Field "title" is required.');
   }
 
   const slug =
@@ -104,7 +135,7 @@ export function validateAndBuildNewsArticle(
       rawCategory as (typeof ALLOWED_CATEGORIES)[number]
     )
   ) {
-    throw new Error(
+    throw new NewsValidationError(
       `Field "category" must be one of: ${ALLOWED_CATEGORIES.join(", ")}.`
     );
   }
@@ -115,18 +146,20 @@ export function validateAndBuildNewsArticle(
       ? cleanText(input.excerpt, "excerpt", 10, 600)
       : existingArticle?.excerpt;
   if (!excerpt) {
-    throw new Error('Field "excerpt" is required.');
+    throw new NewsValidationError('Field "excerpt" is required.');
   }
 
   const lead =
-    input.lead !== undefined && typeof input.lead === "string" && input.lead.trim().length > 0
+    input.lead !== undefined &&
+    typeof input.lead === "string" &&
+    input.lead.trim().length > 0
       ? cleanText(input.lead, "lead", 1, 1500)
       : existingArticle?.lead || excerpt;
 
   const rawImage =
     input.image !== undefined ? input.image : existingArticle?.image;
   if (typeof rawImage !== "string" || !rawImage.trim()) {
-    throw new Error(
+    throw new NewsValidationError(
       'Field "image" is required (provide an uploaded file or a media URL/path).'
     );
   }
@@ -139,7 +172,9 @@ export function validateAndBuildNewsArticle(
     } else if (typeof input.videoSrc === "string") {
       videoSrc = validateMediaUrlOrPath(input.videoSrc, "videoSrc");
     } else {
-      throw new Error('Field "videoSrc" must be a string URL/path.');
+      throw new NewsValidationError(
+        'Field "videoSrc" must be a string URL/path.'
+      );
     }
   }
 
@@ -152,7 +187,7 @@ export function validateAndBuildNewsArticle(
   let highlights: string[] = existingArticle?.highlights || [];
   if (input.highlights !== undefined) {
     if (!Array.isArray(input.highlights) || input.highlights.length > 12) {
-      throw new Error(
+      throw new NewsValidationError(
         'Field "highlights" must be an array of up to 12 strings.'
       );
     }
@@ -169,16 +204,18 @@ export function validateAndBuildNewsArticle(
       input.sections.length === 0 ||
       input.sections.length > 20
     ) {
-      throw new Error(
+      throw new NewsValidationError(
         'Field "sections" must be a non-empty array of up to 20 content blocks.'
       );
     }
 
     sections = input.sections.map((rawSec, sIdx) => {
-      if (!rawSec || typeof rawSec !== "object") {
-        throw new Error(`Section at index ${sIdx} must be an object.`);
+      if (!isPlainObject(rawSec)) {
+        throw new NewsValidationError(
+          `Section at index ${sIdx} must be an object.`
+        );
       }
-      const sec = rawSec as Record<string, unknown>;
+      const sec = rawSec;
       const heading = cleanText(
         sec.heading,
         `sections[${sIdx}].heading`,
@@ -191,7 +228,7 @@ export function validateAndBuildNewsArticle(
         sec.paragraphs.length === 0 ||
         sec.paragraphs.length > 20
       ) {
-        throw new Error(
+        throw new NewsValidationError(
           `Field "sections[${sIdx}].paragraphs" must be a non-empty array of strings.`
         );
       }
@@ -233,7 +270,9 @@ export function validateAndBuildNewsArticle(
       return builtSection;
     });
   } else if (sections.length === 0) {
-    throw new Error('Field "sections" is required when creating an article.');
+    throw new NewsValidationError(
+      'Field "sections" is required when creating an article.'
+    );
   }
 
   const date =
