@@ -19,7 +19,9 @@ const ovoFont = localFont({
 const siteUrl = (
   process.env.LUNORIS_SITE_URL ||
   process.env.NEXT_PUBLIC_SITE_URL ||
-  "https://lunoris-investor-pitch.vercel.app"
+  // Vercel's own production domain (follows a custom domain once one is added), else the live alias.
+  (process.env.VERCEL_PROJECT_PRODUCTION_URL && `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`) ||
+  "https://lunoris-landing-main.vercel.app"
 ).replace(/\/+$/, "");
 
 const title = "Lunoris: Piece of Mind | Official Game Experience";

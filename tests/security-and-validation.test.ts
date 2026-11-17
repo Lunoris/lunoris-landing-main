@@ -1,5 +1,7 @@
 import assert from "node:assert/strict";
 import crypto from "node:crypto";
+import http from "node:http";
+import type { AddressInfo } from "node:net";
 import { describe, it } from "node:test";
 import { NextRequest } from "next/server";
 import {
@@ -7,6 +9,7 @@ import {
   isPrivateIpAddress,
   isPrivateOrInternalHost,
   MediaValidationError,
+  pinnedLookup,
   validateMediaUrlOrPath,
 } from "@/lib/mediaUpload";
 import {
@@ -398,5 +401,27 @@ describe("News payload validation (newsValidator)", () => {
         }),
       NewsValidationError
     );
+  });
+});
+
+describe("Pinned DNS lookup for the media mirror (pinnedLookup)", () => {
+  it("connects to the pinned address for a DNS hostname (Node 20+ asks lookup for all addresses)", async () => {
+    const server = http.createServer((_req, res) => res.end("ok"));
+    await new Promise<void>((r) => server.listen(0, "127.0.0.1", r));
+    const { port } = server.address() as AddressInfo;
+    try {
+      const status = await new Promise<number>((resolve, reject) => {
+        const req = http.request(
+          `http://media.example.test:${port}/`,
+          { lookup: pinnedLookup({ address: "127.0.0.1", family: 4 }) },
+          (res) => { res.resume(); resolve(res.statusCode ?? 0); }
+        );
+        req.on("error", reject);
+        req.end();
+      });
+      assert.equal(status, 200);
+    } finally {
+      server.close();
+    }
   });
 });

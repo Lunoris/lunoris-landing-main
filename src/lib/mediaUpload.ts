@@ -551,6 +551,18 @@ interface SingleHopFetchResult {
   body?: Buffer;
 }
 
+/**
+ * `lookup` for http(s).request that always answers the pre-verified address. Node 20+ connects with
+ * autoSelectFamily and asks for `{ all: true }`, which needs an array; a bare address there fails with
+ * ERR_INVALID_IP_ADDRESS.
+ */
+export function pinnedLookup(pinned: VerifiedPinnedAddress): net.LookupFunction {
+  return (_hostname, opts, callback) => {
+    if (opts && opts.all) callback(null, [{ address: pinned.address, family: pinned.family }]);
+    else callback(null, pinned.address, pinned.family);
+  };
+}
+
 function requestSingleHopPinned(
   parsedUrl: URL,
   pinned: VerifiedPinnedAddress,
@@ -570,9 +582,7 @@ function requestSingleHopPinned(
           "User-Agent": "LunorisMediaMirror/1.0",
         },
         ...(isHttps ? { servername: parsedUrl.hostname } : {}),
-        lookup: (_hostname, _opts, callback) => {
-          callback(null, pinned.address, pinned.family);
-        },
+        lookup: pinnedLookup(pinned),
         signal,
       },
       (res) => {
