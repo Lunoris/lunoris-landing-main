@@ -44,7 +44,7 @@ export function LandingPageClient({
   } = useLunorisScrollEffects();
 
   return (
-    <div className="lunoris-page">
+    <div className="lunoris-page lunoris-landing">
       <MemoHeaderBar
         navBtnSlotRef={navBtnSlotRef}
         steamBtnRef={steamBtnRef}

@@ -1457,6 +1457,20 @@ body {
   );
 }
 
+.landing-scenery {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  --scenery-fade: linear-gradient(to bottom, transparent 0 1.5rem, #000 clamp(12rem, 24vw, 24rem), #000 75%, transparent 100%);
+  -webkit-mask-image: var(--scenery-fade);
+  mask-image: var(--scenery-fade);
+}
+
+.landing-scenery > .lunoris-mural-bg {
+  -webkit-mask-image: none;
+  mask-image: none;
+}
+
 .lunoris-mural-section > .lunoris-mural-fade-top,
 .lunoris-mural-section > .lunoris-mural-fade-bottom,
 .lunoris-final-cta > .lunoris-mural-fade-top {
@@ -10819,4 +10833,31 @@ html[dir="rtl"] .news-painterly-quote {
   .dream-levels-journey-stop .dream-level-teaser-title {
     font-size: clamp(1.6rem, 8.6vw, 2.4rem);
   }
+}
+
+/* All landing sections fade into the same underlying night sky. */
+.lunoris-landing > main {
+  background-color: rgba(5, 4, 12, 0.4);
+}
+
+.lunoris-landing > main > section {
+  background-color: transparent;
+}
+
+.lunoris-landing > main > section:not(.lunoris-final-cta)::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  --edge-fade: min(24%, clamp(6rem, 16vw, 16rem));
+  background: linear-gradient(to bottom, transparent, rgba(5, 4, 12, 0.24) var(--edge-fade),
+    rgba(5, 4, 12, 0.24) calc(100% - var(--edge-fade)), transparent);
+}
+
+.lunoris-landing .lunoris-final-cta {
+  background-image: linear-gradient(to bottom, transparent, rgba(5, 4, 12, 0.24) 40%, #000 100%);
+}
+
+.lunoris-landing > .lunoris-footer {
+  border-top: 0;
 }

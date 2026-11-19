@@ -12,11 +12,12 @@ export function FinalCtaSection({ finalCtaSlotRef }: FinalCtaSectionProps) {
 
   return (
     <section className="lunoris-final-cta">
-      <div
-        className="lunoris-mural-bg"
-        style={{ backgroundImage: "url('/assets/elar-hope.jpg')" }}
-        aria-hidden="true"
-      />
+      <div className="landing-scenery" aria-hidden="true">
+        <div
+          className="lunoris-mural-bg"
+          style={{ backgroundImage: "url('/assets/elar-hope.jpg')" }}
+        />
+      </div>
       <div className="lunoris-mural-fade-top" aria-hidden="true" />
       <div className="lunoris-mural-fade-bottom" aria-hidden="true" />
 

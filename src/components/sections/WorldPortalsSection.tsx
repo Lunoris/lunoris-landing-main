@@ -468,11 +468,13 @@ export function WorldPortalsSection() {
         activePortalId ? "has-active-portal-zoom" : ""
       }`.trim()}
     >
-      <div
-        className="lunoris-mural-bg"
-        style={{ backgroundImage: "url('/assets/elar-joy.jpg')" }}
-        aria-hidden="true"
-      />
+      <div className="landing-scenery" aria-hidden="true">
+        <div
+          className="lunoris-mural-bg"
+          style={{ backgroundImage: "url('/assets/elar-joy.jpg')" }}
+          aria-hidden="true"
+        />
+      </div>
       <div className="lunoris-mural-fade-top" aria-hidden="true" />
       <div className="lunoris-mural-fade-bottom" aria-hidden="true" />
 
