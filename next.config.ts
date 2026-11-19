@@ -6,6 +6,7 @@ const scriptSrc = isProd
   : "script-src 'self' 'unsafe-inline' 'unsafe-eval'";
 
 const nextConfig: NextConfig = {
+  experimental: { agentUpgrade: 'security' },
   reactStrictMode: true,
   devIndicators: false,
   poweredByHeader: false,
